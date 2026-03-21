@@ -7,181 +7,290 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Keyframes ────────────────────────────────────────────────── */
+    @keyframes revealFlip {
+      0%   { transform: rotateX(90deg) scale(0.85); opacity: 0; }
+      60%  { transform: rotateX(-10deg) scale(1.05); opacity: 1; }
+      100% { transform: rotateX(0deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes flagBounce {
+      0%   { transform: scale(0) rotate(-30deg); }
+      50%  { transform: scale(1.3) rotate(10deg); }
+      75%  { transform: scale(0.9) rotate(-5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes mineBlast {
+      0%   { transform: scale(1);    background: #ff4444; box-shadow: 0 0 0 0 rgba(255,80,0,0.9); }
+      40%  { transform: scale(1.35); background: #ff8800; box-shadow: 0 0 0 14px rgba(255,80,0,0.4); }
+      70%  { transform: scale(1.15); background: #ffcc00; box-shadow: 0 0 0 24px rgba(255,200,0,0.15); }
+      100% { transform: scale(1);    background: #cc2200; box-shadow: 0 0 0 30px rgba(255,80,0,0); }
+    }
+
+    @keyframes boardEntrance {
+      0%   { opacity: 0; transform: perspective(600px) rotateX(20deg) scale(0.9); }
+      100% { opacity: 1; transform: perspective(600px) rotateX(0deg) scale(1); }
+    }
+
+    @keyframes overlayFadeIn {
+      0%   { opacity: 0; transform: scale(0.8) translateY(-20px); }
+      70%  { transform: scale(1.04) translateY(2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { text-shadow: 0 0 10px rgba(99,179,237,0.6), 0 2px 4px rgba(0,0,0,0.5); }
+      50%       { text-shadow: 0 0 24px rgba(99,179,237,1),   0 2px 8px rgba(0,0,0,0.5); }
+    }
+
+    @keyframes winCellGlow {
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.4); }
+      50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px 4px rgba(99,230,120,0.6); }
+    }
+
+    /* ── Base ─────────────────────────────────────────────────────── */
     body {
-      background: #c0c0c0;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       min-height: 100vh;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
+      padding: 28px 20px;
       user-select: none;
     }
 
     h1 {
-      font-size: 2rem;
-      color: #333;
-      margin-bottom: 14px;
-      letter-spacing: 2px;
-      text-shadow: 1px 1px 0 #fff;
+      font-size: 2.2rem;
+      color: #e2eafc;
+      margin-bottom: 16px;
+      letter-spacing: 4px;
+      animation: titlePulse 3s ease-in-out infinite;
+      text-transform: uppercase;
     }
 
+    /* ── Controls ─────────────────────────────────────────────────── */
     #controls {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 12px;
+      margin-bottom: 18px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     #controls label {
       font-weight: 600;
-      color: #333;
+      color: #a0aec0;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
     }
 
     #difficulty {
-      padding: 4px 10px;
+      padding: 6px 14px;
       font-size: 0.95rem;
-      border: 2px inset #888;
-      background: #d4d4d4;
+      border: 1px solid rgba(99,179,237,0.4);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      color: #e2eafc;
       cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
     }
-
-    /* Classic Windows 3D raised panel */
-    .panel {
-      background: #c0c0c0;
-      border-top: 3px solid #fff;
-      border-left: 3px solid #fff;
-      border-right: 3px solid #808080;
-      border-bottom: 3px solid #808080;
-      padding: 6px;
+    #difficulty:hover, #difficulty:focus {
+      border-color: rgba(99,179,237,0.9);
+      background: rgba(99,179,237,0.15);
     }
+    #difficulty option { background: #302b63; color: #e2eafc; }
 
+    /* ── Game container ───────────────────────────────────────────── */
     #game-container {
       display: inline-block;
-      background: #c0c0c0;
-      border-top: 4px solid #fff;
-      border-left: 4px solid #fff;
-      border-right: 4px solid #808080;
-      border-bottom: 4px solid #808080;
-      padding: 10px;
+      background: linear-gradient(145deg, #1e1b4b, #2d2770);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.5),
+        0 8px 24px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: boardEntrance 0.5s cubic-bezier(0.22,1,0.36,1) both;
     }
 
-    /* ── Header bar ─────────────────────────────────────────────── */
+    /* ── Header bar ───────────────────────────────────────────────── */
     #header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #c0c0c0;
-      border-top: 3px solid #808080;
-      border-left: 3px solid #808080;
-      border-right: 3px solid #fff;
-      border-bottom: 3px solid #fff;
-      padding: 6px 10px;
-      margin-bottom: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 12px;
+      margin-bottom: 10px;
       min-width: 200px;
     }
 
     /* Seven-segment style display */
     .display {
-      background: #000;
-      color: #f00;
+      background: #0a0a14;
+      color: #ff3333;
       font-family: 'Courier New', monospace;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: bold;
       width: 68px;
       text-align: right;
-      padding: 2px 6px;
-      border-top: 2px solid #808080;
-      border-left: 2px solid #808080;
-      border-right: 2px solid #fff;
-      border-bottom: 2px solid #fff;
-      letter-spacing: 2px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,50,50,0.25);
+      letter-spacing: 3px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 0 8px rgba(255,50,50,0.15);
     }
 
     /* Reset / emoji button */
     #reset-btn {
       font-size: 1.5rem;
-      width: 44px;
-      height: 36px;
+      width: 46px;
+      height: 38px;
       cursor: pointer;
-      background: #c0c0c0;
-      border-top: 3px solid #fff;
-      border-left: 3px solid #fff;
-      border-right: 3px solid #808080;
-      border-bottom: 3px solid #808080;
+      background: linear-gradient(145deg, #4a4080, #332d6e);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    #reset-btn:hover {
+      background: linear-gradient(145deg, #5a50a0, #3e3880);
     }
     #reset-btn:active {
-      border-top: 3px solid #808080;
-      border-left: 3px solid #808080;
-      border-right: 3px solid #fff;
-      border-bottom: 3px solid #fff;
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
     }
 
-    /* ── Board ──────────────────────────────────────────────────── */
+    /* ── Board ────────────────────────────────────────────────────── */
     #board {
       display: grid;
-      gap: 0;
-      border-top: 3px solid #808080;
-      border-left: 3px solid #808080;
-      border-right: 3px solid #fff;
-      border-bottom: 3px solid #fff;
+      gap: 2px;
+      padding: 2px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      perspective: 800px;
     }
 
-    /* Each cell */
+    /* ── Each cell ────────────────────────────────────────────────── */
     .cell {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
-      font-weight: bold;
+      font-size: 0.88rem;
+      font-weight: 800;
       cursor: pointer;
-      /* Raised 3D look for hidden cells */
-      background: #c0c0c0;
-      border-top: 3px solid #fff;
-      border-left: 3px solid #fff;
-      border-right: 3px solid #808080;
-      border-bottom: 3px solid #808080;
+      border-radius: 5px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+
+      /* 3-D raised tile */
+      background: linear-gradient(145deg, #5a52b0 0%, #3d3690 40%, #2e2870 100%);
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset -1px -1px 0 rgba(0,0,0,0.3);
+    }
+
+    /* Subtle shimmer on unrevealed cells */
+    .cell:not(.revealed)::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 5px;
+      background: linear-gradient(
+        105deg,
+        transparent 35%,
+        rgba(255,255,255,0.12) 50%,
+        transparent 65%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 4s linear infinite;
+      pointer-events: none;
+    }
+
+    .cell:not(.revealed):hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow:
+        0 7px 0 rgba(0,0,0,0.5),
+        0 0 12px rgba(99,179,237,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        inset -1px -1px 0 rgba(0,0,0,0.2);
+      background: linear-gradient(145deg, #6b62c8 0%, #4e47a8 40%, #3a3490 100%);
+      z-index: 1;
+    }
+
+    .cell:not(.revealed):active {
+      transform: translateY(2px) scale(0.97);
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.6),
+        inset 0 2px 4px rgba(0,0,0,0.4);
     }
 
     .cell.revealed {
-      border: 1px solid #999;
-      background: #c0c0c0;
+      background: linear-gradient(145deg, #1a174a, #211d58);
       cursor: default;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 2px 6px rgba(0,0,0,0.5);
+      animation: revealFlip 0.28s cubic-bezier(0.22,1,0.36,1) both;
     }
 
     .cell.flagged {
       cursor: pointer;
     }
 
-    .cell.mine-hit {
-      background: #f00;
+    /* Flag emoji animated in */
+    .cell.flagged .flag-icon {
+      display: inline-block;
+      animation: flagBounce 0.35s cubic-bezier(0.22,1,0.36,1) both;
     }
 
-    /* Number colours matching classic Minesweeper */
-    .n1 { color: #0000ff; }
-    .n2 { color: #007b00; }
-    .n3 { color: #ff0000; }
-    .n4 { color: #00007b; }
-    .n5 { color: #7b0000; }
-    .n6 { color: #007b7b; }
-    .n7 { color: #000000; }
-    .n8 { color: #7b7b7b; }
+    .cell.mine-hit {
+      animation: mineBlast 0.6s ease forwards !important;
+    }
 
-    /* ── Overlay (win / lose message) ───────────────────────────── */
+    /* Win glow on safe revealed cells */
+    .cell.win-glow {
+      animation: winCellGlow 1.2s ease-in-out infinite;
+    }
+
+    /* ── Number colours ──────────────────────────────────────────── */
+    .n1 { color: #63b3ed; text-shadow: 0 0 6px rgba(99,179,237,0.7); }
+    .n2 { color: #68d391; text-shadow: 0 0 6px rgba(104,211,145,0.7); }
+    .n3 { color: #fc8181; text-shadow: 0 0 6px rgba(252,129,129,0.7); }
+    .n4 { color: #b794f4; text-shadow: 0 0 6px rgba(183,148,244,0.7); }
+    .n5 { color: #f6ad55; text-shadow: 0 0 6px rgba(246,173,85,0.7); }
+    .n6 { color: #4fd1c5; text-shadow: 0 0 6px rgba(79,209,197,0.7); }
+    .n7 { color: #f687b3; text-shadow: 0 0 6px rgba(246,135,179,0.7); }
+    .n8 { color: #a0aec0; text-shadow: 0 0 6px rgba(160,174,192,0.7); }
+
+    /* ── Overlay (win / lose message) ────────────────────────────── */
     #overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
       align-items: center;
       justify-content: center;
       z-index: 10;
@@ -189,37 +298,51 @@
     #overlay.active { display: flex; }
 
     #overlay-box {
-      background: #c0c0c0;
-      border-top: 4px solid #fff;
-      border-left: 4px solid #fff;
-      border-right: 4px solid #808080;
-      border-bottom: 4px solid #808080;
-      padding: 30px 40px;
+      background: linear-gradient(145deg, #1e1b4b, #2d2770);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 36px 48px;
       text-align: center;
-      min-width: 220px;
+      min-width: 240px;
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: overlayFadeIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
     }
 
     #overlay-box h2 {
-      font-size: 1.8rem;
-      margin-bottom: 16px;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #e2eafc;
+      letter-spacing: 2px;
+    }
+
+    #overlay-box p {
+      color: #a0aec0;
+      margin-bottom: 20px;
+      font-size: 1.05rem;
     }
 
     #overlay-box button {
-      margin-top: 6px;
-      padding: 6px 24px;
+      margin-top: 4px;
+      padding: 10px 32px;
       font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
       cursor: pointer;
-      background: #c0c0c0;
-      border-top: 3px solid #fff;
-      border-left: 3px solid #fff;
-      border-right: 3px solid #808080;
-      border-bottom: 3px solid #808080;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 16px rgba(102,126,234,0.4);
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    #overlay-box button:hover {
+      background: linear-gradient(135deg, #7c93f0 0%, #8a5cb8 100%);
     }
     #overlay-box button:active {
-      border-top: 3px solid #808080;
-      border-left: 3px solid #808080;
-      border-right: 3px solid #fff;
-      border-bottom: 3px solid #fff;
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.4);
     }
   </style>
 </head>
@@ -383,8 +506,8 @@ function placeMines(safeR, safeC) {
 /* ── Render board DOM ────────────────────────────────────────────── */
 function renderBoard() {
   boardEl.innerHTML = '';
-  boardEl.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
-  boardEl.style.gridTemplateRows    = `repeat(${rows}, 28px)`;
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
+  boardEl.style.gridTemplateRows    = `repeat(${rows}, 30px)`;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -475,14 +598,17 @@ function endGame(won) {
 
   if (won) {
     resetBtn.textContent = '😎';
-    // Auto-flag remaining mines
+    // Auto-flag remaining mines and add win glow to all revealed cells
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const cell = grid[r][c];
         if (cell.mine && !cell.flagged) {
           cell.flagged = true;
           flagCount++;
-          cell.el.textContent = '🚩';
+          cell.el.innerHTML = '<span class="flag-icon">🚩</span>';
+        }
+        if (!cell.mine && cell.revealed) {
+          cell.el.classList.add('win-glow');
         }
       }
     }
@@ -491,14 +617,18 @@ function endGame(won) {
     overlaySub.textContent   = `Cleared in ${seconds}s`;
   } else {
     resetBtn.textContent = '😵';
-    // Reveal all mines
+    // Reveal all mines with staggered animation
+    let delay = 0;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const cell = grid[r][c];
         if (cell.mine && !cell.flagged && !cell.revealed) {
-          cell.revealed = true;
-          cell.el.classList.add('revealed');
-          cell.el.textContent = '💣';
+          const el = cell.el;
+          setTimeout(() => {
+            el.classList.add('revealed');
+            el.textContent = '💣';
+          }, delay);
+          delay += 18;
         }
         // Mark wrong flags
         if (cell.flagged && !cell.mine) {
@@ -510,7 +640,7 @@ function endGame(won) {
     overlaySub.textContent   = 'You hit a mine.';
   }
 
-  setTimeout(() => overlay.classList.add('active'), 600);
+  setTimeout(() => overlay.classList.add('active'), won ? 600 : 900);
 }
 
 /* ── Event handlers ──────────────────────────────────────────────── */
@@ -551,12 +681,12 @@ function onRightClick(e) {
   if (cell.flagged) {
     cell.flagged = false;
     flagCount--;
-    cell.el.textContent = '';
+    cell.el.innerHTML = '';
     cell.el.classList.remove('flagged');
   } else {
     cell.flagged = true;
     flagCount++;
-    cell.el.textContent = '🚩';
+    cell.el.innerHTML = '<span class="flag-icon">🚩</span>';
     cell.el.classList.add('flagged');
   }
 
