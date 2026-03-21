@@ -1,0 +1,1 @@
+# Golden-day-game-with-mcp-agents-only
