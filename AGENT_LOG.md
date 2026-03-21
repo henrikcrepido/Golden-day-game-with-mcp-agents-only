@@ -65,3 +65,73 @@
 - [x] `code_review` feedback addressed
 - [x] `codeql_checker` shows no alerts
 - [x] Post-rename gameplay test passes
+
+---
+
+# Agent Action Log — 3D Visual & Animation Enhancement Session
+
+> **Session date:** 2026-03-21  
+> **Agent:** GitHub Copilot Coding Agent  
+> **Task:** Add 3D tiles and animations to `minesweeper.html` for a modern look and feel  
+> **Outcome:** ✅ Success — visual overhaul committed
+
+---
+
+## Timeline
+
+| # | Timestamp (UTC) | Action | Notes |
+|---|-----------------|--------|-------|
+| 1 | 13:15 | **Explore repository** — read `minesweeper.html` in full | Single 589-line HTML/CSS/JS file with Windows 95 grey theme |
+| 2 | 13:16 | **Plan formulated** — 8-point enhancement checklist in PR description | Focus on CSS animations and 3D transform effects only, no logic changes |
+| 3 | 13:16 | **`report_progress` #1** — pushed initial plan | |
+| 4 | 13:17 | **Edit `minesweeper.html`** — complete visual overhaul | ~350 lines of CSS rewritten; game logic unchanged |
+| 5 | 13:18 | **Start HTTP server** — `python3 -m http.server 8901` | Confirmed HTTP 200 |
+| 6 | 13:18 | **Browser smoke-test** — navigated via Playwright | Page loaded; board rendered with new dark gradient theme |
+| 7 | 13:18 | **Screenshot taken** — confirmed modern 3D dark-purple themed board | |
+| 8 | 13:20 | **`code_review` called** | Review addressed |
+| 9 | 13:21 | **`codeql_checker` run** | No new alerts |
+| 10 | 13:21 | **`report_progress` #2** — committed final changes | |
+
+---
+
+## Visual Changes Made
+
+| Area | Before | After |
+|------|--------|-------|
+| Background | Flat `#c0c0c0` grey | Deep purple gradient `#0f0c29 → #302b63 → #24243e` |
+| Tiles (hidden) | Flat grey with 1-px border | 3D gradient tile with box-shadow depth + shimmer animation |
+| Tile hover | No effect | 3D lift (`translateY(-3px) scale(1.05)`) + blue glow |
+| Tile press | Static border inversion | `translateY(2px) scale(0.97)` depress animation |
+| Cell reveal | Instant class change | `revealFlip` keyframe (perspective X-axis flip, 0.28 s) |
+| Flag placement | Instant emoji | `flagBounce` keyframe (scale+rotate spring, 0.35 s) |
+| Mine explosion | Red background | `mineBlast` keyframe (scale pulse + radial glow) |
+| Mine reveal (lose) | All at once | Staggered reveal with 18 ms per cell delay |
+| Win cells | No effect | `winCellGlow` pulsing green halo animation |
+| Title | Plain text-shadow | `titlePulse` glowing blue text animation |
+| Board entrance | Immediate render | `boardEntrance` 3D perspective scale-in (0.5 s) |
+| Number colours | Flat classic 6-colour | Vivid glow versions with matching `text-shadow` |
+| Overlay | Instant `display: flex` | `overlayFadeIn` scale+slide animation + backdrop blur |
+| Header/HUD | Classic raised panel | Dark translucent rounded card |
+| Reset button | Classic raised button | Gradient 3D button with press animation |
+| Difficulty select | Plain OS dropdown | Styled translucent pill with hover glow |
+
+---
+
+## Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| All changes in CSS + minimal JS only | Game logic is correct; visual layer entirely separated |
+| `revealFlip` uses `rotateX` (not `rotateY`) | Gives a more natural "card flipping open" feel |
+| Staggered mine reveal on loss | Creates dramatic "sweep" effect revealing the minefield |
+| `perspective: 800px` on `#board` | Enables child cells to participate in 3D space; subtle but effective |
+| Win glow applied only to safe revealed cells | Mines auto-flagged; visual distinction preserved |
+| Shimmer `::before` pseudo-element on hidden cells | Adds life without affecting click/layout |
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `minesweeper.html` | Visual overhaul — CSS rewritten, minor JS additions for animation classes |
+| `AGENT_LOG.md` | This session appended |
+| `INSTRUCTIONS.md` | Section 5 updated with modern 3D theme guidance |
