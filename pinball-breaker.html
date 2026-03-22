@@ -234,7 +234,10 @@
     <h2 id="ov-title">Pinball Breaker</h2>
     <p id="ov-body">Move mouse (or finger) to control the paddle.<br>Knock out every brick. Pinball bumpers boost your score!<br><br>
       Power-ups fall from bricks:<br>
-      💛 Wide paddle &nbsp;|&nbsp; 🔵 Multi-ball &nbsp;|&nbsp; 🔴 Fireball
+      💛 Wide paddle &nbsp;|&nbsp; 🔵 Multi-ball &nbsp;|&nbsp; 🔴 Fireball<br>
+      ⚡ Speed (2× pts) &nbsp;|&nbsp; 💎 Mega ball &nbsp;|&nbsp; 🔗 Chain reaction<br><br>
+      <small style="color:#606080">👾 Ball Eaters appear from level 4 — use 🔴 fireball to destroy them!<br>
+      Moving bricks appear from level 3.</small>
     </p>
     <div class="score-big hidden" id="ov-score"></div>
     <div id="pb-name-entry" class="hs-hidden">
@@ -258,6 +261,7 @@
   <span><span class="dot" style="background:#facc15"></span>3-hit brick (30 pts)</span>
   <span><span class="dot" style="background:#a78bfa"></span>Steel (5 hits, 50 pts)</span>
   <span><span class="dot" style="background:#34d399"></span>Bumper</span>
+  <span><span class="dot" style="background:#ff4444"></span>👾 Ball Eater (lvl 4+)</span>
 </div>
 
 <footer><a href="index.html">← Back to Golden Day Games</a> &nbsp;·&nbsp; Golden Day Games © 2026</footer>
@@ -361,6 +365,7 @@ const BRICK_ROWS  = 5;
 const BRICK_GAP   = 4;
 const BRICK_TOP   = 60;
 const BUMPER_R    = 20;
+const CHAIN_REACTION_RADIUS = 55;
 
 // Brick type definitions: [hitPoints, pointsEach, color(s)]
 const BRICK_TYPES = [
@@ -372,9 +377,9 @@ const BRICK_TYPES = [
 ];
 
 // Power-up types
-const POWERUP_TYPES = ['wide','multi','fire'];
-const POWERUP_COLOR = { wide:'#facc15', multi:'#60a5fa', fire:'#f87171' };
-const POWERUP_EMOJI = { wide:'💛', multi:'🔵', fire:'🔴' };
+const POWERUP_TYPES = ['wide','multi','fire','speed','mega','chain'];
+const POWERUP_COLOR = { wide:'#facc15', multi:'#60a5fa', fire:'#f87171', speed:'#fbbf24', mega:'#22d3ee', chain:'#a3e635' };
+const POWERUP_EMOJI = { wide:'💛', multi:'🔵', fire:'🔴', speed:'⚡', mega:'💎', chain:'🔗' };
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let state = 'idle'; // idle | playing | dead | won
@@ -395,6 +400,10 @@ let mouseX = W / 2;
 let wideTimer  = 0; // frames remaining for wide paddle
 let fireActive = false;
 let fireTimer  = 0;
+let speedTimer = 0; // ⚡ Speed Ball
+let megaTimer  = 0; // 💎 Mega Ball
+let chainTimer = 0; // 🔗 Chain Ball
+let creatures  = []; // ball-eating enemies (level 4+)
 
 // ── Input ──────────────────────────────────────────────────────────────────────
 canvas.addEventListener('mousemove', e => {
@@ -487,10 +496,11 @@ function launchBall() {
 
 // ── Level builder ─────────────────────────────────────────────────────────────
 function buildLevel(lvl) {
-  bricks   = [];
-  bumpers  = [];
-  powerups = [];
-  particles= [];
+  bricks    = [];
+  bumpers   = [];
+  powerups  = [];
+  particles = [];
+  creatures = [];
 
   const bw = Math.floor((W - BRICK_GAP) / BRICK_COLS) - BRICK_GAP;
   const bh = 20;
@@ -503,14 +513,19 @@ function buildLevel(lvl) {
       // Decide brick type based on level & row
       let type;
       const rand = Math.random();
-      if (lvl >= 4 && rand < 0.12) type = 4; // steel
-      else if (rand < 0.2 + lvl*0.03) type = 3;
+      if (lvl >= 4 && rand < (lvl >= 5 ? 0.18 : 0.12)) type = 4; // steel
+      else if (rand < 0.2 + lvl*0.04) type = 3;
       else if (rand < 0.5) type = 2;
       else type = 1;
 
       const x = BRICK_GAP + c * (bw + BRICK_GAP);
       const y = BRICK_TOP + r * (bh + BRICK_GAP);
-      bricks.push({ x, y, w: bw, h: bh, type, hp: BRICK_TYPES[type].hp, flash: 0 });
+      // Moving bricks from level 3 (some fraction)
+      const movingChance = lvl >= 3 ? Math.min(0.15 + (lvl - 3) * 0.05, 0.4) : 0;
+      const vx = (lvl >= 3 && Math.random() < movingChance)
+        ? (Math.random() < 0.5 ? 1 : -1) * rnd(0.6, 1.4 + lvl * 0.1)
+        : 0;
+      bricks.push({ x, y, w: bw, h: bh, type, hp: BRICK_TYPES[type].hp, flash: 0, vx });
     }
   }
 
@@ -529,6 +544,20 @@ function buildLevel(lvl) {
     if (ok) placedBumpers.push({ x: bx, y: by, r: BUMPER_R, flash: 0, hits: 0 });
   }
   bumpers = placedBumpers;
+
+  // Ball-eating creatures from level 4 (more on higher levels)
+  if (lvl >= 4) {
+    const creatureCount = Math.min(1 + Math.floor((lvl - 4) * 0.8), 5);
+    const creatureZoneTop    = BRICK_TOP + rows * (bh + BRICK_GAP) + 30;
+    const creatureZoneBottom = H - 160;
+    for (let i = 0; i < creatureCount; i++) {
+      const cx = rnd(20, W - 20);
+      const cy = rnd(creatureZoneTop, Math.max(creatureZoneTop + 20, creatureZoneBottom));
+      const angle = rnd(0, Math.PI * 2);
+      const spd   = rnd(1.2, 1.8 + lvl * 0.15);
+      creatures.push({ x: cx, y: cy, r: 13, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd, flash: 0, hp: 2 });
+    }
+  }
 }
 
 // ── Score helper ──────────────────────────────────────────────────────────────
@@ -563,6 +592,9 @@ function startGame() {
   wideTimer = 0;
   fireActive = false;
   fireTimer = 0;
+  speedTimer = 0;
+  megaTimer  = 0;
+  chainTimer = 0;
 
   highScore = pbGetBestScore();
   hudScore.textContent = '0';
@@ -586,6 +618,9 @@ function loseLife() {
   wideTimer = 0;
   fireActive = false;
   fireTimer = 0;
+  speedTimer = 0;
+  megaTimer  = 0;
+  chainTimer = 0;
   multiplier = 1;
   multiplierTimer = 0;
   hudMult.textContent = '×1';
@@ -610,6 +645,9 @@ function levelClear() {
   wideTimer = 0;
   fireActive = false;
   fireTimer = 0;
+  speedTimer = 0;
+  megaTimer  = 0;
+  chainTimer = 0;
   hudLevel.textContent = level;
   hudMult.textContent = '×1';
   buildLevel(level);
@@ -638,6 +676,23 @@ function applyPowerup(type) {
     fireActive = true;
     fireTimer  = 600;
     for (const b of balls) b.fire = true;
+  } else if (type === 'speed') {
+    // ⚡ Speed: boost all balls by 60%, double points for 8 s
+    // Only apply velocity boost once; re-pickup just refreshes the timer
+    if (speedTimer === 0) {
+      for (const b of balls) {
+        b.vx *= 1.6;
+        b.vy *= 1.6;
+      }
+    }
+    speedTimer = 480;
+  } else if (type === 'mega') {
+    // 💎 Mega: enlarge ball radius for 8 s
+    megaTimer = 480;
+    for (const b of balls) b.r = 14;
+  } else if (type === 'chain') {
+    // 🔗 Chain: enable chain reaction brick damage for 8 s
+    chainTimer = 480;
   }
 }
 
@@ -670,6 +725,37 @@ function drawBumper(bmp) {
     ctx.textBaseline = 'middle';
     ctx.fillText(bmp.hits, bmp.x, bmp.y);
   }
+  ctx.restore();
+}
+
+// ── Creature (ball eater) draw ────────────────────────────────────────────────
+function drawCreature(c) {
+  const glow = c.flash > 0 ? c.flash / 15 : 0;
+  ctx.save();
+  ctx.shadowColor = '#ff4444';
+  ctx.shadowBlur  = 18 + 20 * glow;
+  // Body
+  const grad = ctx.createRadialGradient(c.x - 3, c.y - 3, 1, c.x, c.y, c.r);
+  grad.addColorStop(0, `rgba(255,${80 + Math.floor(glow*100)},80,0.95)`);
+  grad.addColorStop(1, `rgba(140,0,0,0.8)`);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+  ctx.fill();
+  // Eyes
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(c.x - 4, c.y - 3, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(c.x + 4, c.y - 3, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(c.x - 3.5, c.y - 3, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(c.x + 4.5, c.y - 3, 1.5, 0, Math.PI * 2); ctx.fill();
+  // Mouth (angry arc)
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(c.x, c.y + 2, 5, 0.2, Math.PI - 0.2);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -760,7 +846,11 @@ function drawBall(b) {
     const t = b.trail[i];
     const alpha = (i / b.trail.length) * 0.4;
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = b.fire ? '#f87171' : '#a78bfa';
+    ctx.fillStyle = b.fire ? '#f87171'
+                 : speedTimer > 0 ? '#fbbf24'
+                 : megaTimer  > 0 ? '#22d3ee'
+                 : chainTimer > 0 ? '#a3e635'
+                 : '#a78bfa';
     ctx.beginPath();
     ctx.arc(t.x, t.y, b.r * (0.5 + 0.5 * i / b.trail.length), 0, Math.PI*2);
     ctx.fill();
@@ -774,6 +864,21 @@ function drawBall(b) {
     grad.addColorStop(0.5, '#fb923c');
     grad.addColorStop(1, '#dc2626');
     ctx.shadowColor = '#f87171';
+  } else if (speedTimer > 0) {
+    grad.addColorStop(0, '#fffbeb');
+    grad.addColorStop(0.5, '#fbbf24');
+    grad.addColorStop(1, '#d97706');
+    ctx.shadowColor = '#fbbf24';
+  } else if (megaTimer > 0) {
+    grad.addColorStop(0, '#ecfeff');
+    grad.addColorStop(0.5, '#22d3ee');
+    grad.addColorStop(1, '#0e7490');
+    ctx.shadowColor = '#22d3ee';
+  } else if (chainTimer > 0) {
+    grad.addColorStop(0, '#f7fee7');
+    grad.addColorStop(0.5, '#a3e635');
+    grad.addColorStop(1, '#4d7c0f');
+    ctx.shadowColor = '#a3e635';
   } else {
     grad.addColorStop(0, '#f5f3ff');
     grad.addColorStop(0.5, '#a78bfa');
@@ -841,6 +946,9 @@ function update() {
   // Timers
   if (wideTimer  > 0) wideTimer--;
   if (fireTimer  > 0) { fireTimer--; if (fireTimer === 0) { fireActive = false; for (const b of balls) b.fire = false; } }
+  if (speedTimer > 0) { speedTimer--; }
+  if (megaTimer  > 0) { megaTimer--;  if (megaTimer === 0) { for (const b of balls) b.r = BALL_R; } }
+  if (chainTimer > 0) { chainTimer--; }
   if (multiplierTimer > 0) {
     multiplierTimer--;
     if (multiplierTimer === 0) { multiplier = 1; hudMult.textContent = '×1'; }
@@ -849,8 +957,28 @@ function update() {
   // Bumper flash decay
   for (const bmp of bumpers) { if (bmp.flash > 0) bmp.flash--; }
 
-  // Brick flash decay
-  for (const br of bricks) { if (br.flash > 0) br.flash--; }
+  // Brick flash decay + moving brick update
+  for (const br of bricks) {
+    if (br.flash > 0) br.flash--;
+    if (br.vx !== 0) {
+      br.x += br.vx;
+      if (br.x < 0) { br.x = 0; br.vx = Math.abs(br.vx); }
+      if (br.x + br.w > W) { br.x = W - br.w; br.vx = -Math.abs(br.vx); }
+    }
+  }
+
+  // Creature (ball eater) movement
+  for (let ci = creatures.length - 1; ci >= 0; ci--) {
+    const c = creatures[ci];
+    if (c.flash > 0) c.flash--;
+    c.x += c.vx;
+    c.y += c.vy;
+    // Bounce off walls
+    if (c.x - c.r < 0)  { c.x = c.r;     c.vx = Math.abs(c.vx); }
+    if (c.x + c.r > W)  { c.x = W - c.r; c.vx = -Math.abs(c.vx); }
+    if (c.y - c.r < 0)  { c.y = c.r;     c.vy = Math.abs(c.vy); }
+    if (c.y + c.r > H - 80) { c.y = H - 80 - c.r; c.vy = -Math.abs(c.vy); }
+  }
 
   // ── Balls ──────────────────────────────────────────────────────────────────
   for (let bi = balls.length - 1; bi >= 0; bi--) {
@@ -908,6 +1036,32 @@ function update() {
         bmpHit(bmp, ball);
       }
     }
+
+    // Creature (ball eater) collisions
+    let ballEaten = false;
+    for (let ci = creatures.length - 1; ci >= 0; ci--) {
+      const c = creatures[ci];
+      const col = circleCircle(ball.x, ball.y, ball.r, c.x, c.y, c.r);
+      if (col) {
+        if (ball.fire) {
+          // Fireball kills creature → big bonus
+          spawnParticles(c.x, c.y, '#ff4444', 20);
+          const pts = 200 * multiplier;
+          addScore(pts);
+          addPopup(c.x, c.y - 20, '💀 +' + pts, '#ff4444');
+          creatures.splice(ci, 1);
+        } else {
+          // Creature eats the ball
+          c.flash = 15;
+          spawnParticles(ball.x, ball.y, '#ff4444', 16);
+          ballEaten = true;
+          balls.splice(bi, 1);
+          if (balls.length === 0) { loseLife(); return; }
+          break;
+        }
+      }
+    }
+    if (ballEaten) continue;
 
     // Brick collisions
     for (let bri = bricks.length - 1; bri >= 0; bri--) {
@@ -979,12 +1133,40 @@ function hitBrick(br, idx, ball) {
   const def = BRICK_TYPES[br.type];
 
   if (br.hp <= 0) {
-    const pts = def.pts * multiplier;
+    // Base points — doubled by speed ball, extra 50% by mega
+    let pts = def.pts * multiplier;
+    if (speedTimer > 0) pts *= 2;
+    if (megaTimer  > 0) pts = Math.floor(pts * 1.5);
     addScore(pts);
     addPopup(br.x + br.w/2, br.y + br.h/2, '+' + pts, def.colors[0]);
     spawnParticles(br.x + br.w/2, br.y + br.h/2, def.colors[0], 10);
     maybeDrop(br.x + br.w/2, br.y + br.h/2);
+    const cx = br.x + br.w/2;
+    const cy = br.y + br.h/2;
     bricks.splice(idx, 1);
+
+    // Chain reaction: damage adjacent bricks for 1 hp
+    if (chainTimer > 0) {
+      let chainBonus = 0;
+      for (let i = bricks.length - 1; i >= 0; i--) {
+        const nb = bricks[i];
+        const ncx = nb.x + nb.w/2;
+        const ncy = nb.y + nb.h/2;
+        if (Math.hypot(ncx - cx, ncy - cy) <= CHAIN_REACTION_RADIUS) {
+          nb.flash = 8;
+          nb.hp--;
+          if (nb.hp <= 0) {
+            chainBonus += BRICK_TYPES[nb.type].pts;
+            spawnParticles(ncx, ncy, '#a3e635', 6);
+            bricks.splice(i, 1);
+          }
+        }
+      }
+      if (chainBonus > 0) {
+        addScore(chainBonus * multiplier);
+        addPopup(cx, cy - 18, '🔗 +' + (chainBonus * multiplier), '#a3e635');
+      }
+    }
   }
 }
 
@@ -1003,6 +1185,9 @@ function draw() {
 
   // Bumpers
   for (const bmp of bumpers) drawBumper(bmp);
+
+  // Creatures
+  for (const c of creatures) drawCreature(c);
 
   // Power-ups
   for (const p of powerups) drawPowerup(p);
@@ -1053,6 +1238,54 @@ function draw() {
     ctx.beginPath(); ctx.roundRect(bx, by, bw, 5, 3); ctx.fill();
     ctx.fillStyle = '#f87171';
     ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, 5, 3); ctx.fill();
+  }
+
+  // Speed timer bar
+  if (speedTimer > 0) {
+    const pct = speedTimer / 480;
+    const bw = 80;
+    const bx = W/2 - bw/2 - 90;
+    const by = H - 22;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, 5, 3); ctx.fill();
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, 5, 3); ctx.fill();
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡', bx + bw/2, by - 4);
+  }
+
+  // Mega timer bar
+  if (megaTimer > 0) {
+    const pct = megaTimer / 480;
+    const bw = 80;
+    const bx = W/2 - bw/2 + 90;
+    const by = H - 22;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, 5, 3); ctx.fill();
+    ctx.fillStyle = '#22d3ee';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, 5, 3); ctx.fill();
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('💎', bx + bw/2, by - 4);
+  }
+
+  // Chain timer bar
+  if (chainTimer > 0) {
+    const pct = chainTimer / 480;
+    const bw = 80;
+    const bx = W/2 - bw/2;
+    const by = H - 32;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, 5, 3); ctx.fill();
+    ctx.fillStyle = '#a3e635';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, 5, 3); ctx.fill();
+    ctx.fillStyle = '#a3e635';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔗', bx + bw/2, by - 4);
   }
 }
 
