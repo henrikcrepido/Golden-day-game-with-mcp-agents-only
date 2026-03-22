@@ -160,9 +160,29 @@
       color: #444466;
       text-align: center;
     }
+
+    /* ── Fullscreen button ──────────────────────────────── */
+    #fs-btn {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #fs-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
   </style>
 </head>
 <body>
+
+  <button id="fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">⛶</button>
 
   <header>
     <div class="logo">&#9733; Golden Day Games</div>
@@ -205,5 +225,20 @@
 
   <footer>Golden Day Games &copy; 2026</footer>
 
+  <script>
+    const fsBtn = document.getElementById('fs-btn');
+    function updateFsIcon() {
+      fsBtn.textContent = document.fullscreenElement ? '✕' : '⛶';
+      fsBtn.title = document.fullscreenElement ? 'Exit fullscreen' : 'Toggle fullscreen';
+    }
+    fsBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+    document.addEventListener('fullscreenchange', updateFsIcon);
+  </script>
 </body>
 </html>
