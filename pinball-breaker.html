@@ -121,6 +121,58 @@
     }
     #overlay button:hover { transform: scale(1.06); box-shadow: 0 8px 24px rgba(255,180,0,0.4); }
 
+    /* ── Highscore name entry ─────────────────────────────────────── */
+    .hs-hidden { display: none !important; }
+
+    #pb-name-entry { margin-top: 0.5rem; }
+    #pb-name-entry label {
+      display: block;
+      color: #b0b0d0;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+    #pb-name-entry input[type="text"] {
+      width: 180px;
+      padding: 7px 12px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255,213,79,0.5);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: #f0eefc;
+      outline: none;
+      text-align: center;
+    }
+    #pb-name-entry input[type="text"]:focus {
+      border-color: rgba(255,213,79,0.9);
+    }
+
+    /* ── Highscore table ─────────────────────────────────────────── */
+    #pb-hs-section { margin-top: 0.5rem; min-width: 220px; }
+    #pb-hs-section h3 {
+      font-size: 0.72rem;
+      color: #606080;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #pb-hs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    #pb-hs-table th {
+      color: #606080;
+      font-weight: 600;
+      padding: 2px 8px;
+      text-align: center;
+    }
+    #pb-hs-table td {
+      color: #b0b0d0;
+      padding: 3px 8px;
+      text-align: center;
+    }
+    #pb-hs-table tr.hs-new td { color: #ffd54f; font-weight: 700; }
+
     /* Power-up legend */
     #legend {
       margin-top: 10px;
@@ -185,6 +237,17 @@
       💛 Wide paddle &nbsp;|&nbsp; 🔵 Multi-ball &nbsp;|&nbsp; 🔴 Fireball
     </p>
     <div class="score-big hidden" id="ov-score"></div>
+    <div id="pb-name-entry" class="hs-hidden">
+      <label for="pb-player-name">Enter your name:</label>
+      <input type="text" id="pb-player-name" maxlength="16" placeholder="Your name" />
+    </div>
+    <div id="pb-hs-section" class="hs-hidden">
+      <h3>🏆 High Scores</h3>
+      <table id="pb-hs-table">
+        <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
+        <tbody id="pb-hs-body"></tbody>
+      </table>
+    </div>
     <button id="ov-btn">▶ Start Game</button>
   </div>
 </div>
@@ -217,15 +280,76 @@ const hudMult  = document.getElementById('hud-mult');
 const hudLives = document.getElementById('hud-lives');
 
 // ── Overlay elements ──────────────────────────────────────────────────────────
-const overlay = document.getElementById('overlay');
-const ovTitle = document.getElementById('ov-title');
-const ovBody  = document.getElementById('ov-body');
-const ovScore = document.getElementById('ov-score');
-const ovBtn   = document.getElementById('ov-btn');
-ovBtn.addEventListener('click', startGame);
+const overlay    = document.getElementById('overlay');
+const ovTitle    = document.getElementById('ov-title');
+const ovBody     = document.getElementById('ov-body');
+const ovScore    = document.getElementById('ov-score');
+const ovBtn      = document.getElementById('ov-btn');
+const pbNameEntry  = document.getElementById('pb-name-entry');
+const pbPlayerName = document.getElementById('pb-player-name');
+const pbHsSection  = document.getElementById('pb-hs-section');
+const pbHsBody     = document.getElementById('pb-hs-body');
 
-// ── Persistence ───────────────────────────────────────────────────────────────
-let highScore = parseInt(localStorage.getItem('pbBreaker_best') || '0', 10);
+// ── Highscore persistence ─────────────────────────────────────────────────────
+const PB_HS_MAX = 5;
+const PB_HS_KEY = 'pbBreaker_hs';
+let pbPendingScore = null;
+
+function pbGetHighscores() {
+  try { return JSON.parse(localStorage.getItem(PB_HS_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function pbSaveHighscores(scores) {
+  localStorage.setItem(PB_HS_KEY, JSON.stringify(scores));
+}
+
+function pbQualifiesForHS(s) {
+  if (s <= 0) return false;
+  const scores = pbGetHighscores();
+  if (scores.length < PB_HS_MAX) return true;
+  return s > scores[scores.length - 1].score;
+}
+
+function pbRenderHS(scores, highlightIdx) {
+  pbHsBody.innerHTML = '';
+  scores.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    if (i === highlightIdx) tr.classList.add('hs-new');
+    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + s.name + '</td><td>' + s.score.toLocaleString() + '</td>';
+    pbHsBody.appendChild(tr);
+  });
+  pbHsSection.classList.remove('hs-hidden');
+}
+
+function pbShowEndHighscore(finalScore) {
+  pbPendingScore = finalScore;
+  if (pbQualifiesForHS(finalScore)) {
+    pbNameEntry.classList.remove('hs-hidden');
+    pbPlayerName.value = '';
+    setTimeout(() => pbPlayerName.focus(), 50);
+    ovBtn.textContent = 'Save Score';
+    pbHsSection.classList.add('hs-hidden');
+  } else {
+    pbNameEntry.classList.add('hs-hidden');
+    pbRenderHS(pbGetHighscores(), -1);
+    ovBtn.textContent = '▶ Play Again';
+    pbPendingScore = null;
+  }
+}
+
+function pbResetHSOverlay() {
+  pbNameEntry.classList.add('hs-hidden');
+  pbHsSection.classList.add('hs-hidden');
+  pbPendingScore = null;
+}
+
+// ── Best score from leaderboard for HUD ───────────────────────────────────────
+function pbGetBestScore() {
+  const scores = pbGetHighscores();
+  return scores.length > 0 ? scores[0].score : 0;
+}
+
+let highScore = pbGetBestScore();
 hudBest.textContent = highScore;
 
 // ── Game constants ────────────────────────────────────────────────────────────
@@ -412,7 +536,6 @@ function addScore(pts) {
   score += pts * multiplier;
   if (score > highScore) {
     highScore = score;
-    localStorage.setItem('pbBreaker_best', highScore);
     hudBest.textContent = highScore;
   }
   hudScore.textContent = score;
@@ -441,10 +564,14 @@ function startGame() {
   fireActive = false;
   fireTimer = 0;
 
+  highScore = pbGetBestScore();
   hudScore.textContent = '0';
+  hudBest.textContent = highScore;
   hudLevel.textContent = '1';
   hudMult.textContent = '×1';
   updateLivesHUD();
+  pbResetHSOverlay();
+  ovBtn.textContent = '▶ Play Again';
 
   buildLevel(level);
   balls = [launchBall()];
@@ -469,8 +596,8 @@ function loseLife() {
     ovBody.textContent  = 'Better luck next time!';
     ovScore.textContent = 'Score: ' + score;
     ovScore.classList.remove('hidden');
-    ovBtn.textContent   = '▶ Play Again';
     overlay.classList.remove('hidden');
+    pbShowEndHighscore(score);
   } else {
     balls = [launchBall()];
   }
@@ -935,6 +1062,33 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
+
+// ── Overlay button handler ────────────────────────────────────────────────────
+ovBtn.addEventListener('click', () => {
+  if (pbPendingScore !== null) {
+    const name = pbPlayerName.value.trim() || 'Anonymous';
+    const savedScore = pbPendingScore;
+    const scores = pbGetHighscores();
+    scores.push({ name, score: savedScore });
+    scores.sort((a, b) => b.score - a.score);
+    scores.splice(PB_HS_MAX);
+    pbSaveHighscores(scores);
+    highScore = scores[0].score;
+    hudBest.textContent = highScore;
+    const newIdx = scores.findIndex(s => s.name === name && s.score === savedScore);
+    pbNameEntry.classList.add('hs-hidden');
+    pbRenderHS(scores, newIdx);
+    ovBtn.textContent = '▶ Play Again';
+    pbPendingScore = null;
+    return;
+  }
+  startGame();
+});
+
+// ── Submit name with Enter key ────────────────────────────────────────────────
+pbPlayerName.addEventListener('keydown', e => {
+  if (e.key === 'Enter') ovBtn.click();
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 hudBest.textContent = highScore;

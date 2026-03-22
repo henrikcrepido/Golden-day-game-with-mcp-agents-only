@@ -344,6 +344,58 @@
       transform: translateY(3px);
       box-shadow: 0 1px 0 rgba(0,0,0,0.4);
     }
+
+    /* ── Highscore name entry ─────────────────────────────────────── */
+    .hs-hidden { display: none !important; }
+
+    #name-entry { margin: 12px 0 4px; }
+    #name-entry label {
+      display: block;
+      color: #a0aec0;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+    }
+    #name-entry input[type="text"] {
+      width: 180px;
+      padding: 7px 12px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(99,179,237,0.5);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: #e2eafc;
+      outline: none;
+      text-align: center;
+    }
+    #name-entry input[type="text"]:focus {
+      border-color: rgba(99,179,237,0.9);
+    }
+
+    /* ── Highscore table ─────────────────────────────────────────── */
+    #hs-section { margin-top: 12px; min-width: 220px; }
+    #hs-section h3 {
+      font-size: 0.78rem;
+      color: #6b7aad;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #hs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    #hs-table th {
+      color: #6b7aad;
+      font-weight: 600;
+      padding: 2px 8px;
+      text-align: center;
+    }
+    #hs-table td {
+      color: #c8d0ec;
+      padding: 3px 8px;
+      text-align: center;
+    }
+    #hs-table tr.hs-new td { color: #ffd54f; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -373,6 +425,17 @@
   <div id="overlay-box">
     <h2 id="overlay-title"></h2>
     <p id="overlay-sub"></p>
+    <div id="name-entry" class="hs-hidden">
+      <label for="player-name">Enter your name:</label>
+      <input type="text" id="player-name" maxlength="16" placeholder="Your name" />
+    </div>
+    <div id="hs-section" class="hs-hidden">
+      <h3>🏆 Best Times</h3>
+      <table id="hs-table">
+        <thead><tr><th>#</th><th>Name</th><th>Time</th></tr></thead>
+        <tbody id="hs-body"></tbody>
+      </table>
+    </div>
     <button id="overlay-btn">Play Again</button>
   </div>
 </div>
@@ -405,6 +468,64 @@ const overlay       = document.getElementById('overlay');
 const overlayTitle  = document.getElementById('overlay-title');
 const overlaySub    = document.getElementById('overlay-sub');
 const overlayBtn    = document.getElementById('overlay-btn');
+const nameEntry     = document.getElementById('name-entry');
+const playerNameEl  = document.getElementById('player-name');
+const hsSection     = document.getElementById('hs-section');
+const hsBody        = document.getElementById('hs-body');
+
+/* ── Highscore helpers ───────────────────────────────────────────── */
+const HS_MAX = 5;
+let pendingWinTime = null;
+
+function hsKey() { return 'ms_hs_' + diffSelect.value; }
+
+function getHighscores() {
+  try { return JSON.parse(localStorage.getItem(hsKey()) || '[]'); } catch(e) { return []; }
+}
+
+function saveHighscores(scores) {
+  localStorage.setItem(hsKey(), JSON.stringify(scores));
+}
+
+function qualifiesForHS(time) {
+  const scores = getHighscores();
+  if (scores.length < HS_MAX) return true;
+  return time < scores[scores.length - 1].time;
+}
+
+function renderHS(scores, highlightIdx) {
+  hsBody.innerHTML = '';
+  scores.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    if (i === highlightIdx) tr.classList.add('hs-new');
+    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + s.name + '</td><td>' + s.time + 's</td>';
+    hsBody.appendChild(tr);
+  });
+  hsSection.classList.remove('hs-hidden');
+}
+
+function showWinHighscore(time) {
+  pendingWinTime = time;
+  if (qualifiesForHS(time)) {
+    nameEntry.classList.remove('hs-hidden');
+    playerNameEl.value = '';
+    setTimeout(() => playerNameEl.focus(), 50);
+    overlayBtn.textContent = 'Save Score';
+    hsSection.classList.add('hs-hidden');
+  } else {
+    nameEntry.classList.add('hs-hidden');
+    renderHS(getHighscores(), -1);
+    overlayBtn.textContent = 'Play Again';
+    pendingWinTime = null;
+  }
+}
+
+function resetHSOverlay() {
+  nameEntry.classList.add('hs-hidden');
+  hsSection.classList.add('hs-hidden');
+  overlayBtn.textContent = 'Play Again';
+  pendingWinTime = null;
+}
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function padDisplayNumber(n) { return String(Math.min(Math.abs(n), 999)).padStart(3, '0'); }
@@ -446,6 +567,7 @@ function initGame() {
   updateMineCounter();
   resetBtn.textContent = '🙂';
   overlay.classList.remove('active');
+  resetHSOverlay();
 
   // Build grid data
   grid = [];
@@ -640,7 +762,12 @@ function endGame(won) {
     overlaySub.textContent   = 'You hit a mine.';
   }
 
-  setTimeout(() => overlay.classList.add('active'), won ? 600 : 900);
+  setTimeout(() => {
+    overlay.classList.add('active');
+    if (won) {
+      showWinHighscore(seconds);
+    }
+  }, won ? 600 : 900);
 }
 
 /* ── Event handlers ──────────────────────────────────────────────── */
@@ -706,8 +833,29 @@ function onMiddleClick(e) {
 /* ── Reset button ────────────────────────────────────────────────── */
 resetBtn.addEventListener('click', initGame);
 
-/* ── Overlay play-again ──────────────────────────────────────────── */
-overlayBtn.addEventListener('click', initGame);
+/* ── Overlay play-again / save-score ────────────────────────────── */
+overlayBtn.addEventListener('click', () => {
+  if (pendingWinTime !== null) {
+    const name = playerNameEl.value.trim() || 'Anonymous';
+    const scores = getHighscores();
+    scores.push({ name, time: pendingWinTime });
+    scores.sort((a, b) => a.time - b.time);
+    scores.splice(HS_MAX);
+    saveHighscores(scores);
+    const newIdx = scores.findIndex(s => s.name === name && s.time === pendingWinTime);
+    nameEntry.classList.add('hs-hidden');
+    renderHS(scores, newIdx);
+    overlayBtn.textContent = 'Play Again';
+    pendingWinTime = null;
+    return;
+  }
+  initGame();
+});
+
+/* ── Submit name with Enter key ─────────────────────────────────── */
+playerNameEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') overlayBtn.click();
+});
 
 /* ── Difficulty change ───────────────────────────────────────────── */
 diffSelect.addEventListener('change', initGame);
