@@ -233,9 +233,10 @@
   <div id="overlay">
     <h2 id="ov-title">Pinball Breaker</h2>
     <p id="ov-body">Move mouse (or finger) to control the paddle.<br>Knock out every brick. Pinball bumpers boost your score!<br><br>
-      Power-ups fall from bricks:<br>
+      Power-ups fall from bricks (catch with paddle):<br>
       💛 Wide paddle &nbsp;|&nbsp; 🔵 Multi-ball &nbsp;|&nbsp; 🔴 Fireball<br>
       ⚡ Speed (2× pts) &nbsp;|&nbsp; 💎 Mega ball &nbsp;|&nbsp; 🔗 Chain reaction<br><br>
+      ❤️ <strong>Health</strong> also falls from bricks — <em>hit it with the ball</em> to gain +1 life!<br><br>
       <small style="color:#606080">👾 Ball Eaters appear from level 4 — use 🔴 fireball to destroy them!<br>
       Moving bricks appear from level 3.</small>
     </p>
@@ -262,6 +263,7 @@
   <span><span class="dot" style="background:#a78bfa"></span>Steel (5 hits, 50 pts)</span>
   <span><span class="dot" style="background:#34d399"></span>Bumper</span>
   <span><span class="dot" style="background:#ff4444"></span>👾 Ball Eater (lvl 4+)</span>
+  <span><span class="dot" style="background:#ef4444"></span>❤️ Health (hit with ball → +1 life)</span>
 </div>
 
 <footer><a href="index.html">← Back to Golden Day Games</a> &nbsp;·&nbsp; Golden Day Games © 2026</footer>
@@ -366,6 +368,9 @@ const BRICK_GAP   = 4;
 const BRICK_TOP   = 60;
 const BUMPER_R    = 20;
 const CHAIN_REACTION_RADIUS = 55;
+const HEALTH_ITEM_R   = 13;  // radius of falling health item
+const HEALTH_ITEM_VY  = 1.8; // fall speed of health item
+const MAX_LIVES       = 5;   // maximum lives the player can hold
 
 // Brick type definitions: [hitPoints, pointsEach, color(s)]
 const BRICK_TYPES = [
@@ -397,6 +402,7 @@ let powerups = [];
 let particles = [];
 
 let mouseX = W / 2;
+let healthItems = []; // falling ❤️ items — hit with ball to gain a life
 let wideTimer  = 0; // frames remaining for wide paddle
 let fireActive = false;
 let fireTimer  = 0;
@@ -574,11 +580,12 @@ function getLayoutGrid(lvl, rows, cols) {
 
 // ── Level builder ─────────────────────────────────────────────────────────────
 function buildLevel(lvl) {
-  bricks    = [];
-  bumpers   = [];
-  powerups  = [];
-  particles = [];
-  creatures = [];
+  bricks      = [];
+  bumpers     = [];
+  powerups    = [];
+  healthItems = [];
+  particles   = [];
+  creatures   = [];
 
   const bw = Math.floor((W - BRICK_GAP) / BRICK_COLS) - BRICK_GAP;
   const bh = 20;
@@ -744,6 +751,14 @@ function maybeDrop(x, y) {
   if (Math.random() < 0.18) {
     const t = POWERUP_TYPES[Math.floor(Math.random()*POWERUP_TYPES.length)];
     powerups.push({ x, y, w: 28, h: 28, type: t, vy: 2.5 });
+  }
+}
+
+// ── Health item drop ──────────────────────────────────────────────────────────
+// Dropped from destroyed bricks; must be hit by the ball (not the paddle) to gain +1 life.
+function maybeDropHealth(x, y) {
+  if (Math.random() < 0.08) {
+    healthItems.push({ x, y, r: HEALTH_ITEM_R, vy: HEALTH_ITEM_VY });
   }
 }
 
@@ -994,6 +1009,22 @@ function drawPowerup(p) {
   ctx.restore();
 }
 
+// ── Health item draw ──────────────────────────────────────────────────────────
+function drawHealthItem(h) {
+  ctx.save();
+  ctx.shadowColor = '#f87171';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = 'rgba(239,68,68,0.25)';
+  ctx.beginPath();
+  ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = '18px system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('❤️', h.x, h.y);
+  ctx.restore();
+}
+
 // ── Score popup array ─────────────────────────────────────────────────────────
 let scorePopups = [];
 function addPopup(x, y, text, color = '#ffd54f') {
@@ -1184,6 +1215,29 @@ function update() {
     }
   }
 
+  // ── Health items (hit with ball to gain +1 life) ───────────────────────────
+  for (let hi = healthItems.length - 1; hi >= 0; hi--) {
+    const h = healthItems[hi];
+    h.y += h.vy;
+    if (h.y - h.r > H) { healthItems.splice(hi, 1); continue; }
+    // Check ball collision
+    let collected = false;
+    for (const ball of balls) {
+      const dx = ball.x - h.x;
+      const dy = ball.y - h.y;
+      if (dx*dx + dy*dy < (ball.r + h.r) * (ball.r + h.r)) {
+        lives = Math.min(lives + 1, MAX_LIVES);
+        updateLivesHUD();
+        spawnParticles(h.x, h.y, '#f87171', 18);
+        addPopup(h.x, h.y - 22, '❤️ +1 Life!', '#f87171');
+        healthItems.splice(hi, 1);
+        collected = true;
+        break;
+      }
+    }
+    if (collected) continue;
+  }
+
   // ── Level clear check ──────────────────────────────────────────────────────
   if (bricks.length === 0) {
     addScore(500 * level); // level bonus
@@ -1226,6 +1280,7 @@ function hitBrick(br, idx, ball) {
     addPopup(br.x + br.w/2, br.y + br.h/2, '+' + pts, def.colors[0]);
     spawnParticles(br.x + br.w/2, br.y + br.h/2, def.colors[0], 10);
     maybeDrop(br.x + br.w/2, br.y + br.h/2);
+    maybeDropHealth(br.x + br.w/2, br.y + br.h/2);
     const cx = br.x + br.w/2;
     const cy = br.y + br.h/2;
     bricks.splice(idx, 1);
@@ -1276,6 +1331,9 @@ function draw() {
 
   // Power-ups
   for (const p of powerups) drawPowerup(p);
+
+  // Health items (hit with ball to gain life)
+  for (const h of healthItems) drawHealthItem(h);
 
   // Balls
   for (const b of balls) drawBall(b);
