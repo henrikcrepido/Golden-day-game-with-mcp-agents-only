@@ -837,14 +837,15 @@ resetBtn.addEventListener('click', initGame);
 overlayBtn.addEventListener('click', () => {
   if (pendingWinTime !== null) {
     const name = playerNameEl.value.trim() || 'Anonymous';
+    const savedTime = pendingWinTime;
     const scores = getHighscores();
-    scores.push({ name, time: pendingWinTime });
+    scores.push({ name, time: savedTime });
     scores.sort((a, b) => a.time - b.time);
+    const newIdx = scores.findIndex(s => s.name === name && s.time === savedTime);
     scores.splice(HS_MAX);
     saveHighscores(scores);
-    const newIdx = scores.findIndex(s => s.name === name && s.time === pendingWinTime);
     nameEntry.classList.add('hs-hidden');
-    renderHS(scores, newIdx);
+    renderHS(scores, newIdx < HS_MAX ? newIdx : -1);
     overlayBtn.textContent = 'Play Again';
     pendingWinTime = null;
     return;

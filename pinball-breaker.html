@@ -1071,13 +1071,13 @@ ovBtn.addEventListener('click', () => {
     const scores = pbGetHighscores();
     scores.push({ name, score: savedScore });
     scores.sort((a, b) => b.score - a.score);
+    const newIdx = scores.findIndex(s => s.name === name && s.score === savedScore);
     scores.splice(PB_HS_MAX);
     pbSaveHighscores(scores);
     highScore = scores[0].score;
     hudBest.textContent = highScore;
-    const newIdx = scores.findIndex(s => s.name === name && s.score === savedScore);
     pbNameEntry.classList.add('hs-hidden');
-    pbRenderHS(scores, newIdx);
+    pbRenderHS(scores, newIdx < PB_HS_MAX ? newIdx : -1);
     ovBtn.textContent = '▶ Play Again';
     pbPendingScore = null;
     return;
