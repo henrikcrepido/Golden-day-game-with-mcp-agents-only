@@ -135,3 +135,53 @@
 | `minesweeper.html` | Visual overhaul — CSS rewritten, minor JS additions for animation classes |
 | `AGENT_LOG.md` | This session appended |
 | `INSTRUCTIONS.md` | Section 5 updated with modern 3D theme guidance |
+
+---
+
+# Agent Action Log — Pinball Breaker Build Session
+
+> **Session date:** 2026-03-22  
+> **Agent:** GitHub Copilot Coding Agent  
+> **Task:** Create a new fun game combining Arkanoid and Pinball mechanics with high-score tracking  
+> **Outcome:** ✅ Success — `pinball-breaker.html` created and committed
+
+---
+
+## Timeline
+
+| # | Action | Notes |
+|---|--------|-------|
+| 1 | **Explore repository** — read `index.html`, `minesweeper.html`, `README.md`, `AGENT_LOG.md`, `INSTRUCTIONS.md` | Two games exist (Minesweeper); landing page has a "Coming soon" placeholder |
+| 2 | **Plan formulated** — Arkanoid+Pinball hybrid with localStorage high score, power-ups, particle effects, level progression | Checklist pushed via `report_progress` |
+| 3 | **Create `pinball-breaker.html`** — ~650-line single-file game | Embedded CSS + JS; canvas-based; no external dependencies |
+| 4 | **Update `index.html`** — replaced "Coming soon" placeholder with live Pinball Breaker card | `badge-ready` badge; links to `pinball-breaker.html` |
+| 5 | **Update `README.md`** — added Pinball Breaker row to games table | |
+| 6 | **Append `AGENT_LOG.md`** — this session | |
+| 7 | **`report_progress`** — committed and pushed all changes | |
+
+---
+
+## Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Canvas-based rendering (not DOM) | Smooth 60 fps animation needed for ball physics; canvas far easier than animating DOM elements |
+| Pinball bumpers as circles inside the brick field | Directly mimics pinball bumper mechanic; bumper hits raise the score multiplier |
+| Multiplier decays after 3 s without another bumper hit | Creates tension — player must aim for bumpers to keep the multiplier alive |
+| Power-ups: wide paddle, multi-ball, fireball | Classic Arkanoid power-up trio; fireball passes through bricks, multi-ball adds chaos |
+| `localStorage.getItem('pbBreaker_best')` for high score | Simple, zero-server persistence; survives page refreshes |
+| Level progression: more rows + more bumpers each level | Natural difficulty ramp with explicit visual reward (+500×level bonus) |
+| Particle system + score popups | Juicy feedback that makes the game feel satisfying to play |
+| Ball angle varies with paddle hit position | Gives player directional control, matching both Arkanoid and pinball conventions |
+| Trail behind ball | Visual clarity at high speed; also looks great |
+
+---
+
+## Files Changed
+
+| File | Change | Lines |
+|------|--------|-------|
+| `pinball-breaker.html` | Created | +~650 |
+| `index.html` | Replaced "Coming soon" with live Pinball Breaker card | +11, -7 |
+| `README.md` | Added game row | +1 |
+| `AGENT_LOG.md` | This session appended | +~60 |
