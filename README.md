@@ -11,6 +11,7 @@ action logs and reusable instructions saved as Markdown for future sessions.
 |------|------|-------------|
 | Minesweeper | [`minesweeper.html`](minesweeper.html) | Open the file in any browser — no build step needed |
 | Pinball Breaker | [`pinball-breaker.html`](pinball-breaker.html) | Mouse/touch to move the paddle; smash bricks and hit bumpers for a score multiplier |
+| Dungeon of Echoes | [`mod-adventure.html`](mod-adventure.html) | A D&D-style MOD text adventure — explore, fight monsters, and claim the Dragon's Hoard |
 
 ---
 
