@@ -10,6 +10,7 @@ action logs and reusable instructions saved as Markdown for future sessions.
 | Game | File | How to play |
 |------|------|-------------|
 | Minesweeper | [`minesweeper.html`](minesweeper.html) | Open the file in any browser — no build step needed |
+| Pinball Breaker | [`pinball-breaker.html`](pinball-breaker.html) | Mouse/touch to move the paddle; smash bricks and hit bumpers for a score multiplier |
 
 ---
 
