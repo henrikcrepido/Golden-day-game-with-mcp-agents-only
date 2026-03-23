@@ -488,6 +488,7 @@
       gap: 0.8rem;
       padding: 2rem;
       text-align: center;
+      overflow-y: auto;
       animation: floatUp 0.4s ease both;
     }
     #overlay h2 {
@@ -550,6 +551,81 @@
     }
     .how-box li { margin-left: 1.2rem; }
     .how-box strong { color: var(--gold); }
+
+    /* ── Name Input ─────────────────────────── */
+    #name-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+    #name-section label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #player-name-input {
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      width: 260px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #player-name-input:focus { border-color: var(--gold); }
+    #player-name-input.input-error { border-color: var(--red); animation: shake 0.4s; }
+    #name-required-msg {
+      font-size: 0.78rem;
+      color: var(--red);
+      min-height: 1.1em;
+    }
+
+    /* ── Leaderboard ────────────────────────── */
+    #leaderboard-section {
+      width: 100%;
+      max-width: 560px;
+      margin-top: 0.6rem;
+    }
+    #leaderboard-section h3 {
+      font-size: 0.78rem;
+      color: var(--gold2);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 0.45rem;
+    }
+    #leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    #leaderboard-table th {
+      color: var(--muted);
+      font-weight: 600;
+      padding: 0.28rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    #leaderboard-table td {
+      padding: 0.28rem 0.5rem;
+      border-bottom: 1px solid rgba(37,37,64,0.5);
+    }
+    #leaderboard-table tr.lb-highlight td {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    #leaderboard-table .lb-pos { color: var(--muted); text-align: center; }
+    .lb-empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 0.5rem;
+    }
 
     /* scrollbar */
     ::-webkit-scrollbar { width: 5px; }
@@ -673,11 +749,25 @@
       <li data-i18n="howto_5">Reach Black Belt Master to win!</li>
     </ul>
   </div>
-  <p id="ov-desc">Test your IT support instincts across 8 scenario categories. Can you reach Black Belt?</p>
+  <p id="ov-desc" data-i18n="start_desc">Test your IT support instincts across 8 scenario categories. Can you reach Black Belt?</p>
   <div class="ov-score" id="ov-score" style="display:none"></div>
   <div class="ov-sub" id="ov-sub" style="display:none"></div>
   <div class="ach-unlocked-list" id="ov-ach-list"></div>
+
+  <!-- Name input (start screen only) -->
+  <div id="name-section">
+    <label for="player-name-input" data-i18n="name_label">Your Name</label>
+    <input id="player-name-input" type="text" maxlength="30" autocomplete="off" aria-label="Player name" />
+    <div id="name-required-msg"></div>
+  </div>
+
   <button class="big-btn" id="ov-btn">🚀 Start Game</button>
+
+  <!-- Leaderboard -->
+  <div id="leaderboard-section">
+    <h3 data-i18n="leaderboard_title">🏆 Leaderboard</h3>
+    <div id="leaderboard-body"></div>
+  </div>
 </div>
 
 <script>
@@ -723,6 +813,16 @@ const I18N = {
     urg_high:      'HIGH',
     urg_critical:  'CRITICAL',
     timeout_msg:   "\u23f1 Time\u2019s up! The ticket was left unresolved. SLA breach! You lost a life.",
+    name_label:        'Your Name',
+    name_placeholder:  'Enter your name\u2026',
+    name_required:     'Please enter your name to start!',
+    leaderboard_title: '\ud83c\udfc6 Leaderboard',
+    lb_col_name:       'Name',
+    lb_col_score:      'Score',
+    lb_col_ach:        'Achievements',
+    lb_col_rank:       'Rank',
+    lb_empty:          'No scores yet \u2014 be the first!',
+    start_desc:        'Test your IT support instincts across 8 scenario categories. Can you reach Black Belt?',
   },
   sv: {
     lang_btn:      '🇬🇧 EN',
@@ -760,6 +860,16 @@ const I18N = {
     urg_high:      'H\u00d6G',
     urg_critical:  'KRITISK',
     timeout_msg:   '\u23f1 Tiden \u00e4r ute! \u00c4rendet l\u00e4mnades ol\u00f6st. SLA-brott! Du f\u00f6rlorade ett liv.',
+    name_label:        'Ditt Namn',
+    name_placeholder:  'Ange ditt namn\u2026',
+    name_required:     'Ange ditt namn f\u00f6r att starta!',
+    leaderboard_title: '\ud83c\udfc6 Topplista',
+    lb_col_name:       'Namn',
+    lb_col_score:      'Po\u00e4ng',
+    lb_col_ach:        'Prestationer',
+    lb_col_rank:       'Rang',
+    lb_empty:          'Inga po\u00e4ng \u00e4nnu \u2014 var den f\u00f6rsta!',
+    start_desc:        'Testa dina IT-supportinstinkter inom 8 scenariokategorier. Kan du n\u00e5 Svartb\u00e4ltet?',
   },
 };
 let currentLang  = localStorage.getItem('lang') || 'en';
@@ -1184,6 +1294,9 @@ function applyLang(lang) {
 
   document.getElementById('lang-btn').textContent = t.lang_btn;
 
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) nameInput.placeholder = t.name_placeholder;
+
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (t[key] !== undefined) el.textContent = t[key];
@@ -1363,6 +1476,63 @@ function showScorePop(pts, color, x, y) {
 }
 
 /* ═══════════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════════ */
+const LEADERBOARD_KEY = 'supportHeroLeaderboard';
+let playerName = '';
+let lastSavedIdx = -1;
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function loadLeaderboard() {
+  try { return JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || []; }
+  catch (e) { console.error('Failed to parse leaderboard from localStorage:', e); return []; }
+}
+
+function saveToLeaderboard(name, score, achievements, maxStreak, tickets, rank) {
+  const board = loadLeaderboard();
+  const ts = Date.now();
+  board.push({ name, score, achievements, maxStreak, tickets, rank, ts });
+  board.sort((a, b) => b.score - a.score || b.achievements - a.achievements);
+  const top10 = board.slice(0, 10);
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(top10));
+  lastSavedIdx = top10.findIndex(e => e.ts === ts);
+}
+
+function renderLeaderboard() {
+  const board = loadLeaderboard();
+  const t = I18N[currentLang];
+  const lbBody = document.getElementById('leaderboard-body');
+  if (!lbBody) return;
+  if (board.length === 0) {
+    lbBody.innerHTML = `<div class="lb-empty">${t.lb_empty}</div>`;
+    return;
+  }
+  let html = `<table id="leaderboard-table"><thead><tr>
+    <th>#</th><th>${t.lb_col_name}</th><th>${t.lb_col_score}</th>
+    <th>${t.lb_col_ach}</th><th>${t.lb_col_rank}</th>
+  </tr></thead><tbody>`;
+  board.forEach((entry, i) => {
+    const cls = (i === lastSavedIdx) ? ' class="lb-highlight"' : '';
+    html += `<tr${cls}>
+      <td class="lb-pos">${i + 1}</td>
+      <td>${escapeHtml(entry.name)}</td>
+      <td>${entry.score.toLocaleString()}</td>
+      <td>${entry.achievements}</td>
+      <td>${escapeHtml(entry.rank)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  lbBody.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════
    LOAD TICKET
 ═══════════════════════════════════════════════ */
 let currentScenario = null;
@@ -1534,6 +1704,9 @@ function showGameOver() {
   const rankIdx = getCurrentRankIndex();
   const rankName = RANKS[rankIdx].name;
   const t = I18N[currentLang];
+  if (playerName) {
+    saveToLeaderboard(playerName, state.score, state.unlockedAch.size, state.maxStreak, state.tickets, rankName);
+  }
   displayOverlay(
     '💀', t.gameover_title,
     `All lives lost! You reached rank <strong>${rankName}</strong> with <strong>${state.tickets}</strong> tickets resolved.`,
@@ -1546,7 +1719,11 @@ function showGameOver() {
 function showVictory() {
   overlayState = 'victory';
   clearInterval(timerInterval);
+  const rankName = RANKS[RANKS.length - 1].name;
   const t = I18N[currentLang];
+  if (playerName) {
+    saveToLeaderboard(playerName, state.score, state.unlockedAch.size, state.maxStreak, state.tickets, rankName);
+  }
   displayOverlay(
     '🏆', t.victory_title,
     `You reached the highest rank! A true Support Hero. Congratulations on conquering the ticket queue!`,
@@ -1576,15 +1753,47 @@ function displayOverlay(icon, title, desc, score, sub, btnText) {
     }
   });
 
+  document.getElementById('name-section').style.display = 'none';
   ovBtn.textContent = btnText;
-  ovBtn.onclick = startGame;
+  ovBtn.onclick = showStartScreen;
   overlay.style.display = 'flex';
+  renderLeaderboard();
 }
 
 /* ═══════════════════════════════════════════════
    START / INIT
 ═══════════════════════════════════════════════ */
+function showStartScreen() {
+  overlayState = 'start';
+  lastSavedIdx = -1;
+  const t = I18N[currentLang];
+  ovIcon.textContent = '🎫';
+  ovTitle.textContent = t.start_title;
+  ovDesc.innerHTML = t.start_desc;
+  ovScore.style.display = 'none';
+  ovSub.style.display = 'none';
+  ovAchList.innerHTML = '';
+  document.getElementById('name-section').style.display = 'flex';
+  ovBtn.textContent = t.start_btn;
+  ovBtn.onclick = startGame;
+  overlay.style.display = 'flex';
+  renderLeaderboard();
+}
+
 function startGame() {
+  const nameInput = document.getElementById('player-name-input');
+  const reqMsg    = document.getElementById('name-required-msg');
+  const name = nameInput.value.trim();
+  if (!name) {
+    nameInput.classList.add('input-error');
+    reqMsg.textContent = I18N[currentLang].name_required;
+    setTimeout(() => {
+      nameInput.classList.remove('input-error');
+      reqMsg.textContent = '';
+    }, 600);
+    return;
+  }
+  playerName = name;
   state = freshState();
   state.queue = buildQueue();
   overlay.style.display = 'none';
@@ -1603,6 +1812,7 @@ state = freshState();
 renderAchievements();
 updateHUD();
 applyLang(currentLang);
+renderLeaderboard();
 </script>
 </body>
 </html>
