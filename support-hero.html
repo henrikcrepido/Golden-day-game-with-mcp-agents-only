@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Support Hero — Black Belt Support Master</title>
+  <title data-i18n="page_title">Support Hero — Black Belt Support Master</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -555,36 +555,56 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Language button ─────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
   </style>
 </head>
 <body>
 
+<button id="lang-btn">🇸🇪 SV</button>
+
 <div id="title-bar">
-  <h1>🎫 SUPPORT HERO</h1>
-  <div class="sub">Gamification of IT Support — Reach Black Belt Master!</div>
+  <h1 data-i18n="logo">🎫 SUPPORT HERO</h1>
+  <div class="sub" data-i18n="subtitle">Gamification of IT Support — Reach Black Belt Master!</div>
 </div>
 
 <div id="app">
   <!-- HUD -->
   <div id="hud">
     <div class="hud-block">
-      <span class="hud-label">Score</span>
+      <span class="hud-label" data-i18n="hud_score">Score</span>
       <span class="hud-value" id="hud-score">0</span>
     </div>
     <div class="hud-block">
-      <span class="hud-label">Tickets</span>
+      <span class="hud-label" data-i18n="hud_tickets">Tickets</span>
       <span class="hud-value" id="hud-tickets">0</span>
     </div>
     <div class="hud-block">
-      <span class="hud-label">Streak 🔥</span>
+      <span class="hud-label" data-i18n="hud_streak">Streak 🔥</span>
       <span class="hud-value" id="hud-streak" style="color:var(--orange)">0</span>
     </div>
     <div class="hud-block">
-      <span class="hud-label">Lives</span>
+      <span class="hud-label" data-i18n="hud_lives">Lives</span>
       <span class="hud-value" id="hud-lives">❤️❤️❤️</span>
     </div>
     <div id="xp-bar-wrap" class="hud-block" style="align-items:flex-start">
-      <span class="hud-label">XP to next rank</span>
+      <span class="hud-label" data-i18n="hud_xp">XP to next rank</span>
       <div id="xp-bar-bg"><div id="xp-bar"></div></div>
     </div>
     <div id="rank-badge">🥋 Recruit</div>
@@ -604,9 +624,9 @@
       </div>
       <div id="ticket-body">
         <div id="ticket-desc">Loading ticket description…</div>
-        <div id="ticket-system"><span>System:</span> —</div>
+        <div id="ticket-system"><span data-i18n="system_label">System:</span> —</div>
         <div id="timer-wrap">
-          <span id="timer-label">⏱ Time left:</span>
+          <span id="timer-label" data-i18n="timer_label">⏱ Time left:</span>
           <div id="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
           <span id="timer-num">30</span>
         </div>
@@ -620,12 +640,12 @@
     <div id="sidebar">
       <!-- Queue -->
       <div id="queue-panel">
-        <div class="panel-head">📥 Ticket Queue</div>
+        <div class="panel-head" data-i18n="queue_panel">📥 Ticket Queue</div>
         <div id="queue-list"></div>
       </div>
       <!-- Achievements -->
       <div id="ach-panel">
-        <div class="panel-head">🏆 Achievements</div>
+        <div class="panel-head" data-i18n="ach_panel">🏆 Achievements</div>
         <div id="ach-list"></div>
       </div>
     </div>
@@ -635,7 +655,7 @@
 <!-- Achievement toast -->
 <div id="ach-toast">
   <div class="t-icon" id="t-icon"></div>
-  <div class="t-label">Achievement Unlocked!</div>
+  <div class="t-label" data-i18n="ach_unlocked">Achievement Unlocked!</div>
   <div class="t-name" id="t-name"></div>
   <div class="t-desc" id="t-desc"></div>
 </div>
@@ -646,11 +666,11 @@
   <h2 id="ov-title">SUPPORT HERO</h2>
   <div class="how-box">
     <ul>
-      <li>Support tickets arrive with urgency levels.</li>
-      <li>Pick the <strong>correct action</strong> before the timer runs out.</li>
-      <li>IBM MQ &amp; MSMQ dead-letter queues, Windows Services, IIS App Pools, escalations &amp; more.</li>
-      <li>Earn XP, level up, and collect <strong>achievements</strong>.</li>
-      <li>Wrong answer or timeout = lose a ❤️. Reach <strong>🥋 Black Belt Master</strong> to win!</li>
+      <li data-i18n="howto_1">Read each support ticket carefully</li>
+      <li data-i18n="howto_2">Choose the correct action to resolve it</li>
+      <li data-i18n="howto_3">Wrong answers cost lives</li>
+      <li data-i18n="howto_4">Build streaks for bonus points</li>
+      <li data-i18n="howto_5">Reach Black Belt Master to win!</li>
     </ul>
   </div>
   <p id="ov-desc">Test your IT support instincts across 8 scenario categories. Can you reach Black Belt?</p>
@@ -662,6 +682,89 @@
 
 <script>
 "use strict";
+
+/* ═══════════════════════════════════════════════
+   i18n DICTIONARY
+═══════════════════════════════════════════════ */
+const I18N = {
+  en: {
+    lang_btn:      '🇸🇪 SV',
+    page_title:    'Support Hero \u2014 Black Belt Support Master',
+    logo:          '🎫 SUPPORT HERO',
+    subtitle:      'Gamification of IT Support \u2014 Reach Black Belt Master!',
+    hud_score:     'Score',
+    hud_tickets:   'Tickets',
+    hud_streak:    'Streak 🔥',
+    hud_lives:     'Lives',
+    hud_xp:        'XP to next rank',
+    loading:       'Loading\u2026',
+    loading_desc:  'Loading ticket description\u2026',
+    system_label:  'System:',
+    timer_label:   '\u23f1 Time left:',
+    next_ticket:   '\u279c Next Ticket',
+    see_results:   '\ud83d\udcca See Results',
+    victory_lap:   '\ud83c\udfc6 Victory Lap!',
+    queue_panel:   '\ud83d\udce5 Ticket Queue',
+    ach_panel:     '\ud83c\udfc6 Achievements',
+    ach_unlocked:  'Achievement Unlocked!',
+    start_title:   'SUPPORT HERO',
+    howto_1:       'Read each support ticket carefully',
+    howto_2:       'Choose the correct action to resolve it',
+    howto_3:       'Wrong answers cost lives',
+    howto_4:       'Build streaks for bonus points',
+    howto_5:       'Reach Black Belt Master to win!',
+    start_btn:     '\ud83d\ude80 Start Game',
+    gameover_title:'GAME OVER',
+    playagain_btn: '\ud83d\udd04 Play Again',
+    victory_title: 'BLACK BELT MASTER!',
+    victory_btn:   '\ud83c\udf89 Play Again',
+    urg_low:       'LOW',
+    urg_medium:    'MEDIUM',
+    urg_high:      'HIGH',
+    urg_critical:  'CRITICAL',
+    timeout_msg:   "\u23f1 Time\u2019s up! The ticket was left unresolved. SLA breach! You lost a life.",
+  },
+  sv: {
+    lang_btn:      '🇬🇧 EN',
+    page_title:    'Supporthj\u00e4lten \u2014 Svartb\u00e4lte Supportm\u00e4stare',
+    logo:          '🎫 SUPPORTHJ\u00c4LTEN',
+    subtitle:      'Spelficering av IT-support \u2014 N\u00e5 Svartb\u00e4lte M\u00e4staren!',
+    hud_score:     'Po\u00e4ng',
+    hud_tickets:   '\u00c4renden',
+    hud_streak:    'Svit 🔥',
+    hud_lives:     'Liv',
+    hud_xp:        'XP till n\u00e4sta rang',
+    loading:       'Laddar\u2026',
+    loading_desc:  'Laddar \u00e4rendebeskrivning\u2026',
+    system_label:  'System:',
+    timer_label:   '\u23f1 Tid kvar:',
+    next_ticket:   '\u279c N\u00e4sta \u00c4rende',
+    see_results:   '\ud83d\udcca Se Resultat',
+    victory_lap:   '\ud83c\udfc6 Segerrunda!',
+    queue_panel:   '\ud83d\udce5 \u00c4rendek\u00f6',
+    ach_panel:     '\ud83c\udfc6 Prestationer',
+    ach_unlocked:  'Prestation Uppl\u00e5st!',
+    start_title:   'SUPPORTHJ\u00c4LTEN',
+    howto_1:       'L\u00e4s varje support\u00e4rende noga',
+    howto_2:       'V\u00e4lj r\u00e4tt \u00e5tg\u00e4rd f\u00f6r att l\u00f6sa det',
+    howto_3:       'Fel svar kostar liv',
+    howto_4:       'Bygg sviter f\u00f6r bonuspo\u00e4ng',
+    howto_5:       'N\u00e5 Svartb\u00e4lte M\u00e4staren f\u00f6r att vinna!',
+    start_btn:     '\ud83d\ude80 Starta Spelet',
+    gameover_title:'SPELET SLUT',
+    playagain_btn: '\ud83d\udd04 Spela Igen',
+    victory_title: 'SVARTB\u00c4LTE M\u00c4STAREN!',
+    victory_btn:   '\ud83c\udf89 Spela Igen',
+    urg_low:       'L\u00c5G',
+    urg_medium:    'MEDEL',
+    urg_high:      'H\u00d6G',
+    urg_critical:  'KRITISK',
+    timeout_msg:   '\u23f1 Tiden \u00e4r ute! \u00c4rendet l\u00e4mnades ol\u00f6st. SLA-brott! Du f\u00f6rlorade ett liv.',
+  },
+};
+let currentLang  = localStorage.getItem('lang') || 'en';
+let overlayState = 'start';
+let nextBtnKey   = 'next_ticket';
 
 /* ═══════════════════════════════════════════════
    RANKS / XP TABLE
@@ -1071,6 +1174,51 @@ const ovAchList= document.getElementById('ov-ach-list');
 const ovBtn    = document.getElementById('ov-btn');
 
 /* ═══════════════════════════════════════════════
+   LANGUAGE / i18n
+═══════════════════════════════════════════════ */
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.documentElement.lang = lang;
+  const t = I18N[lang];
+
+  document.getElementById('lang-btn').textContent = t.lang_btn;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+
+  // Overlay texts depend on which screen is currently shown
+  if (overlayState === 'start') {
+    ovTitle.textContent = t.start_title;
+    ovBtn.textContent   = t.start_btn;
+  } else if (overlayState === 'gameover') {
+    ovTitle.textContent = t.gameover_title;
+    ovBtn.textContent   = t.playagain_btn;
+  } else if (overlayState === 'victory') {
+    ovTitle.textContent = t.victory_title;
+    ovBtn.textContent   = t.victory_btn;
+  }
+
+  // Update ticket placeholders only while the game is not active (overlay visible)
+  if (overlay.style.display !== 'none') {
+    ticketTitle.textContent = t.loading;
+    ticketDesc.textContent  = t.loading_desc;
+    ticketSys.innerHTML     = '<span>' + t.system_label + '</span> \u2014';
+  }
+
+  // Re-label the next button if it is currently visible
+  if (nextBtn.style.display !== 'none') {
+    nextBtn.textContent = t[nextBtnKey];
+  }
+}
+
+document.getElementById('lang-btn').addEventListener('click', () => {
+  applyLang(currentLang === 'en' ? 'sv' : 'en');
+});
+
+/* ═══════════════════════════════════════════════
    TIMER
 ═══════════════════════════════════════════════ */
 let timerInterval = null;
@@ -1232,9 +1380,9 @@ function loadNextTicket() {
   ticketIcon.textContent = currentScenario.icon;
   ticketTitle.textContent = currentScenario.title;
   ticketDesc.innerHTML = currentScenario.desc;
-  ticketSys.innerHTML = '<span>System:</span> ' + currentScenario.system;
+  ticketSys.innerHTML = '<span>' + I18N[currentLang].system_label + '</span> ' + currentScenario.system;
 
-  urgBadge.textContent = currentScenario.urgency.toUpperCase();
+  urgBadge.textContent = I18N[currentLang]['urg_' + currentScenario.urgency] || currentScenario.urgency.toUpperCase();
   urgBadge.className = 'urg-' + currentScenario.urgency;
 
   feedbackEl.style.display = 'none';
@@ -1320,13 +1468,16 @@ function onActionClick(action, btn, e) {
   nextBtn.style.display = 'block';
 
   if (state.lives <= 0) {
-    nextBtn.textContent = '📊 See Results';
+    nextBtnKey = 'see_results';
+    nextBtn.textContent = I18N[currentLang].see_results;
     nextBtn.onclick = () => showGameOver();
   } else if (state.xp >= 4500) {
-    nextBtn.textContent = '🏆 Victory Lap!';
+    nextBtnKey = 'victory_lap';
+    nextBtn.textContent = I18N[currentLang].victory_lap;
     nextBtn.onclick = () => showVictory();
   } else {
-    nextBtn.textContent = '➜ Next Ticket';
+    nextBtnKey = 'next_ticket';
+    nextBtn.textContent = I18N[currentLang].next_ticket;
     nextBtn.onclick = () => loadNextTicket();
   }
 }
@@ -1347,7 +1498,7 @@ function handleTimeout() {
   state.streak = 0;
   state.lives  = Math.max(0, state.lives - 1);
 
-  showFeedback('timeout', '⏱ Time\'s up! The ticket was left unresolved. SLA breach! You lost a life.');
+  showFeedback('timeout', I18N[currentLang].timeout_msg);
   updateHUD();
   checkAchievements();
 
@@ -1355,10 +1506,12 @@ function handleTimeout() {
   nextBtn.style.display = 'block';
 
   if (state.lives <= 0) {
-    nextBtn.textContent = '📊 See Results';
+    nextBtnKey = 'see_results';
+    nextBtn.textContent = I18N[currentLang].see_results;
     nextBtn.onclick = () => showGameOver();
   } else {
-    nextBtn.textContent = '➜ Next Ticket';
+    nextBtnKey = 'next_ticket';
+    nextBtn.textContent = I18N[currentLang].next_ticket;
     nextBtn.onclick = () => loadNextTicket();
   }
 }
@@ -1376,26 +1529,30 @@ function showFeedback(type, msg) {
    GAME OVER / VICTORY
 ═══════════════════════════════════════════════ */
 function showGameOver() {
+  overlayState = 'gameover';
   clearInterval(timerInterval);
   const rankIdx = getCurrentRankIndex();
   const rankName = RANKS[rankIdx].name;
+  const t = I18N[currentLang];
   displayOverlay(
-    '💀', 'GAME OVER',
+    '💀', t.gameover_title,
     `All lives lost! You reached rank <strong>${rankName}</strong> with <strong>${state.tickets}</strong> tickets resolved.`,
     state.score,
     `Rank: ${rankName} | Max streak: ${state.maxStreak} | XP: ${state.xp}`,
-    '🔄 Play Again'
+    t.playagain_btn
   );
 }
 
 function showVictory() {
+  overlayState = 'victory';
   clearInterval(timerInterval);
+  const t = I18N[currentLang];
   displayOverlay(
-    '🏆', 'BLACK BELT MASTER!',
+    '🏆', t.victory_title,
     `You reached the highest rank! A true Support Hero. Congratulations on conquering the ticket queue!`,
     state.score,
     `Tickets: ${state.tickets} | Max streak: ${state.maxStreak} | Achievements: ${state.unlockedAch.size}/${ACHIEVEMENTS.length}`,
-    '🎉 Play Again'
+    t.victory_btn
   );
 }
 
@@ -1439,13 +1596,13 @@ function startGame() {
 // Start screen setup
 ovScore.style.display = 'none';
 ovSub.style.display   = 'none';
-ovBtn.textContent = '🚀 Start Game';
 ovBtn.onclick = startGame;
 
 // Render locked achievements on load
 state = freshState();
 renderAchievements();
 updateHUD();
+applyLang(currentLang);
 </script>
 </body>
 </html>
