@@ -213,36 +213,54 @@
       transition: background 0.2s, color 0.2s;
     }
     #fs-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
   </style>
 </head>
 <body>
 
 <button id="fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">⛶</button>
+<button id="lang-btn" title="Switch language">🇸🇪 SV</button>
 
 <header>
-  <div class="logo">🎱 Pinball Breaker</div>
-  <p class="sub">Arkanoid × Pinball · Golden Day Games</p>
+  <div class="logo" data-i18n="logo">🎱 Pinball Breaker</div>
+  <p class="sub" data-i18n="sub">Arkanoid × Pinball · Golden Day Games</p>
 </header>
 
 <div id="hud">
   <div class="hud-item">
-    <span class="hud-label">Score</span>
+    <span class="hud-label" data-i18n="hudScore">Score</span>
     <span class="hud-value" id="hud-score">0</span>
   </div>
   <div class="hud-item">
-    <span class="hud-label">Best</span>
+    <span class="hud-label" data-i18n="hudBest">Best</span>
     <span class="hud-value gold" id="hud-best">0</span>
   </div>
   <div class="hud-item">
-    <span class="hud-label">Level</span>
+    <span class="hud-label" data-i18n="hudLevel">Level</span>
     <span class="hud-value" id="hud-level">1</span>
   </div>
   <div class="hud-item">
-    <span class="hud-label">Multiplier</span>
+    <span class="hud-label" data-i18n="hudMult">Multiplier</span>
     <span class="hud-value gold" id="hud-mult">×1</span>
   </div>
   <div class="hud-item">
-    <span class="hud-label">Lives</span>
+    <span class="hud-label" data-i18n="hudLives">Lives</span>
     <span class="hud-value lives-icons" id="hud-lives">❤️❤️❤️</span>
   </div>
 </div>
@@ -262,13 +280,13 @@
     </p>
     <div class="score-big hidden" id="ov-score"></div>
     <div id="pb-name-entry" class="hs-hidden">
-      <label for="pb-player-name">Enter your name:</label>
+      <label for="pb-player-name" data-i18n="nameLabel">Enter your name:</label>
       <input type="text" id="pb-player-name" maxlength="16" placeholder="Your name" />
     </div>
     <div id="pb-hs-section" class="hs-hidden">
-      <h3>🏆 High Scores</h3>
+      <h3 data-i18n="hsTitle">🏆 High Scores</h3>
       <table id="pb-hs-table">
-        <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
+        <thead><tr><th data-i18n="thRank">#</th><th data-i18n="thName">Name</th><th data-i18n="thScore">Score</th></tr></thead>
         <tbody id="pb-hs-body"></tbody>
       </table>
     </div>
@@ -277,16 +295,16 @@
 </div>
 
 <div id="legend">
-  <span><span class="dot" style="background:#f87171"></span>1-hit brick (10 pts)</span>
-  <span><span class="dot" style="background:#fb923c"></span>2-hit brick (20 pts)</span>
-  <span><span class="dot" style="background:#facc15"></span>3-hit brick (30 pts)</span>
-  <span><span class="dot" style="background:#a78bfa"></span>Steel (5 hits, 50 pts)</span>
-  <span><span class="dot" style="background:#34d399"></span>Bumper</span>
-  <span><span class="dot" style="background:#ff4444"></span>👾 Ball Eater (lvl 4+)</span>
-  <span><span class="dot" style="background:#ef4444"></span>❤️ Health (hit with ball → +1 life)</span>
+  <span><span class="dot" style="background:#f87171"></span><span data-i18n="legend1">1-hit brick (10 pts)</span></span>
+  <span><span class="dot" style="background:#fb923c"></span><span data-i18n="legend2">2-hit brick (20 pts)</span></span>
+  <span><span class="dot" style="background:#facc15"></span><span data-i18n="legend3">3-hit brick (30 pts)</span></span>
+  <span><span class="dot" style="background:#a78bfa"></span><span data-i18n="legend4">Steel (5 hits, 50 pts)</span></span>
+  <span><span class="dot" style="background:#34d399"></span><span data-i18n="legend5">Bumper</span></span>
+  <span><span class="dot" style="background:#ff4444"></span><span data-i18n="legend6">👾 Ball Eater (lvl 4+)</span></span>
+  <span><span class="dot" style="background:#ef4444"></span><span data-i18n="legend7">❤️ Health (hit with ball → +1 life)</span></span>
 </div>
 
-<footer><a href="index.html">← Back to Golden Day Games</a> &nbsp;·&nbsp; Golden Day Games © 2026</footer>
+<footer><a href="index.html" data-i18n="footerBack">← Back to Golden Day Games</a> &nbsp;·&nbsp; <span data-i18n="footerCopy">Golden Day Games © 2026</span></footer>
 
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,6 +333,111 @@ const pbNameEntry  = document.getElementById('pb-name-entry');
 const pbPlayerName = document.getElementById('pb-player-name');
 const pbHsSection  = document.getElementById('pb-hs-section');
 const pbHsBody     = document.getElementById('pb-hs-body');
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    pageTitle:    'Pinball Breaker – Golden Day Games',
+    logo:         '🎱 Pinball Breaker',
+    sub:          'Arkanoid × Pinball · Golden Day Games',
+    hudScore:     'SCORE',
+    hudBest:      'BEST',
+    hudLevel:     'LEVEL',
+    hudMult:      'MULTIPLIER',
+    hudLives:     'LIVES',
+    ovTitle:      'Pinball Breaker',
+    ovBody:       'Move mouse (or finger) to control the paddle.<br>Knock out every brick. Pinball bumpers boost your score!<br><br>Power-ups fall from bricks (catch with paddle):<br>💛 Wide paddle &nbsp;|&nbsp; 🔵 Multi-ball &nbsp;|&nbsp; 🔴 Fireball<br>⚡ Speed (2× pts) &nbsp;|&nbsp; 💎 Mega ball &nbsp;|&nbsp; 🔗 Chain reaction<br><br>❤️ <strong>Health</strong> also falls from bricks — <em>hit it with the ball</em> to gain +1 life!<br><br><small style="color:#606080">👾 Ball Eaters appear from level 4 — use 🔴 fireball to destroy them!<br>Moving bricks appear from level 3.</small>',
+    nameLabel:    'Enter your name:',
+    hsTitle:      '🏆 High Scores',
+    thRank:       '#',
+    thName:       'Name',
+    thScore:      'Score',
+    btnStart:     '▶ Start Game',
+    btnPlayAgain: '▶ Play Again',
+    btnSave:      'Save Score',
+    gameOver:     '💀 Game Over',
+    betterLuck:   'Better luck next time!',
+    scoreLabel:   'Score: ',
+    legend1:      '1-hit brick (10 pts)',
+    legend2:      '2-hit brick (20 pts)',
+    legend3:      '3-hit brick (30 pts)',
+    legend4:      'Steel (5 hits, 50 pts)',
+    legend5:      'Bumper',
+    legend6:      '👾 Ball Eater (lvl 4+)',
+    legend7:      '❤️ Health (hit with ball → +1 life)',
+    footerBack:   '← Back to Golden Day Games',
+    footerCopy:   'Golden Day Games © 2026',
+    lifePopup:    '❤️ +1 Life!',
+  },
+  sv: {
+    pageTitle:    'Pinball Krossar – Gyllene Dag Spel',
+    logo:         '🎱 Pinball Krossar',
+    sub:          'Arkanoid × Pinball · Gyllene Dag Spel',
+    hudScore:     'POÄNG',
+    hudBest:      'BÄST',
+    hudLevel:     'NIVÅ',
+    hudMult:      'MULTIPLIKATOR',
+    hudLives:     'LIV',
+    ovTitle:      'Pinball Krossar',
+    ovBody:       'Flytta musen (eller fingret) för att styra paddeln.<br>Slå ut varje tegelsten. Pinball-stötfångare ökar ditt poäng!<br><br>Power-ups faller från tegelstenar (fånga med paddeln):<br>💛 Bred paddel &nbsp;|&nbsp; 🔵 Multi-boll &nbsp;|&nbsp; 🔴 Eldklot<br>⚡ Fart (2× poäng) &nbsp;|&nbsp; 💎 Megaboll &nbsp;|&nbsp; 🔗 Kedjereaktion<br><br>❤️ <strong>Hälsa</strong> faller också från tegelstenar — <em>träffa den med bollen</em> för +1 liv!<br><br><small style="color:#606080">👾 Bolläter dyker upp från nivå 4 — använd 🔴 eldklot för att förstöra dem!<br>Rörliga tegelstenar dyker upp från nivå 3.</small>',
+    nameLabel:    'Ange ditt namn:',
+    hsTitle:      '🏆 Topplistor',
+    thRank:       '#',
+    thName:       'Namn',
+    thScore:      'Poäng',
+    btnStart:     '▶ Starta Spelet',
+    btnPlayAgain: '▶ Spela Igen',
+    btnSave:      'Spara Poäng',
+    gameOver:     '💀 Game Over',
+    betterLuck:   'Bättre lycka nästa gång!',
+    scoreLabel:   'Poäng: ',
+    legend1:      '1-träffs tegelsten (10 poäng)',
+    legend2:      '2-träffs tegelsten (20 poäng)',
+    legend3:      '3-träffs tegelsten (30 poäng)',
+    legend4:      'Stål (5 träffar, 50 poäng)',
+    legend5:      'Stötfångare',
+    legend6:      '👾 Bolläter (nivå 4+)',
+    legend7:      '❤️ Hälsa (träffa med boll → +1 liv)',
+    footerBack:   '← Tillbaka till Gyllene Dag Spel',
+    footerCopy:   'Gyllene Dag Spel © 2026',
+    lifePopup:    '❤️ +1 Liv!',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'en';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.en)[key] || key;
+}
+
+function applyLang() {
+  document.documentElement.lang = currentLang;
+  document.title = t('pageTitle');
+  const langBtn = document.getElementById('lang-btn');
+  langBtn.textContent = currentLang === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  // Overlay content is state-dependent
+  if (typeof state === 'undefined' || state === 'idle') {
+    ovTitle.textContent = t('ovTitle');
+    ovBody.innerHTML    = t('ovBody');
+    ovBtn.textContent   = t('btnStart');
+  } else if (state === 'dead') {
+    ovTitle.textContent = t('gameOver');
+    ovBody.textContent  = t('betterLuck');
+    ovScore.textContent = t('scoreLabel') + score;
+    ovBtn.textContent   = pbPendingScore !== null ? t('btnSave') : t('btnPlayAgain');
+  } else {
+    ovBtn.textContent = t('btnPlayAgain');
+  }
+}
+
+document.getElementById('lang-btn').addEventListener('click', () => {
+  currentLang = currentLang === 'en' ? 'sv' : 'en';
+  localStorage.setItem('lang', currentLang);
+  applyLang();
+});
 
 // ── Highscore persistence ─────────────────────────────────────────────────────
 const PB_HS_MAX = 5;
@@ -353,12 +476,12 @@ function pbShowEndHighscore(finalScore) {
     pbNameEntry.classList.remove('hs-hidden');
     pbPlayerName.value = '';
     setTimeout(() => pbPlayerName.focus(), 50);
-    ovBtn.textContent = 'Save Score';
+    ovBtn.textContent = t('btnSave');
     pbHsSection.classList.add('hs-hidden');
   } else {
     pbNameEntry.classList.add('hs-hidden');
     pbRenderHS(pbGetHighscores(), -1);
-    ovBtn.textContent = '▶ Play Again';
+    ovBtn.textContent = t('btnPlayAgain');
     pbPendingScore = null;
   }
 }
@@ -712,7 +835,7 @@ function startGame() {
   hudMult.textContent = '×1';
   updateLivesHUD();
   pbResetHSOverlay();
-  ovBtn.textContent = '▶ Play Again';
+  ovBtn.textContent = t('btnPlayAgain');
 
   buildLevel(level);
   balls = [launchBall()];
@@ -736,9 +859,9 @@ function loseLife() {
 
   if (lives <= 0) {
     state = 'dead';
-    ovTitle.textContent = '💀 Game Over';
-    ovBody.textContent  = 'Better luck next time!';
-    ovScore.textContent = 'Score: ' + score;
+    ovTitle.textContent = t('gameOver');
+    ovBody.textContent  = t('betterLuck');
+    ovScore.textContent = t('scoreLabel') + score;
     ovScore.classList.remove('hidden');
     overlay.classList.remove('hidden');
     pbShowEndHighscore(score);
@@ -1249,7 +1372,7 @@ function update() {
         lives = Math.min(lives + 1, MAX_LIVES);
         updateLivesHUD();
         spawnParticles(h.x, h.y, '#f87171', 18);
-        addPopup(h.x, h.y - 22, '❤️ +1 Life!', '#f87171');
+        addPopup(h.x, h.y - 22, t('lifePopup'), '#f87171');
         healthItems.splice(hi, 1);
         collected = true;
         break;
@@ -1474,7 +1597,7 @@ ovBtn.addEventListener('click', () => {
     hudBest.textContent = highScore;
     pbNameEntry.classList.add('hs-hidden');
     pbRenderHS(scores, newIdx < PB_HS_MAX ? newIdx : -1);
-    ovBtn.textContent = '▶ Play Again';
+    ovBtn.textContent = t('btnPlayAgain');
     pbPendingScore = null;
     return;
   }
@@ -1506,6 +1629,9 @@ fsBtn.addEventListener('click', () => {
   }
 });
 document.addEventListener('fullscreenchange', updateFsIcon);
+
+// ── Apply language on load ────────────────────────────────────────────────────
+applyLang();
 </script>
 </body>
 </html>

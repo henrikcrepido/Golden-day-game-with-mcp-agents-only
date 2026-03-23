@@ -522,7 +522,7 @@
     #fs-btn {
       position: fixed;
       top: 12px;
-      right: 14px;
+      right: 5.5rem;
       z-index: 1000;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.18);
@@ -535,33 +535,51 @@
       transition: background 0.2s, color 0.2s;
     }
     #fs-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    /* ── Language toggle button ───────────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #aab;
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
   </style>
 </head>
 <body>
 
   <button id="fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">⛶</button>
+  <button id="lang-btn">🇬🇧 EN</button>
 
-  <a class="back-btn" href="index.html">← Tillbaka</a>
+  <a class="back-btn" href="index.html" data-i18n="back">← Tillbaka</a>
 
   <header>
-    <h1>🌟 Gyllene Dagen</h1>
-    <p class="subtitle">Familjespel med tärning · upp till 4 spelare</p>
+    <h1 data-i18n="header-title">🌟 Gyllene Dagen</h1>
+    <p class="subtitle" data-i18n="subtitle">Familjespel med tärning · upp till 4 spelare</p>
   </header>
 
   <!-- ── Setup screen ─────────────────────────────────── -->
   <div class="screen" id="setup-screen">
     <div class="setup-card">
-      <h2>Hur många spelare?</h2>
+      <h2 data-i18n="how-many-players">Hur många spelare?</h2>
       <div class="player-count-row">
         <button class="count-btn" data-n="2">2</button>
         <button class="count-btn active" data-n="3">3</button>
         <button class="count-btn" data-n="4">4</button>
       </div>
 
-      <h2>Välj karaktär och skriv namn</h2>
+      <h2 data-i18n="choose-character">Välj karaktär och skriv namn</h2>
       <div class="player-setup-list" id="player-setup-list"></div>
 
-      <button class="start-btn" id="start-btn">🎲 Starta spelet!</button>
+      <button class="start-btn" id="start-btn" data-i18n="start-btn">🎲 Starta spelet!</button>
     </div>
   </div>
 
@@ -573,25 +591,25 @@
         <div class="board-wrap">
           <div id="board"></div>
           <div class="legend">
-            <div class="legend-item">🟢 Lyckodag +3</div>
-            <div class="legend-item">🔴 Otur −3</div>
-            <div class="legend-item">💤 Vila ett varv</div>
-            <div class="legend-item">⭐ Gyllene dag ×2</div>
+            <div class="legend-item" data-i18n="legend-lucky">🟢 Lyckodag +3</div>
+            <div class="legend-item" data-i18n="legend-unlucky">🔴 Otur −3</div>
+            <div class="legend-item" data-i18n="legend-rest">💤 Vila ett varv</div>
+            <div class="legend-item" data-i18n="legend-golden">⭐ Gyllene dag ×2</div>
           </div>
         </div>
       </div>
       <div class="sidebar">
         <div class="players-panel">
-          <h3>Spelare</h3>
+          <h3 data-i18n="players-heading">Spelare</h3>
           <div id="players-list"></div>
         </div>
         <div class="dice-panel">
-          <h3>Tärning</h3>
+          <h3 data-i18n="dice-heading">Tärning</h3>
           <div class="dice" id="dice">⚀</div>
-          <button class="roll-btn" id="roll-btn">Kasta!</button>
+          <button class="roll-btn" id="roll-btn" data-i18n="roll-btn">Kasta!</button>
         </div>
         <div class="log-panel">
-          <h3>Händelser</h3>
+          <h3 data-i18n="events-heading">Händelser</h3>
           <div id="event-log"></div>
         </div>
       </div>
@@ -603,13 +621,108 @@
     <div class="win-card">
       <span class="win-char" id="win-char">🏆</span>
       <div class="win-name" id="win-name"></div>
-      <div class="win-title">VANN! 🎉</div>
+      <div class="win-title" data-i18n="win-title">VANN! 🎉</div>
       <div class="win-subtitle" id="win-subtitle"></div>
-      <button class="new-game-btn" id="new-game-btn">🎲 Nytt spel</button>
+      <button class="new-game-btn" id="new-game-btn" data-i18n="new-game-btn">🎲 Nytt spel</button>
     </div>
   </div>
 
   <script>
+    /* ── i18n ──────────────────────────────────────────── */
+    const TRANSLATIONS = {
+      sv: {
+        title:               'Gyllene Dagen 🌟',
+        'header-title':      '🌟 Gyllene Dagen',
+        subtitle:            'Familjespel med tärning · upp till 4 spelare',
+        back:                '← Tillbaka',
+        'how-many-players':  'Hur många spelare?',
+        'choose-character':  'Välj karaktär och skriv namn',
+        'player-placeholder':'Spelarens namn…',
+        'start-btn':         '🎲 Starta spelet!',
+        'legend-lucky':      '🟢 Lyckodag +3',
+        'legend-unlucky':    '🔴 Otur −3',
+        'legend-rest':       '💤 Vila ett varv',
+        'legend-golden':     '⭐ Gyllene dag ×2',
+        'players-heading':   'Spelare',
+        'dice-heading':      'Tärning',
+        'roll-btn':          'Kasta!',
+        'events-heading':    'Händelser',
+        'win-title':         'VANN! 🎉',
+        'win-subtitle':      'Grattis! Du nådde mål på ruta {n}! 🥳',
+        'new-game-btn':      '🎲 Nytt spel',
+        'pos-start':         'Start',
+        'pos-square':        'Ruta {n}',
+        'verb-rolled':       'kastade',
+        'word-square':       'ruta',
+        'word-skips':        'vilar ett varv — hoppar över!',
+        'turn-suffix':       ' — din tur!',
+        'double-next-label': '×2 nästa kast!',
+        'msg-lucky':         'Lyckodag! 🍀 Gå 3 extra steg framåt!',
+        'msg-unlucky':       'Otur! ⚡ Gå 3 steg bakåt!',
+        'msg-rest':          'Vila! 💤 Missa nästa tur.',
+        'msg-golden':        'Gyllene dag! ⭐ Dubbla ditt nästa kast!',
+      },
+      en: {
+        title:               'Golden Day 🌟',
+        'header-title':      '🌟 Golden Day',
+        subtitle:            'Family dice game · up to 4 players',
+        back:                '← Back',
+        'how-many-players':  'How many players?',
+        'choose-character':  'Choose character and enter name',
+        'player-placeholder':'Player name…',
+        'start-btn':         '🎲 Start game!',
+        'legend-lucky':      '🟢 Lucky day +3',
+        'legend-unlucky':    '🔴 Bad luck −3',
+        'legend-rest':       '💤 Rest one turn',
+        'legend-golden':     '⭐ Golden day ×2',
+        'players-heading':   'Players',
+        'dice-heading':      'Dice',
+        'roll-btn':          'Roll!',
+        'events-heading':    'Events',
+        'win-title':         'WON! 🎉',
+        'win-subtitle':      'Congratulations! You reached square {n}! 🥳',
+        'new-game-btn':      '🎲 New game',
+        'pos-start':         'Start',
+        'pos-square':        'Square {n}',
+        'verb-rolled':       'rolled',
+        'word-square':       'square',
+        'word-skips':        'rests a turn — skips!',
+        'turn-suffix':       ' — your turn!',
+        'double-next-label': '×2 next roll!',
+        'msg-lucky':         'Lucky day! 🍀 Move 3 extra steps forward!',
+        'msg-unlucky':       'Bad luck! ⚡ Move 3 steps back!',
+        'msg-rest':          'Rest! 💤 Skip next turn.',
+        'msg-golden':        'Golden day! ⭐ Double your next roll!',
+      },
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'sv';
+
+    function t(key) {
+      return (TRANSLATIONS[currentLang] || TRANSLATIONS.sv)[key]
+          || TRANSLATIONS.sv[key] || key;
+    }
+
+    function applyLang() {
+      document.documentElement.lang = currentLang;
+      document.title = t('title');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll('.name-input').forEach(inp => {
+        inp.placeholder = t('player-placeholder');
+      });
+      const langBtn = document.getElementById('lang-btn');
+      if (langBtn) langBtn.textContent = currentLang === 'sv' ? '🇬🇧 EN' : '🇸🇪 SV';
+      if (gameRunning) {
+        renderPlayers();
+        updateTurnBanner();
+      }
+      if (!winOverlay.classList.contains('hidden')) {
+        winSubtitle.textContent = t('win-subtitle').replace('{n}', TOTAL_SQUARES);
+      }
+    }
+
     /* ── Configuration ─────────────────────────────────── */
     const TOTAL_SQUARES = 50;
     const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
@@ -638,10 +751,10 @@
       start: '🏁', finish: '🏆',
     };
     const SPECIAL_EFFECT = {
-      lucky:   { delta:  3, msg: 'Lyckodag! 🍀 Gå 3 extra steg framåt!' },
-      unlucky: { delta: -3, msg: 'Otur! ⚡ Gå 3 steg bakåt!' },
-      rest:    { delta:  0, msg: 'Vila! 💤 Missa nästa tur.' },
-      golden:  { delta:  0, msg: 'Gyllene dag! ⭐ Dubbla ditt nästa kast!' },
+      lucky:   { delta:  3, msgKey: 'msg-lucky' },
+      unlucky: { delta: -3, msgKey: 'msg-unlucky' },
+      rest:    { delta:  0, msgKey: 'msg-rest' },
+      golden:  { delta:  0, msgKey: 'msg-golden' },
     };
 
     /* ── State ─────────────────────────────────────────── */
@@ -701,7 +814,7 @@
         input.className = 'name-input';
         input.type = 'text';
         input.maxLength = 14;
-        input.placeholder = 'Spelarens namn…';
+        input.placeholder = t('player-placeholder');
         input.value = CHARACTERS[i].name;
 
         row.appendChild(dot);
@@ -866,7 +979,7 @@
 
         const posEl = document.createElement('div');
         posEl.className = 'p-pos';
-        posEl.textContent = p.pos === 0 ? 'Start' : 'Ruta ' + p.pos;
+        posEl.textContent = p.pos === 0 ? t('pos-start') : t('pos-square').replace('{n}', p.pos);
 
         info.appendChild(nameEl);
         info.appendChild(posEl);
@@ -900,8 +1013,8 @@
     /* ── Turn banner ────────────────────────────────────── */
     function updateTurnBanner() {
       const p = players[currentPlayerIdx];
-      const extra = p.doubleNext ? ' <span style="color:#ffd54f">(×2 nästa kast!)</span>' : '';
-      turnBanner.innerHTML = p.emoji + ' <strong style="color:' + p.color + '">' + p.name + '</strong> — din tur!' + extra;
+      const extra = p.doubleNext ? ' <span style="color:#ffd54f">(' + t('double-next-label') + ')</span>' : '';
+      turnBanner.innerHTML = p.emoji + ' <strong style="color:' + p.color + '">' + p.name + '</strong>' + t('turn-suffix') + extra;
     }
 
     /* ── Log event ──────────────────────────────────────── */
@@ -926,7 +1039,7 @@
       /* Skip if resting */
       if (p.resting) {
         p.resting = false;
-        logEvent(p.emoji + ' <span>' + p.name + '</span> vilar ett varv — hoppar över!', 'event-rest');
+        logEvent(p.emoji + ' <span>' + p.name + '</span> ' + t('word-skips'), 'event-rest');
         advanceTurn();
         return;
       }
@@ -963,8 +1076,8 @@
 
       p.pos = Math.max(1, newPos);
 
-      logEvent(p.emoji + ' <span>' + p.name + '</span> kastade ' + rawRoll +
-        (steps !== rawRoll ? ' (×2 = ' + steps + ')' : '') + ' → ruta ' + p.pos);
+      logEvent(p.emoji + ' <span>' + p.name + '</span> ' + t('verb-rolled') + ' ' + rawRoll +
+        (steps !== rawRoll ? ' (×2 = ' + steps + ')' : '') + ' → ' + t('word-square') + ' ' + p.pos);
 
       renderBoard();
       renderPlayers();
@@ -982,7 +1095,7 @@
         const evClass = 'event-' + special;
 
         setTimeout(() => {
-          logEvent(p.emoji + ' <span>' + p.name + '</span>: ' + effect.msg, evClass);
+          logEvent(p.emoji + ' <span>' + p.name + '</span>: ' + t(effect.msgKey), evClass);
 
           if (effect.delta !== 0) {
             p.pos = Math.max(1, Math.min(p.pos + effect.delta, TOTAL_SQUARES));
@@ -1018,7 +1131,7 @@
       rollBtn.disabled = true;
       winChar.textContent = winner.emoji;
       winName.textContent = winner.name;
-      winSubtitle.textContent = 'Grattis! Du nådde mål på ruta ' + TOTAL_SQUARES + '! 🥳';
+      winSubtitle.textContent = t('win-subtitle').replace('{n}', TOTAL_SQUARES);
       winOverlay.classList.remove('hidden');
     }
 
@@ -1027,6 +1140,15 @@
       gameScreen.classList.add('hidden');
       setupScreen.classList.remove('hidden');
     });
+
+    // ── Language toggle ─────────────────────────────────────────────
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      currentLang = currentLang === 'sv' ? 'en' : 'sv';
+      localStorage.setItem('lang', currentLang);
+      applyLang();
+    });
+
+    applyLang();
 
     // ── Fullscreen ──────────────────────────────────────────────────
     const fsBtn = document.getElementById('fs-btn');
