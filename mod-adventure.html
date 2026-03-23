@@ -328,26 +328,46 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ─── Language Toggle ────────────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
   </style>
 </head>
 <body>
 
+<button id="lang-btn">🇸🇪 SV</button>
+
 <!-- Name Entry Overlay -->
 <div id="name-overlay">
   <div id="name-box">
-    <h2>⚔ DUNGEON OF ECHOES ⚔</h2>
-    <p>A Dungeons &amp; Dragons–style MOD adventure.<br>
+    <h2 data-i18n="overlay_title">⚔ DUNGEON OF ECHOES ⚔</h2>
+    <p data-i18n-html="overlay_desc">A Dungeons &amp; Dragons–style MOD adventure.<br>
        Explore cursed ruins, fight monsters, and claim the Dragon's Hoard.<br><br>
        What is your name, brave adventurer?</p>
-    <input id="name-input" type="text" maxlength="20" placeholder="Enter your name..." autocomplete="off" />
+    <input id="name-input" type="text" maxlength="20" data-i18n-placeholder="overlay_placeholder" placeholder="Enter your name..." autocomplete="off" />
     <br>
-    <button id="name-start-btn">BEGIN QUEST</button>
+    <button id="name-start-btn" data-i18n="overlay_btn">BEGIN QUEST</button>
   </div>
 </div>
 
 <div id="title-bar">
-  <h1>⚔ DUNGEON OF ECHOES ⚔</h1>
-  <div class="sub">A MOD Text Adventure</div>
+  <h1 data-i18n="title_h1">⚔ DUNGEON OF ECHOES ⚔</h1>
+  <div class="sub" data-i18n="title_sub">A MOD Text Adventure</div>
 </div>
 
 <div id="game-wrapper">
@@ -356,24 +376,24 @@
   <div id="hud">
     <span class="hud-name" id="hud-name">Adventurer</span>
     <div class="hud-stat hp-bar-wrap">
-      <span class="hud-label">HP</span>
+      <span class="hud-label" data-i18n="hud_hp">HP</span>
       <div class="bar-bg"><div id="hp-bar" style="width:100%"></div></div>
       <span class="hud-val" id="hud-hp">20/20</span>
     </div>
     <div class="hud-stat">
-      <span class="hud-label">ATK</span>
+      <span class="hud-label" data-i18n="hud_atk">ATK</span>
       <span class="hud-val" id="hud-atk">5</span>
     </div>
     <div class="hud-stat">
-      <span class="hud-label">DEF</span>
+      <span class="hud-label" data-i18n="hud_def">DEF</span>
       <span class="hud-val" id="hud-def">2</span>
     </div>
     <div class="hud-stat">
-      <span class="hud-label">LVL</span>
+      <span class="hud-label" data-i18n="hud_lvl">LVL</span>
       <span class="hud-val" id="hud-lvl">1</span>
     </div>
     <div class="hud-stat hp-bar-wrap">
-      <span class="hud-label">XP</span>
+      <span class="hud-label" data-i18n="hud_xp">XP</span>
       <div class="bar-bg"><div id="xp-bar" style="width:0%"></div></div>
       <span class="hud-val" id="hud-xp">0/100</span>
     </div>
@@ -391,31 +411,31 @@
   <div id="scene-panel">
     <canvas id="scene-canvas" width="420" height="260"></canvas>
     <div id="location-name">The Village of Ashenveil</div>
-    <div id="exits-bar">Exits: <span id="exits-list">—</span></div>
+    <div id="exits-bar"><span data-i18n="exits_label">Exits:</span> <span id="exits-list">—</span></div>
     <div id="actions">
       <!-- Compass rose -->
       <div style="display:flex; gap:1rem; align-items:flex-start;">
         <div>
-          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;">MOVE</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;" data-i18n="move_label">MOVE</div>
           <div class="dir-grid">
             <div class="placeholder"></div>
-            <button class="act-btn dir" id="btn-n"  title="Go North">↑</button>
+            <button class="act-btn dir" id="btn-n"  data-i18n-title="dir_north" title="Go North">↑</button>
             <div class="placeholder"></div>
-            <button class="act-btn dir" id="btn-w"  title="Go West">←</button>
-            <button class="act-btn dir" id="btn-s"  title="Go South">↓</button>
-            <button class="act-btn dir" id="btn-e"  title="Go East">→</button>
+            <button class="act-btn dir" id="btn-w"  data-i18n-title="dir_west"  title="Go West">←</button>
+            <button class="act-btn dir" id="btn-s"  data-i18n-title="dir_south" title="Go South">↓</button>
+            <button class="act-btn dir" id="btn-e"  data-i18n-title="dir_east"  title="Go East">→</button>
             <div class="placeholder"></div>
             <div class="placeholder"></div>
             <div class="placeholder"></div>
           </div>
         </div>
         <div>
-          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;">ACTIONS</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;" data-i18n="actions_label">ACTIONS</div>
           <div class="action-group">
-            <button class="act-btn attack" id="btn-attack" title="Attack enemy">⚔ Attack</button>
-            <button class="act-btn heal"   id="btn-heal"   title="Use healing potion">🧪 Potion</button>
-            <button class="act-btn"        id="btn-look"   title="Look around">👁 Look</button>
-            <button class="act-btn"        id="btn-inv"    title="Check inventory">🎒 Inv</button>
+            <button class="act-btn attack" id="btn-attack" title="Attack enemy"        data-i18n="btn_attack">⚔ Attack</button>
+            <button class="act-btn heal"   id="btn-heal"   title="Use healing potion"  data-i18n="btn_potion">🧪 Potion</button>
+            <button class="act-btn"        id="btn-look"   title="Look around"         data-i18n="btn_look">👁 Look</button>
+            <button class="act-btn"        id="btn-inv"    title="Check inventory"     data-i18n="btn_inv">🎒 Inv</button>
           </div>
         </div>
       </div>
@@ -424,11 +444,11 @@
 
   <!-- Log / Right Panel -->
   <div id="log-panel">
-    <div id="log-title">📜 Chronicle of your Journey</div>
+    <div id="log-title" data-i18n="log_title">📜 Chronicle of your Journey</div>
     <div id="log"></div>
     <div id="input-row">
-      <input id="cmd-input" type="text" placeholder="Type a command: go north · attack · look · use potion · inventory…" autocomplete="off" />
-      <button id="cmd-btn">▶ DO</button>
+      <input id="cmd-input" type="text" data-i18n-placeholder="cmd_placeholder" placeholder="Type a command: go north · attack · look · use potion · inventory…" autocomplete="off" />
+      <button id="cmd-btn" data-i18n="cmd_btn">▶ DO</button>
     </div>
   </div>
 
@@ -439,6 +459,100 @@
    DUNGEON OF ECHOES  —  MOD Text Adventure
    Self-contained single-file game
    ══════════════════════════════════════════════════════════════════ */
+
+// ─── i18n ────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    page_title:        'Dungeon of Echoes — A MOD Adventure',
+    title_h1:          '⚔ DUNGEON OF ECHOES ⚔',
+    title_sub:         'A MOD Text Adventure',
+    overlay_title:     '⚔ DUNGEON OF ECHOES ⚔',
+    overlay_desc:      'A Dungeons &amp; Dragons–style MOD adventure.<br>Explore cursed ruins, fight monsters, and claim the Dragon\'s Hoard.<br><br>What is your name, brave adventurer?',
+    overlay_placeholder: 'Enter your name...',
+    overlay_btn:       'BEGIN QUEST',
+    hud_hp:            'HP',
+    hud_atk:           'ATK',
+    hud_def:           'DEF',
+    hud_lvl:           'LVL',
+    hud_xp:            'XP',
+    exits_label:       'Exits:',
+    dir_north:         'Go North',
+    dir_south:         'Go South',
+    dir_east:          'Go East',
+    dir_west:          'Go West',
+    move_label:        'MOVE',
+    actions_label:     'ACTIONS',
+    btn_attack:        '⚔ Attack',
+    btn_potion:        '🧪 Potion',
+    btn_look:          '👁 Look',
+    btn_inv:           '🎒 Inv',
+    log_title:         '📜 Chronicle of your Journey',
+    cmd_placeholder:   'Type a command: go north · attack · look · use potion · inventory…',
+    cmd_btn:           '▶ DO',
+    death_msg:         '☠☠☠ <strong>YOU HAVE FALLEN.</strong> ☠☠☠',
+    death_sub:         '<em>Refresh the page to begin anew, brave soul.</em>',
+  },
+  sv: {
+    page_title:        'Ekornas Håla — Ett MOD Äventyr',
+    title_h1:          '⚔ EKORNAS HÅLA ⚔',
+    title_sub:         'Ett MOD Textäventyr',
+    overlay_title:     '⚔ EKORNAS HÅLA ⚔',
+    overlay_desc:      'Ett Dungeons &amp; Dragons-inspirerat MOD-äventyr.<br>Utforska förbannade ruiner, kämpa mot monster och gör anspråk på Drakens Skatt.<br><br>Vad heter du, modige äventyrare?',
+    overlay_placeholder: 'Ange ditt namn...',
+    overlay_btn:       'BÖRJA ÄVENTYRET',
+    hud_hp:            'HP',
+    hud_atk:           'ATK',
+    hud_def:           'DEF',
+    hud_lvl:           'NIV',
+    hud_xp:            'XP',
+    exits_label:       'Utgångar:',
+    dir_north:         'Gå Norrut',
+    dir_south:         'Gå Söderut',
+    dir_east:          'Gå Österut',
+    dir_west:          'Gå Västerut',
+    move_label:        'FLYTTA',
+    actions_label:     'HANDLINGAR',
+    btn_attack:        '⚔ Attackera',
+    btn_potion:        '🧪 Trolldryck',
+    btn_look:          '👁 Titta',
+    btn_inv:           '🎒 Bag',
+    log_title:         '📜 Krönika över din Resa',
+    cmd_placeholder:   'Skriv ett kommando: gå norrut · attackera · titta · använd trolldryck · inventarie…',
+    cmd_btn:           '▶ GÖR',
+    death_msg:         '☠☠☠ <strong>DU HAR STUPAT.</strong> ☠☠☠',
+    death_sub:         '<em>Ladda om sidan för att börja om, modige själ.</em>',
+  },
+};
+
+let currentLang = localStorage.getItem('lang') || 'en';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.en)[key] || key;
+}
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.title = t('page_title');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) langBtn.textContent = lang === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
+}
+
+applyLang(currentLang);
 
 // ─── Dice ────────────────────────────────────────────────────────
 function roll(sides) { return Math.floor(Math.random() * sides) + 1; }
@@ -1288,9 +1402,9 @@ function die() {
   player.dead = true;
   player.inCombat = false;
   addSep();
-  addLog(`☠☠☠ <strong>YOU HAVE FALLEN.</strong> ☠☠☠`, 'death');
+  addLog(t('death_msg'), 'death');
   addLog(`Your vision dims, the cold of the stone seeping through your armour. The dungeon swallows your final breath without ceremony.`, 'narrate');
-  addLog(`<em>Refresh the page to begin anew, brave soul.</em>`, 'system');
+  addLog(t('death_sub'), 'system');
   disableAllActions();
   updateHUD();
 }
@@ -1450,6 +1564,13 @@ nameInput.focus();
 
 // Prevent starting with empty name but allow Enter on focus
 document.addEventListener('DOMContentLoaded', ()=>{ nameInput.focus(); });
+
+// ─── Language Toggle ──────────────────────────────────────────────
+document.getElementById('lang-btn').addEventListener('click', () => {
+  const newLang = currentLang === 'en' ? 'sv' : 'en';
+  localStorage.setItem('lang', newLang);
+  applyLang(newLang);
+});
 </script>
 </body>
 </html>
