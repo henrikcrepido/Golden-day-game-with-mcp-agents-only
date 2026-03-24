@@ -450,6 +450,25 @@ function pbGetHighscores() {
 
 function pbSaveHighscores(scores) {
   localStorage.setItem(PB_HS_KEY, JSON.stringify(scores));
+  fetch('/api/highscores/' + PB_HS_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scores),
+  }).catch(() => {});
+}
+
+async function pbSyncFromServer() {
+  try {
+    const r = await fetch('/api/highscores/' + PB_HS_KEY);
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem(PB_HS_KEY, JSON.stringify(data));
+        highScore = pbGetBestScore();
+        hudBest.textContent = highScore;
+      }
+    }
+  } catch(e) {}
 }
 
 function pbQualifiesForHS(s) {
@@ -1614,6 +1633,7 @@ hudBest.textContent = highScore;
 // Draw static background frame while on overlay
 draw();
 requestAnimationFrame(loop);
+pbSyncFromServer();
 
 // ── Fullscreen ────────────────────────────────────────────────────────────────
 const fsBtn = document.getElementById('fs-btn');

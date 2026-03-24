@@ -1503,6 +1503,24 @@ function saveToLeaderboard(name, score, achievements, maxStreak, tickets, rank) 
   const top10 = board.slice(0, 10);
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(top10));
   lastSavedIdx = top10.findIndex(e => e.ts === ts);
+  fetch('/api/highscores/' + LEADERBOARD_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(top10),
+  }).catch(() => {});
+}
+
+async function syncLeaderboardFromServer() {
+  try {
+    const r = await fetch('/api/highscores/' + LEADERBOARD_KEY);
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(data));
+        renderLeaderboard();
+      }
+    }
+  } catch(e) {}
 }
 
 function renderLeaderboard() {
@@ -1813,6 +1831,7 @@ renderAchievements();
 updateHUD();
 applyLang(currentLang);
 renderLeaderboard();
+syncLeaderboardFromServer();
 </script>
 </body>
 </html>
