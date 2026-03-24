@@ -230,6 +230,21 @@
       transition: background 0.2s, color 0.2s;
     }
     #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    .pause-btn {
+      margin-bottom: 6px;
+      padding: 6px 18px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .pause-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    .pause-btn.paused { border-color: rgba(255,200,60,0.5); color: #ffd54f; }
+    .pause-btn.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -264,6 +279,8 @@
     <span class="hud-value lives-icons" id="hud-lives">❤️❤️❤️</span>
   </div>
 </div>
+
+<button id="pause-btn" class="pause-btn hidden">⏸ Pause</button>
 
 <div id="canvas-wrap">
   <canvas id="c" width="480" height="600"></canvas>
@@ -368,6 +385,8 @@ const TRANSLATIONS = {
     footerBack:   '← Back to Golden Day Games',
     footerCopy:   'Golden Day Games © 2026',
     lifePopup:    '❤️ +1 Life!',
+    btnPause:     '⏸ Pause',
+    btnResume:    '▶ Resume',
   },
   sv: {
     pageTitle:    'Pinball Krossar – Gyllene Dag Spel',
@@ -401,6 +420,8 @@ const TRANSLATIONS = {
     footerBack:   '← Tillbaka till Gyllene Dag Spel',
     footerCopy:   'Gyllene Dag Spel © 2026',
     lifePopup:    '❤️ +1 Liv!',
+    btnPause:     '⏸ Pausa',
+    btnResume:    '▶ Fortsätt',
   }
 };
 
@@ -531,6 +552,7 @@ const POWERUP_EMOJI = { wide:'💛', multi:'🔵', fire:'🔴', speed:'⚡', meg
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let state = 'idle'; // idle | playing | dead | won
+let isPaused = false;
 let score = 0;
 let lives = 3;
 let level = 1;
@@ -816,6 +838,9 @@ function updateLivesHUD() {
 
 // ── Game flow ─────────────────────────────────────────────────────────────────
 function startGame() {
+  isPaused = false;
+  pauseBtn.textContent = t('btnPause');
+  pauseBtn.classList.remove('paused', 'hidden');
   score = 0;
   lives = 3;
   level = 1;
@@ -864,6 +889,8 @@ function loseLife() {
     ovScore.textContent = t('scoreLabel') + score;
     ovScore.classList.remove('hidden');
     overlay.classList.remove('hidden');
+    isPaused = false;
+    pauseBtn.classList.add('hidden');
     pbShowEndHighscore(score);
   } else {
     balls = [launchBall()];
@@ -1573,11 +1600,26 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.fillText('🔗', bx + bw/2, by - 4);
   }
+
+  // Paused overlay
+  if (isPaused) {
+    ctx.fillStyle = 'rgba(6,6,18,0.6)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⏸ PAUSED', W/2, H/2);
+    ctx.font = '16px system-ui';
+    ctx.fillStyle = '#9090b8';
+    ctx.fillText(t('btnResume'), W/2, H/2 + 48);
+    ctx.textBaseline = 'alphabetic';
+  }
 }
 
 // ── Game loop ─────────────────────────────────────────────────────────────────
 function loop() {
-  update();
+  if (!isPaused) update();
   draw();
   requestAnimationFrame(loop);
 }
@@ -1608,6 +1650,22 @@ ovBtn.addEventListener('click', () => {
 pbPlayerName.addEventListener('keydown', e => {
   if (e.key === 'Enter') ovBtn.click();
 });
+
+// ── Pause ─────────────────────────────────────────────────────────────────────
+const pauseBtn = document.getElementById('pause-btn');
+
+function togglePause() {
+  if (state !== 'playing') return;
+  isPaused = !isPaused;
+  if (isPaused) {
+    pauseBtn.textContent = t('btnResume');
+    pauseBtn.classList.add('paused');
+  } else {
+    pauseBtn.textContent = t('btnPause');
+    pauseBtn.classList.remove('paused');
+  }
+}
+pauseBtn.addEventListener('click', togglePause);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 hudBest.textContent = highScore;
