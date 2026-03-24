@@ -303,3 +303,34 @@ Commit message format:
 - [ ] Security scan (`codeql_checker`)
 - [ ] Final commit + push (`report_progress`)
 ```
+
+
+---
+
+## Appendix — IIS Deployment Guide (added 2026-03-24)
+
+The `/api/highscores/{key}` REST API is provided by `server.py` when running
+locally with Python.  For IIS hosting:
+
+1. Ensure the IIS URL Rewrite module and PHP FastCGI handler are installed.
+2. Deploy all files to the IIS site root (no build step needed).
+3. Grant the application-pool identity **Modify** access to the `data\` folder.
+4. The `web.config` in the repository root takes care of routing and MIME types.
+
+### Key files
+
+| File | Role |
+|------|------|
+| `web.config` | IIS configuration (URL Rewrite, defaultDocument, security) |
+| `api/highscores.php` | PHP replacement for the Python highscores API |
+| `data/` | Runtime JSON files written here (one per score key) |
+
+### URL contract (unchanged)
+
+```
+GET  /api/highscores/{key}   → 200 application/json  ([] if not found)
+POST /api/highscores/{key}   → 200 {"ok":true}        (body: JSON array)
+```
+
+Both the Python server and the PHP handler honour the same contract, so no
+changes to the HTML game files are required when switching between the two.

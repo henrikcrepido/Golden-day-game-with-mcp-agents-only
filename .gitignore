@@ -3,3 +3,8 @@ data/*.json
 
 # Python cache
 __pycache__/
+
+# .NET build and publish artifacts
+HighscoresApi/bin/
+HighscoresApi/obj/
+HighscoresApi/data/
