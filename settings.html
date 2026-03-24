@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings – Golden Day Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0d0d1a;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(80, 40, 160, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(30, 80, 180, 0.25) 0%, transparent 60%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e8e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Header ──────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: floatUp 0.7s ease both;
+    }
+
+    header .logo {
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ffd54f, #ff8f00, #ffe082, #ff8f00, #ffd54f);
+      background-size: 400px 1px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    header .tagline {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #9090b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Back button ─────────────────────────────────── */
+    #back-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 1.6;
+      transition: background 0.2s, color 0.2s;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    /* ── Lang button ─────────────────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    /* ── Content wrapper ─────────────────────────────── */
+    .content {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ── Section card ────────────────────────────────── */
+    .section-card {
+      background: linear-gradient(145deg, #1c1c35, #14142a);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 18px;
+      padding: 1.5rem 1.8rem;
+      animation: floatUp 0.6s ease both;
+    }
+
+    .section-card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffd54f;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Highscore table ─────────────────────────────── */
+    .hs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .hs-table th {
+      text-align: left;
+      color: #9090b8;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hs-table td {
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: #c8c8e0;
+    }
+
+    .hs-table tr:last-child td { border-bottom: none; }
+    .hs-table td:first-child { color: #9090b8; width: 2.5rem; }
+    .hs-table .gold { color: #ffd54f; font-weight: 700; }
+
+    .empty-row td {
+      color: #606080;
+      font-style: italic;
+      text-align: center;
+      padding: 0.8rem;
+    }
+
+    /* ── Difficulty sub-header ───────────────────────── */
+    .diff-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #7070a0;
+      margin: 1rem 0 0.4rem;
+    }
+    .diff-label:first-of-type { margin-top: 0; }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.2rem;
+    }
+
+    .btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      border: none;
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.28); }
+
+    .btn-warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .btn-warn:hover { background: rgba(245, 158, 11, 0.28); }
+
+    /* ── Export / Import row ─────────────────────────── */
+    .export-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .btn-secondary {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    .btn-secondary:hover { background: rgba(99, 102, 241, 0.28); }
+
+    /* ── Toast notification ──────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1e1e40;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #e8e8f0;
+      padding: 0.65rem 1.4rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 2000;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    footer {
+      margin-top: 4rem;
+      font-size: 0.78rem;
+      color: #444466;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <a id="back-btn" href="index.html">← <span data-i18n="back">Home</span></a>
+  <button id="lang-btn"></button>
+
+  <header>
+    <div class="logo" data-i18n="title">⚙ Settings</div>
+    <p class="tagline" data-i18n="tagline">Highscores &amp; Data</p>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Minesweeper ──────────────────────────────── -->
+    <div class="section-card" style="animation-delay:0.05s">
+      <h2>💣 <span data-i18n="ms-title">Minesweeper</span></h2>
+      <div id="ms-scores"></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="clear-ms" data-i18n="clear-game">Clear scores</button>
+      </div>
+    </div>
+
+    <!-- ── Pinball Breaker ──────────────────────────── -->
+    <div class="section-card" style="animation-delay:0.10s">
+      <h2>🎱 <span data-i18n="pb-title">Pinball Breaker</span></h2>
+      <div id="pb-scores"></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="clear-pb" data-i18n="clear-game">Clear scores</button>
+      </div>
+    </div>
+
+    <!-- ── Support Hero ─────────────────────────────── -->
+    <div class="section-card" style="animation-delay:0.15s">
+      <h2>🎫 <span data-i18n="sh-title">Support Hero</span></h2>
+      <div id="sh-scores"></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="clear-sh" data-i18n="clear-game">Clear scores</button>
+      </div>
+    </div>
+
+    <!-- ── Danger zone ──────────────────────────────── -->
+    <div class="section-card" style="animation-delay:0.20s">
+      <h2>⚠️ <span data-i18n="danger-title">Danger Zone</span></h2>
+      <p style="color:#8080a8;font-size:0.88rem;margin-bottom:1rem" data-i18n="danger-desc">
+        Permanently clear all highscores from every game. This cannot be undone.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-warn" id="clear-all" data-i18n="clear-all">🗑 Clear all highscores</button>
+        <button class="btn btn-secondary" id="export-btn" data-i18n="export-btn">📥 Export JSON</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer data-i18n="footer">Golden Day Games © 2026</footer>
+  <div id="toast"></div>
+
+  <script>
+  /* ── i18n ─────────────────────────────────────────────────────────── */
+  const translations = {
+    en: {
+      pageTitle:     'Settings – Golden Day Games',
+      title:         '⚙ Settings',
+      tagline:       'Highscores & Data',
+      back:          'Home',
+      'ms-title':    'Minesweeper',
+      'pb-title':    'Pinball Breaker',
+      'sh-title':    'Support Hero',
+      'danger-title':'Danger Zone',
+      'danger-desc': 'Permanently clear all highscores from every game. This cannot be undone.',
+      'clear-game':  'Clear scores',
+      'clear-all':   '🗑 Clear all highscores',
+      'export-btn':  '📥 Export JSON',
+      footer:        'Golden Day Games © 2026',
+      // table headers
+      rank: '#', name: 'Name', score: 'Score', time: 'Time',
+      easy: 'Easy', medium: 'Medium', hard: 'Hard',
+      achievements: 'Achievements', streak: 'Streak', rank_label: 'Rank',
+      empty: 'No scores yet',
+      // toasts
+      toast_cleared: 'Scores cleared!',
+      toast_all_cleared: 'All highscores cleared!',
+      toast_exported: 'Scores exported to file',
+      // confirm
+      confirm_clear_game: 'Clear scores for this game?',
+      confirm_clear_all:  'Clear ALL highscores from every game? This cannot be undone.',
+    },
+    sv: {
+      pageTitle:     'Inställningar – Gyllene Dag Spel',
+      title:         '⚙ Inställningar',
+      tagline:       'Highscores & Data',
+      back:          'Hem',
+      'ms-title':    'Minesweeper',
+      'pb-title':    'Pinball Krossar',
+      'sh-title':    'Supporthjalten',
+      'danger-title':'Farlig zon',
+      'danger-desc': 'Rensa alla highscores permanent från varje spel. Det går inte att ångra.',
+      'clear-game':  'Rensa poäng',
+      'clear-all':   '🗑 Rensa alla highscores',
+      'export-btn':  '📥 Exportera JSON',
+      footer:        'Gyllene Dag Spel © 2026',
+      rank: '#', name: 'Namn', score: 'Poäng', time: 'Tid',
+      easy: 'Lätt', medium: 'Medel', hard: 'Svår',
+      achievements: 'Prestationer', streak: 'Svit', rank_label: 'Rang',
+      empty: 'Inga poäng ännu',
+      toast_cleared: 'Poäng rensade!',
+      toast_all_cleared: 'Alla highscores rensade!',
+      toast_exported: 'Poäng exporterade till fil',
+      confirm_clear_game: 'Rensa poäng för detta spel?',
+      confirm_clear_all:  'Rensa ALLA highscores från varje spel? Det går inte att ångra.',
+    }
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'en';
+  function t(key) { return (translations[currentLang] || translations.en)[key] || key; }
+
+  function applyLang(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.title = t('pageTitle');
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      const val = (translations[lang] || translations.en)[key];
+      if (val !== undefined) el.textContent = val;
+    });
+    document.getElementById('lang-btn').textContent =
+      lang === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
+    renderAll();
+  }
+
+  /* ── Toast ─────────────────────────────────────────────────────────── */
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  /* ── Helpers ───────────────────────────────────────────────────────── */
+  function readJSON(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || []; }
+    catch (e) { return []; }
+  }
+
+  function fmtTime(s) {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return m > 0 ? m + 'm ' + sec + 's' : sec + 's';
+  }
+
+  /* ── Render tables ─────────────────────────────────────────────────── */
+  function makeTable(cols, rows) {
+    if (!rows || rows.length === 0) {
+      return '<p style="color:#606080;font-style:italic;font-size:0.88rem;padding:0.4rem 0">' +
+             t('empty') + '</p>';
+    }
+    let html = '<table class="hs-table"><thead><tr>';
+    cols.forEach(c => { html += '<th>' + c + '</th>'; });
+    html += '</tr></thead><tbody>';
+    rows.forEach((r, i) => {
+      html += '<tr>' + r.map((cell, ci) =>
+        '<td' + (ci === 0 ? '' : ci === 1 ? ' class="gold"' : '') + '>' + cell + '</td>'
+      ).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function renderMinesweeper() {
+    const el = document.getElementById('ms-scores');
+    const diffs = ['easy', 'medium', 'hard'];
+    let html = '';
+    diffs.forEach(d => {
+      const scores = readJSON('ms_hs_' + d);
+      html += '<div class="diff-label">' + t(d) + '</div>';
+      html += makeTable(
+        [t('rank'), t('name'), t('time')],
+        scores.map((s, i) => [i + 1, s.name, fmtTime(s.time)])
+      );
+    });
+    el.innerHTML = html;
+  }
+
+  function renderPinball() {
+    const scores = readJSON('pbBreaker_hs');
+    document.getElementById('pb-scores').innerHTML = makeTable(
+      [t('rank'), t('name'), t('score')],
+      scores.map((s, i) => [i + 1, s.name, s.score.toLocaleString()])
+    );
+  }
+
+  function renderSupportHero() {
+    const scores = readJSON('supportHeroLeaderboard');
+    document.getElementById('sh-scores').innerHTML = makeTable(
+      [t('rank'), t('name'), t('score'), t('achievements'), t('rank_label')],
+      scores.map((s, i) => [i + 1, s.name, s.score.toLocaleString(), s.achievements || 0, s.rank || ''])
+    );
+  }
+
+  function renderAll() {
+    renderMinesweeper();
+    renderPinball();
+    renderSupportHero();
+  }
+
+  /* ── Clear handlers ────────────────────────────────────────────────── */
+  document.getElementById('clear-ms').addEventListener('click', () => {
+    if (!confirm(t('confirm_clear_game'))) return;
+    ['easy', 'medium', 'hard'].forEach(d => localStorage.removeItem('ms_hs_' + d));
+    renderMinesweeper();
+    showToast(t('toast_cleared'));
+  });
+
+  document.getElementById('clear-pb').addEventListener('click', () => {
+    if (!confirm(t('confirm_clear_game'))) return;
+    localStorage.removeItem('pbBreaker_hs');
+    renderPinball();
+    showToast(t('toast_cleared'));
+  });
+
+  document.getElementById('clear-sh').addEventListener('click', () => {
+    if (!confirm(t('confirm_clear_game'))) return;
+    localStorage.removeItem('supportHeroLeaderboard');
+    renderSupportHero();
+    showToast(t('toast_cleared'));
+  });
+
+  document.getElementById('clear-all').addEventListener('click', () => {
+    if (!confirm(t('confirm_clear_all'))) return;
+    ['easy', 'medium', 'hard'].forEach(d => localStorage.removeItem('ms_hs_' + d));
+    localStorage.removeItem('pbBreaker_hs');
+    localStorage.removeItem('supportHeroLeaderboard');
+    renderAll();
+    showToast(t('toast_all_cleared'));
+  });
+
+  /* ── Export JSON ───────────────────────────────────────────────────── */
+  document.getElementById('export-btn').addEventListener('click', () => {
+    const data = {
+      exported: new Date().toISOString(),
+      minesweeper: {
+        easy:   readJSON('ms_hs_easy'),
+        medium: readJSON('ms_hs_medium'),
+        hard:   readJSON('ms_hs_hard'),
+      },
+      pinballBreaker:   readJSON('pbBreaker_hs'),
+      supportHero:      readJSON('supportHeroLeaderboard'),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'golden-day-highscores.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(t('toast_exported'));
+  });
+
+  /* ── Lang toggle ───────────────────────────────────────────────────── */
+  document.getElementById('lang-btn').addEventListener('click', () => {
+    const next = currentLang === 'en' ? 'sv' : 'en';
+    localStorage.setItem('lang', next);
+    applyLang(next);
+  });
+
+  /* ── Init ──────────────────────────────────────────────────────────── */
+  applyLang(currentLang);
+  </script>
+</body>
+</html>
