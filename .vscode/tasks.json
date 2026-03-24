@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build highscores api",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "-nologo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/HighscoresApi"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "run python server",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "server.py",
+        "8080"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

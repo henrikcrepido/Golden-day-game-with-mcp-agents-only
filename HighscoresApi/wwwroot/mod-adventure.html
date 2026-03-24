@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dungeon of Echoes — A MOD Adventure</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a12;
+      --panel:     #111120;
+      --border:    #2a2a4a;
+      --gold:      #ffd54f;
+      --gold2:     #ff8f00;
+      --red:       #ef4444;
+      --green:     #34d399;
+      --blue:      #60a5fa;
+      --purple:    #a78bfa;
+      --text:      #d4d4f0;
+      --muted:     #6060a0;
+      --btn:       #1e1e38;
+      --btn-hover: #2a2a50;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ─── Title Bar ─────────────────────────────────── */
+    #title-bar {
+      width: 100%;
+      background: linear-gradient(90deg, #0d0d22, #1a1a35, #0d0d22);
+      border-bottom: 2px solid var(--gold2);
+      text-align: center;
+      padding: 0.6rem 1rem;
+    }
+    #title-bar h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #title-bar .sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ─── Main Layout ───────────────────────────────── */
+    #game-wrapper {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 0;
+      width: 100%;
+      max-width: 1200px;
+      flex: 1;
+      padding: 1rem;
+      gap: 0.8rem;
+    }
+
+    /* ─── HUD ────────────────────────────────────────── */
+    #hud {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      flex-wrap: wrap;
+    }
+    .hud-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+    .hud-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+    }
+    .hud-label { color: var(--muted); text-transform: uppercase; font-size: 0.7rem; }
+    .hud-val   { font-weight: 700; }
+    .hp-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .bar-bg {
+      width: 110px;
+      height: 10px;
+      background: #222240;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    #hp-bar    { height: 100%; background: var(--red);    border-radius: 999px; transition: width 0.4s; }
+    #xp-bar    { height: 100%; background: var(--purple); border-radius: 999px; transition: width 0.4s; }
+
+    /* ─── Scene Panel ─────────────────────────────────── */
+    #scene-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #scene-canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+      border-bottom: 1px solid var(--border);
+    }
+    #location-name {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    #exits-bar {
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    #exits-bar span { color: var(--blue); font-weight: 700; }
+
+    /* ─── Action Buttons ────────────────────────────── */
+    #actions {
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .dir-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px;
+      width: 140px;
+    }
+    .dir-grid .placeholder { background: transparent; border: none; pointer-events: none; }
+    .action-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    button.act-btn {
+      background: var(--btn);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.45rem 0.9rem;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    button.act-btn:hover:not(:disabled) {
+      background: var(--btn-hover);
+      border-color: var(--gold2);
+      color: var(--gold);
+    }
+    button.act-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    button.act-btn.dir { width: 42px; height: 38px; padding: 0; font-size: 1rem; }
+    button.act-btn.attack { border-color: #7f1d1d; color: var(--red); }
+    button.act-btn.attack:hover:not(:disabled) { background: #3b0a0a; border-color: var(--red); }
+    button.act-btn.heal   { border-color: #064e3b; color: var(--green); }
+    button.act-btn.heal:hover:not(:disabled)   { background: #022c22; border-color: var(--green); }
+
+    /* ─── Log Panel ───────────────────────────────────── */
+    #log-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    #log-title {
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    #log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.8rem 1rem;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      max-height: 520px;
+      scroll-behavior: smooth;
+    }
+    #log::-webkit-scrollbar { width: 6px; }
+    #log::-webkit-scrollbar-track { background: transparent; }
+    #log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+
+    .log-entry { margin-bottom: 0.6rem; }
+    .log-entry.narrate { color: var(--text); }
+    .log-entry.move    { color: var(--blue); }
+    .log-entry.combat  { color: var(--red); }
+    .log-entry.reward  { color: var(--gold); }
+    .log-entry.heal-log { color: var(--green); }
+    .log-entry.system  { color: var(--muted); font-style: italic; }
+    .log-entry.look    { color: #c4b5fd; }
+    .log-entry.death   { color: var(--red); font-weight: 900; letter-spacing: 1px; }
+
+    .log-sep {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0.5rem 0;
+      opacity: 0.5;
+    }
+
+    /* ─── Input ───────────────────────────────────────── */
+    #input-row {
+      display: flex;
+      border-top: 1px solid var(--border);
+      padding: 0.5rem;
+      gap: 0.4rem;
+    }
+    #cmd-input {
+      flex: 1;
+      background: #0d0d1e;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      padding: 0.45rem 0.7rem;
+      outline: none;
+    }
+    #cmd-input:focus { border-color: var(--gold2); }
+    #cmd-input::placeholder { color: var(--muted); }
+    #cmd-btn {
+      background: var(--gold2);
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 900;
+      padding: 0.45rem 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #cmd-btn:hover { background: var(--gold); }
+
+    /* ─── Name Entry Overlay ────────────────────────── */
+    #name-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    #name-box {
+      background: var(--panel);
+      border: 2px solid var(--gold2);
+      border-radius: 16px;
+      padding: 2rem 2.5rem;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+    }
+    #name-box h2 { color: var(--gold); font-size: 1.4rem; margin-bottom: 0.5rem; letter-spacing: 2px; }
+    #name-box p  { color: var(--muted); font-size: 0.82rem; line-height: 1.6; margin-bottom: 1.2rem; }
+    #name-input {
+      width: 100%;
+      background: #0d0d1e;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 0.5rem 0.8rem;
+      margin-bottom: 1rem;
+      outline: none;
+      text-align: center;
+    }
+    #name-input:focus { border-color: var(--gold2); }
+    #name-start-btn {
+      background: var(--gold2);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 900;
+      padding: 0.6rem 1.8rem;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s;
+    }
+    #name-start-btn:hover { background: var(--gold); }
+
+    /* ─── Responsive ──────────────────────────────────── */
+    @media (max-width: 800px) {
+      #game-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ─── Pause Button ───────────────────────────────── */
+    #pause-btn {
+      padding: 5px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #pause-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    #pause-btn.paused { border-color: rgba(255,200,60,0.5); color: #ffd54f; }
+    #pause-btn:disabled { opacity: 0.4; cursor: default; }
+    #pause-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #fff;
+      font-weight: bold;
+      letter-spacing: 2px;
+      backdrop-filter: blur(4px);
+    }
+    #pause-overlay.active { display: flex; }
+
+    /* ─── Language Toggle ────────────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  </style>
+</head>
+<body>
+
+<button id="lang-btn">🇸🇪 SV</button>
+
+<!-- Name Entry Overlay -->
+<div id="name-overlay">
+  <div id="name-box">
+    <h2 data-i18n="overlay_title">⚔ DUNGEON OF ECHOES ⚔</h2>
+    <p data-i18n-html="overlay_desc">A Dungeons &amp; Dragons–style MOD adventure.<br>
+       Explore cursed ruins, fight monsters, and claim the Dragon's Hoard.<br><br>
+       What is your name, brave adventurer?</p>
+    <input id="name-input" type="text" maxlength="20" data-i18n-placeholder="overlay_placeholder" placeholder="Enter your name..." autocomplete="off" />
+    <br>
+    <button id="name-start-btn" data-i18n="overlay_btn">BEGIN QUEST</button>
+  </div>
+</div>
+
+<div id="title-bar">
+  <h1 data-i18n="title_h1">⚔ DUNGEON OF ECHOES ⚔</h1>
+  <div class="sub" data-i18n="title_sub">A MOD Text Adventure</div>
+</div>
+
+<div id="game-wrapper">
+
+  <!-- HUD -->
+  <div id="hud">
+    <span class="hud-name" id="hud-name">Adventurer</span>
+    <div class="hud-stat hp-bar-wrap">
+      <span class="hud-label" data-i18n="hud_hp">HP</span>
+      <div class="bar-bg"><div id="hp-bar" style="width:100%"></div></div>
+      <span class="hud-val" id="hud-hp">20/20</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label" data-i18n="hud_atk">ATK</span>
+      <span class="hud-val" id="hud-atk">5</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label" data-i18n="hud_def">DEF</span>
+      <span class="hud-val" id="hud-def">2</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label" data-i18n="hud_lvl">LVL</span>
+      <span class="hud-val" id="hud-lvl">1</span>
+    </div>
+    <div class="hud-stat hp-bar-wrap">
+      <span class="hud-label" data-i18n="hud_xp">XP</span>
+      <div class="bar-bg"><div id="xp-bar" style="width:0%"></div></div>
+      <span class="hud-val" id="hud-xp">0/100</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label">🪙</span>
+      <span class="hud-val" id="hud-gold">0</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label">🧪</span>
+      <span class="hud-val" id="hud-potions">3</span>
+    </div>
+    <button id="pause-btn" data-i18n="pause_btn" data-i18n-title="pause_btn" disabled>⏸ Pause</button>
+  </div>
+
+<div id="pause-overlay"><span id="pause-label" data-i18n="paused_label">⏸ PAUSED</span></div>
+
+  <!-- Scene / Left Panel -->
+  <div id="scene-panel">
+    <canvas id="scene-canvas" width="420" height="260"></canvas>
+    <div id="location-name">The Village of Ashenveil</div>
+    <div id="exits-bar"><span data-i18n="exits_label">Exits:</span> <span id="exits-list">—</span></div>
+    <div id="actions">
+      <!-- Compass rose -->
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;" data-i18n="move_label">MOVE</div>
+          <div class="dir-grid">
+            <div class="placeholder"></div>
+            <button class="act-btn dir" id="btn-n"  data-i18n-title="dir_north" title="Go North">↑</button>
+            <div class="placeholder"></div>
+            <button class="act-btn dir" id="btn-w"  data-i18n-title="dir_west"  title="Go West">←</button>
+            <button class="act-btn dir" id="btn-s"  data-i18n-title="dir_south" title="Go South">↓</button>
+            <button class="act-btn dir" id="btn-e"  data-i18n-title="dir_east"  title="Go East">→</button>
+            <div class="placeholder"></div>
+            <div class="placeholder"></div>
+            <div class="placeholder"></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:3px;letter-spacing:1px;" data-i18n="actions_label">ACTIONS</div>
+          <div class="action-group">
+            <button class="act-btn attack" id="btn-attack" title="Attack enemy"        data-i18n="btn_attack">⚔ Attack</button>
+            <button class="act-btn heal"   id="btn-heal"   title="Use healing potion"  data-i18n="btn_potion">🧪 Potion</button>
+            <button class="act-btn"        id="btn-look"   title="Look around"         data-i18n="btn_look">👁 Look</button>
+            <button class="act-btn"        id="btn-inv"    title="Check inventory"     data-i18n="btn_inv">🎒 Inv</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log / Right Panel -->
+  <div id="log-panel">
+    <div id="log-title" data-i18n="log_title">📜 Chronicle of your Journey</div>
+    <div id="log"></div>
+    <div id="input-row">
+      <input id="cmd-input" type="text" data-i18n-placeholder="cmd_placeholder" placeholder="Type a command: go north · attack · look · use potion · inventory…" autocomplete="off" />
+      <button id="cmd-btn" data-i18n="cmd_btn">▶ DO</button>
+    </div>
+  </div>
+
+</div><!-- /game-wrapper -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   DUNGEON OF ECHOES  —  MOD Text Adventure
+   Self-contained single-file game
+   ══════════════════════════════════════════════════════════════════ */
+
+// ─── i18n ────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    page_title:        'Dungeon of Echoes — A MOD Adventure',
+    title_h1:          '⚔ DUNGEON OF ECHOES ⚔',
+    title_sub:         'A MOD Text Adventure',
+    overlay_title:     '⚔ DUNGEON OF ECHOES ⚔',
+    overlay_desc:      'A Dungeons &amp; Dragons–style MOD adventure.<br>Explore cursed ruins, fight monsters, and claim the Dragon\'s Hoard.<br><br>What is your name, brave adventurer?',
+    overlay_placeholder: 'Enter your name...',
+    overlay_btn:       'BEGIN QUEST',
+    hud_hp:            'HP',
+    hud_atk:           'ATK',
+    hud_def:           'DEF',
+    hud_lvl:           'LVL',
+    hud_xp:            'XP',
+    exits_label:       'Exits:',
+    dir_north:         'Go North',
+    dir_south:         'Go South',
+    dir_east:          'Go East',
+    dir_west:          'Go West',
+    move_label:        'MOVE',
+    actions_label:     'ACTIONS',
+    btn_attack:        '⚔ Attack',
+    btn_potion:        '🧪 Potion',
+    btn_look:          '👁 Look',
+    btn_inv:           '🎒 Inv',
+    log_title:         '📜 Chronicle of your Journey',
+    cmd_placeholder:   'Type a command: go north · attack · look · use potion · inventory…',
+    cmd_btn:           '▶ DO',
+    death_msg:         '☠☠☠ <strong>YOU HAVE FALLEN.</strong> ☠☠☠',
+    death_sub:         '<em>Refresh the page to begin anew, brave soul.</em>',
+    pause_btn:         '⏸ Pause',
+    resume_btn:        '▶ Resume',
+    paused_label:      '⏸ PAUSED',
+  },
+  sv: {
+    page_title:        'Ekornas Håla — Ett MOD Äventyr',
+    title_h1:          '⚔ EKORNAS HÅLA ⚔',
+    title_sub:         'Ett MOD Textäventyr',
+    overlay_title:     '⚔ EKORNAS HÅLA ⚔',
+    overlay_desc:      'Ett Dungeons &amp; Dragons-inspirerat MOD-äventyr.<br>Utforska förbannade ruiner, kämpa mot monster och gör anspråk på Drakens Skatt.<br><br>Vad heter du, modige äventyrare?',
+    overlay_placeholder: 'Ange ditt namn...',
+    overlay_btn:       'BÖRJA ÄVENTYRET',
+    hud_hp:            'HP',
+    hud_atk:           'ATK',
+    hud_def:           'DEF',
+    hud_lvl:           'NIV',
+    hud_xp:            'XP',
+    exits_label:       'Utgångar:',
+    dir_north:         'Gå Norrut',
+    dir_south:         'Gå Söderut',
+    dir_east:          'Gå Österut',
+    dir_west:          'Gå Västerut',
+    move_label:        'FLYTTA',
+    actions_label:     'HANDLINGAR',
+    btn_attack:        '⚔ Attackera',
+    btn_potion:        '🧪 Trolldryck',
+    btn_look:          '👁 Titta',
+    btn_inv:           '🎒 Bag',
+    log_title:         '📜 Krönika över din Resa',
+    cmd_placeholder:   'Skriv ett kommando: gå norrut · attackera · titta · använd trolldryck · inventarie…',
+    cmd_btn:           '▶ GÖR',
+    death_msg:         '☠☠☠ <strong>DU HAR STUPAT.</strong> ☠☠☠',
+    death_sub:         '<em>Ladda om sidan för att börja om, modige själ.</em>',
+    pause_btn:         '⏸ Pausa',
+    resume_btn:        '▶ Fortsätt',
+    paused_label:      '⏸ PAUSAD',
+  },
+};
+
+let currentLang = localStorage.getItem('lang') || 'en';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS.en)[key] || key;
+}
+
+function applyLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.title = t('page_title');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) langBtn.textContent = lang === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
+}
+
+applyLang(currentLang);
+
+// ─── Dice ────────────────────────────────────────────────────────
+function roll(sides) { return Math.floor(Math.random() * sides) + 1; }
+function rollD6()    { return roll(6);  }
+function rollD8()    { return roll(8);  }
+function rollD20()   { return roll(20); }
+
+// ─── World Data ──────────────────────────────────────────────────
+const ROOMS = {
+  village: {
+    id: 'village',
+    name: 'The Village of Ashenveil',
+    scene: 'village',
+    description: [
+      'You stand at the heart of Ashenveil, a crumbling village perpetually shrouded in grey mist.',
+      'Thatched rooftops lean against each other like exhausted sentinels. A rusted weathervane spins atop the old inn, and the smell of wood smoke drifts from a chimney.',
+      'Townsfolk hurry past with fearful eyes, whispering of the darkness spreading from the ruins to the north.',
+    ],
+    exits: { north: 'forest', east: 'blacksmith' },
+    enemies: [],
+    items: ['gold_coin'],
+  },
+  blacksmith: {
+    id: 'blacksmith',
+    name: 'The Ashenveil Smithy',
+    scene: 'tavern',
+    description: [
+      'The smithy is warm with the glow of a forge. The rhythmic clang of hammer on steel fills the air.',
+      'Weapons and armour adorn every wall — swords of varying quality, bucklers dented by battle, and a magnificent golden shield behind the counter.',
+      'Old Tormund the blacksmith wipes sweat from his brow and eyes you with a merchant\'s appraisal.',
+    ],
+    exits: { west: 'village' },
+    enemies: [],
+    items: ['short_sword'],
+  },
+  forest: {
+    id: 'forest',
+    name: 'The Whispering Forest',
+    scene: 'forest',
+    description: [
+      'Ancient oaks close overhead, their gnarled branches intertwining like the fingers of giants. Only thin shafts of pale light pierce the canopy.',
+      'The forest whispers with an uncanny intelligence — leaves rustle without wind, and shadows dart between the trunks just beyond your vision.',
+      'A narrow, root-tangled path continues northward toward the ruined spires you saw from the village. To the south lies the comparative safety of Ashenveil.',
+    ],
+    exits: { south: 'village', north: 'cave_entrance', east: 'graveyard' },
+    enemies: ['wolf', 'goblin'],
+    items: [],
+  },
+  graveyard: {
+    id: 'graveyard',
+    name: 'The Forgotten Graveyard',
+    scene: 'graveyard',
+    description: [
+      'Crooked tombstones erupt from the earth at broken angles, names worn smooth by centuries of rain.',
+      'Dead willows drag their skeletal branches across the ground. The air tastes of cold iron and old grief.',
+      'Something stirs among the graves — a pair of hollow, glowing sockets watches you from behind a tilting obelisk.',
+    ],
+    exits: { west: 'forest', north: 'ruins' },
+    enemies: ['skeleton', 'ghoul'],
+    items: ['gold_coin', 'healing_potion'],
+  },
+  cave_entrance: {
+    id: 'cave_entrance',
+    name: 'The Maw of the Abyss',
+    scene: 'cave_entrance',
+    description: [
+      'A vast cave mouth yawns before you, edged in black stone worn smooth by centuries of foul winds exhaling from the deep.',
+      'Claw marks score the stone archway — wide, deep gouges that no human hand could make.',
+      'From the darkness below comes the distant echo of dripping water and a low, guttural growl that you feel more than hear.',
+    ],
+    exits: { south: 'forest', north: 'dungeon_hall', east: 'ruins' },
+    enemies: ['orc', 'bat_swarm'],
+    items: ['torch'],
+  },
+  ruins: {
+    id: 'ruins',
+    name: 'The Shattered Sanctum',
+    scene: 'ruins',
+    description: [
+      'The sanctum of some forgotten god lies in magnificent ruin. Massive columns lean at impossible angles, held up by nothing but stubbornness.',
+      'Faded murals on the surviving walls depict terrible winged creatures — you recognise them now: they are dragons, worshipped as gods.',
+      'At the centre of the shattered floor, a spiral staircase descends into cold darkness.',
+    ],
+    exits: { west: 'cave_entrance', south: 'graveyard', down: 'underground_lake' },
+    enemies: ['dark_elf', 'stone_golem'],
+    items: ['ancient_scroll'],
+  },
+  dungeon_hall: {
+    id: 'dungeon_hall',
+    name: 'The Hall of the Fallen',
+    scene: 'dungeon_hall',
+    description: [
+      'A vast subterranean hall stretches before you, its vaulted ceiling lost in shadow. Iron torches along the walls have long since burned to cold black husks.',
+      'The stone floor is littered with the bones of warriors who came before you, their rusted armour still clinging to crumbling skeletons.',
+      'Somewhere ahead a dim amber glow pulses, rhythmic as a terrible heartbeat.',
+    ],
+    exits: { south: 'cave_entrance', north: 'underground_lake', east: 'treasure_room' },
+    enemies: ['orc_captain', 'skeleton'],
+    items: ['iron_shield'],
+  },
+  underground_lake: {
+    id: 'underground_lake',
+    name: 'The Lake of Whispers',
+    scene: 'underground_lake',
+    description: [
+      'An underground lake spreads before you, utterly still and black as obsidian. Bioluminescent moss on the cavern walls casts the water in ghostly blue-green light.',
+      'Your reflection stares back at you — but for a moment, you swear it mouths words you cannot hear.',
+      'A rickety wooden raft is moored to a post of black iron. Across the lake, a passage glows with dull orange light.',
+    ],
+    exits: { south: 'dungeon_hall', north: 'dragon_lair', up: 'ruins' },
+    enemies: ['cave_troll', 'water_wraith'],
+    items: ['enchanted_blade'],
+  },
+  treasure_room: {
+    id: 'treasure_room',
+    name: 'The Vault of Ages',
+    scene: 'treasure_room',
+    description: [
+      'Gold. Mountains of it. Coins, goblets, crowns, and artefacts of breathtaking antiquity are piled floor to ceiling.',
+      'Gemstones catch the light from cracks in the ceiling — rubies red as heart\'s blood, sapphires blue as winter sky.',
+      'You feel the weight of forgotten kings watching you from the shadows. Take what you must, but do not be greedy — or the vault may never let you leave.',
+    ],
+    exits: { west: 'dungeon_hall' },
+    enemies: ['cursed_knight'],
+    items: ['gold_coin', 'gold_coin', 'gold_coin', 'healing_potion', 'ruby_amulet'],
+  },
+  dragon_lair: {
+    id: 'dragon_lair',
+    name: "Malachar's Lair",
+    scene: 'dragon_lair',
+    description: [
+      'At last — the lair of Malachar the Abyssal, elder dragon and scourge of the realm.',
+      'Enormous bones of previous challengers ring the perimeter. Breath-scorched stone tells the story of countless battles won by the beast.',
+      'The dragon himself is coiled upon a throne of melted gold, one vast eye sliding open as your footstep echoes. A voice like a landslide fills your mind: "Another mortal. How… tedious."',
+    ],
+    exits: { south: 'underground_lake' },
+    enemies: ['malachar'],
+    items: [],
+  },
+};
+
+const ENEMIES = {
+  wolf:          { name: 'Slavering Wolf',       hp: 12, atk: 4,  def: 1, xp: 20,  gold: 0,  desc: 'A lean grey wolf, ribs showing, desperation sharpening its fangs.' },
+  goblin:        { name: 'Sneaky Goblin',         hp: 10, atk: 3,  def: 1, xp: 15,  gold: 5,  desc: 'A knee-high creature with wide, cunning eyes and a rusty dagger.' },
+  bat_swarm:     { name: 'Bat Swarm',             hp: 8,  atk: 2,  def: 0, xp: 10,  gold: 0,  desc: 'A shrieking cloud of leathery wings and tiny needle-teeth.' },
+  orc:           { name: 'Cave Orc',              hp: 18, atk: 6,  def: 3, xp: 35,  gold: 8,  desc: 'A brutish orc, grey-skinned and scarred, clutching a notched war-axe.' },
+  skeleton:      { name: 'Animated Skeleton',     hp: 14, atk: 5,  def: 2, xp: 25,  gold: 3,  desc: 'Bones knit by dark magic, hollow eye sockets burning with green fire.' },
+  ghoul:         { name: 'Putrid Ghoul',          hp: 16, atk: 7,  def: 2, xp: 40,  gold: 6,  desc: 'A once-human creature hunched with hunger, nails grown to black talons.' },
+  dark_elf:      { name: 'Dark Elf Assassin',     hp: 20, atk: 9,  def: 4, xp: 55,  gold: 15, desc: 'A lithe figure swathed in midnight silk, twin blades gleaming.' },
+  stone_golem:   { name: 'Stone Golem',           hp: 30, atk: 8,  def: 6, xp: 70,  gold: 5,  desc: 'A seven-foot construct of granite and ancient magic, eyes of molten rock.' },
+  orc_captain:   { name: 'Orc Warchief',          hp: 28, atk: 11, def: 5, xp: 80,  gold: 20, desc: 'A massive orc draped in orcish finery — trophy skulls jangle at its belt.' },
+  cave_troll:    { name: 'Cave Troll',            hp: 35, atk: 12, def: 4, xp: 90,  gold: 10, desc: 'A hulking troll, skin like stone, swinging fists the size of anvils.' },
+  water_wraith:  { name: 'Water Wraith',          hp: 18, atk: 8,  def: 3, xp: 50,  gold: 0,  desc: 'A translucent apparition of a drowned sailor, icy fingers reaching for your throat.' },
+  cursed_knight: { name: 'Cursed Champion',       hp: 40, atk: 14, def: 8, xp: 110, gold: 50, desc: 'A once-noble knight sealed in black armour, driven mad by greed.' },
+  malachar:      { name: 'Malachar the Abyssal',  hp: 80, atk: 18, def: 10,xp: 500, gold: 200,desc: 'Ancient. Immense. A dragon whose very breath is the distillation of despair.' },
+};
+
+const ITEMS = {
+  gold_coin:      { name: 'Gold Coin',        type: 'gold',    value: 10,  desc: 'A shining coin stamped with a forgotten king\'s face.' },
+  healing_potion: { name: 'Healing Potion',   type: 'potion',  heal: 20,   desc: 'A vial of warm red liquid. Smells of elderberries and earth.' },
+  short_sword:    { name: 'Short Sword',      type: 'weapon',  atk: 3,     desc: 'A reliable blade, double-edged and well-balanced.' },
+  iron_shield:    { name: 'Iron Shield',      type: 'armor',   def: 3,     desc: 'A heavy shield bearing a crest worn smooth by time.' },
+  enchanted_blade:{ name: 'Enchanted Blade',  type: 'weapon',  atk: 7,     desc: 'A sword humming with blue runes. The edge never dulls.' },
+  ruby_amulet:    { name: 'Ruby Amulet',      type: 'amulet',  maxhp: 15,  desc: 'A pulsing ruby set in silver. You feel more vital wearing it.' },
+  ancient_scroll: { name: 'Ancient Scroll',   type: 'scroll',  xp: 30,     desc: 'A brittle parchment covered in arcane script. Reading it grants wisdom.' },
+  torch:          { name: 'Torch',            type: 'misc',               desc: 'A pitch-soaked torch, still usable.' },
+};
+
+// ─── Player State ─────────────────────────────────────────────────
+const player = {
+  name:     'Adventurer',
+  location: 'village',
+  hp:       20,
+  maxHp:    20,
+  atk:      5,
+  def:      2,
+  level:    1,
+  xp:       0,
+  xpNext:   100,
+  gold:     0,
+  potions:  3,
+  inventory:[],
+  inCombat: false,
+  enemy:    null,  // current enemy instance {template, hp}
+  dead:     false,
+};
+
+let isPaused = false;
+
+// ─── Scene Rendering ─────────────────────────────────────────────
+const canvas = document.getElementById('scene-canvas');
+const ctx    = canvas.getContext('2d');
+
+// Palette helpers
+function sky(c1, c2) {
+  const g = ctx.createLinearGradient(0, 0, 0, 260);
+  g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+}
+
+const scenes = {
+  village() {
+    // Sky
+    const bg = sky('#1a1a3e','#2d1b5e');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,420,260);
+    // Mist
+    ctx.fillStyle = 'rgba(180,180,220,0.07)';
+    ctx.fillRect(0,140,420,120);
+    // Moon
+    ctx.beginPath(); ctx.arc(340,40,22,0,Math.PI*2);
+    ctx.fillStyle='#fffde7'; ctx.fill();
+    ctx.beginPath(); ctx.arc(350,36,18,0,Math.PI*2);
+    ctx.fillStyle='#1a1a3e'; ctx.fill();
+    // Stars
+    [[20,20],[60,10],[100,30],[150,8],[200,22],[250,5],[300,18],[360,28],[400,12]].forEach(([x,y])=>{
+      ctx.beginPath(); ctx.arc(x,y,1.2,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fill();
+    });
+    // Ground
+    ctx.fillStyle='#1b1b2f'; ctx.fillRect(0,200,420,60);
+    // Houses
+    function house(x,w,h,roof,color){
+      ctx.fillStyle=color; ctx.fillRect(x,200-h,w,h);
+      ctx.fillStyle=roof;
+      ctx.beginPath(); ctx.moveTo(x-8,200-h); ctx.lineTo(x+w/2,200-h-30); ctx.lineTo(x+w+8,200-h); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='rgba(255,200,50,0.35)';
+      ctx.fillRect(x+w*0.2, 200-h+h*0.4, w*0.25, h*0.3);
+      ctx.fillRect(x+w*0.55, 200-h+h*0.4, w*0.25, h*0.3);
+    }
+    house(30, 60, 60, '#5c1c1c','#2d2d4a');
+    house(110, 80, 75, '#3d2c00','#252538');
+    house(215, 55, 50, '#5c1c1c','#2a2a42');
+    house(295, 90, 80, '#3d2c00','#1e1e32');
+    // Inn sign
+    ctx.fillStyle='#8B4513'; ctx.fillRect(137,135,6,30);
+    ctx.fillStyle='#6B3410'; ctx.fillRect(130,128,20,12); ctx.fillStyle='#ffd54f';
+    ctx.font='bold 7px Courier New'; ctx.fillText('INN',132,136);
+    // Cobblestones
+    for(let i=0;i<420;i+=35){ ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.beginPath(); ctx.arc(i,215,12,0,Math.PI); ctx.stroke(); }
+    // Smoke
+    ctx.strokeStyle='rgba(200,200,200,0.15)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(155,145); ctx.quadraticCurveTo(150,130,158,118); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(165,140); ctx.quadraticCurveTo(172,128,163,115); ctx.stroke();
+  },
+
+  forest() {
+    const bg = sky('#0a0f1a','#0d1a0d');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,420,260);
+    // Moon
+    ctx.beginPath(); ctx.arc(210,35,18,0,Math.PI*2); ctx.fillStyle='#e8e0c0'; ctx.fill();
+    // Stars
+    [[40,15],[80,25],[130,10],[170,30],[260,12],[310,20],[370,18],[400,30]].forEach(([x,y])=>{
+      ctx.beginPath(); ctx.arc(x,y,1,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fill();
+    });
+    // Ground
+    ctx.fillStyle='#0d1a0a'; ctx.fillRect(0,200,420,60);
+    // Trees
+    function tree(x,h,trunk){
+      ctx.fillStyle='#3b2208'; ctx.fillRect(x-6,200-trunk,12,trunk);
+      // Layers of foliage
+      [[0,h,60],[0,h*0.6,70],[0,h*0.35,55]].forEach(([dy,fh,fw])=>{
+        ctx.fillStyle=`rgba(10,${60+Math.random()*30},10,0.9)`;
+        ctx.beginPath(); ctx.moveTo(x-fw/2,200-trunk-dy); ctx.lineTo(x,200-trunk-dy-fh); ctx.lineTo(x+fw/2,200-trunk-dy); ctx.closePath(); ctx.fill();
+      });
+    }
+    [10,70,130,200,260,320,380].forEach((x,i)=>tree(x, 60+i%3*20, 50+i%2*20));
+    // Path
+    ctx.beginPath();
+    ctx.moveTo(170,260); ctx.lineTo(195,200); ctx.lineTo(230,200); ctx.lineTo(255,260);
+    ctx.fillStyle='rgba(80,60,30,0.6)'; ctx.fill();
+    // Fireflies
+    [[100,180],[160,160],[280,170],[330,185]].forEach(([x,y])=>{
+      ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,255,100,0.7)'; ctx.fill();
+    });
+    // Fog wisps
+    ctx.fillStyle='rgba(120,160,120,0.06)';
+    [[-20,210,200,40],[80,195,180,35],[200,205,220,30]].forEach(([x,y,w,h])=>{
+      ctx.beginPath(); ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2); ctx.fill();
+    });
+  },
+
+  graveyard() {
+    const bg = sky('#070712','#100c1e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,420,260);
+    // Moon half-covered
+    ctx.beginPath(); ctx.arc(60,45,24,0,Math.PI*2); ctx.fillStyle='#c0bca0'; ctx.fill();
+    ctx.fillStyle='rgba(20,15,35,0.5)'; ctx.fillRect(60,21,80,48);
+    // Eerie sky colour
+    ctx.fillStyle='rgba(80,0,80,0.08)'; ctx.fillRect(0,0,420,260);
+    // Ground
+    ctx.fillStyle='#0f0d18'; ctx.fillRect(0,195,420,65);
+    // Graves
+    function grave(x,h,lean){
+      ctx.save(); ctx.translate(x,195); ctx.rotate(lean*Math.PI/180);
+      ctx.fillStyle='#2a2a3a';
+      ctx.fillRect(-12,-h,24,h);
+      ctx.beginPath(); ctx.arc(0,-h,12,Math.PI,0); ctx.fillStyle='#252535'; ctx.fill();
+      ctx.strokeStyle='rgba(150,100,200,0.3)'; ctx.lineWidth=0.5;
+      ctx.strokeRect(-10,-h+5,20,10);
+      ctx.restore();
+    }
+    [[60,50,-8],[110,65,5],[170,45,-3],[240,70,7],[300,55,-5],[360,60,4],[400,42,-6]].forEach(([x,h,l])=>grave(x,h,l));
+    // Cross grave
+    ctx.fillStyle='#1a1a28'; ctx.fillRect(200,150,8,45); ctx.fillRect(188,158,32,8);
+    // Dead trees
+    function deadTree(x){
+      ctx.strokeStyle='#2a1a0a'; ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(x,195); ctx.lineTo(x,130);
+      ctx.lineTo(x-25,95); ctx.moveTo(x,150); ctx.lineTo(x+20,115);
+      ctx.moveTo(x-25,95); ctx.lineTo(x-40,75); ctx.stroke();
+    }
+    deadTree(30); deadTree(390);
+    // Fog
+    ctx.fillStyle='rgba(100,80,140,0.08)';
+    ctx.beginPath(); ctx.ellipse(210,210,200,30,0,0,Math.PI*2); ctx.fill();
+    // Glowing eyes
+    [[240,175],[350,182]].forEach(([x,y])=>{
+      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fillStyle='rgba(0,220,0,0.8)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x+10,y,3,0,Math.PI*2); ctx.fillStyle='rgba(0,220,0,0.8)'; ctx.fill();
+    });
+  },
+
+  cave_entrance() {
+    const bg = sky('#050509','#080c08');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,420,260);
+    // Mouth of cave
+    ctx.beginPath();
+    ctx.moveTo(0,260); ctx.lineTo(0,160); ctx.quadraticCurveTo(20,80,90,60);
+    ctx.quadraticCurveTo(210,20,330,60); ctx.quadraticCurveTo(400,80,420,160);
+    ctx.lineTo(420,260); ctx.closePath();
+    ctx.fillStyle='#0a0a0a'; ctx.fill();
+    // Outer rock cliff
+    ctx.beginPath(); ctx.moveTo(0,260); ctx.lineTo(0,180); ctx.lineTo(80,130); ctx.lineTo(80,260); ctx.closePath();
+    ctx.fillStyle='#1a1a1a'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(420,260); ctx.lineTo(420,180); ctx.lineTo(340,130); ctx.lineTo(340,260); ctx.closePath();
+    ctx.fillStyle='#141414'; ctx.fill();
+    // Sky peaking at top
+    const skyGrad = sky('#0a0f20','#1a0d30');
+    ctx.fillStyle=skyGrad; ctx.fillRect(0,0,420,60);
+    // Claw marks
+    ctx.strokeStyle='rgba(180,30,30,0.5)'; ctx.lineWidth=2;
+    [[100,80,110,120],[108,78,118,118],[116,82,126,122]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    [[300,82,290,122],[308,80,298,120],[316,84,306,124]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    // Glow from inside
+    const glow = ctx.createRadialGradient(210,260,10,210,260,180);
+    glow.addColorStop(0,'rgba(100,40,0,0.4)'); glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow; ctx.fillRect(0,0,420,260);
+    // Rocks at base
+    [[50,255,40,20],[110,258,30,15],[300,256,45,18],[370,254,35,20]].forEach(([x,y,w,h])=>{
+      ctx.beginPath(); ctx.ellipse(x,y,w/2,h/2,0,0,Math.PI*2);
+      ctx.fillStyle='#1e1e1e'; ctx.fill();
+    });
+  },
+
+  ruins() {
+    const bg = sky('#0d0820','#180a2e');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,420,260);
+    // Stars
+    for(let i=0;i<25;i++){
+      ctx.beginPath(); ctx.arc(Math.random()*420,Math.random()*100,0.8,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.fill();
+    }
+    // Ground
+    ctx.fillStyle='#111118'; ctx.fillRect(0,210,420,50);
+    // Broken columns
+    function column(x, topY, broken){
+      const cw=22;
+      // Capital
+      ctx.fillStyle='#2e2e44'; ctx.fillRect(x-cw/2-4,topY-10,cw+8,10);
+      // Shaft
+      if(!broken){
+        ctx.fillStyle='#252538'; ctx.fillRect(x-cw/2,topY,cw,210-topY);
+      } else {
+        const mid = topY + (210-topY)*0.6;
+        ctx.fillStyle='#252538'; ctx.fillRect(x-cw/2,topY,cw,mid-topY);
+        // fallen piece
+        ctx.save(); ctx.translate(x-cw/2,mid+5); ctx.rotate(0.3);
+        ctx.fillStyle='#252538'; ctx.fillRect(0,0,cw,40); ctx.restore();
+      }
+    }
+    column(60, 90, false); column(140, 120, true); column(220, 80, false);
+    column(300, 110, true); column(380, 95, false);
+    // Arch remnant
+    ctx.strokeStyle='#2e2e44'; ctx.lineWidth=14;
+    ctx.beginPath(); ctx.arc(210,150,80,Math.PI,0); ctx.stroke();
+    // Runes on ground
+    ctx.strokeStyle='rgba(120,60,200,0.3)'; ctx.lineWidth=1;
+    [[150,220,70],[210,225,50],[260,218,60]].forEach(([x,y,r])=>{
+      ctx.beginPath(); ctx.arc(x,y,r/2,0,Math.PI*2); ctx.stroke();
+    });
+    // Mural silhouette (dragon on wall)
+    ctx.fillStyle='rgba(150,60,0,0.15)';
+    ctx.beginPath(); ctx.moveTo(180,100); ctx.lineTo(250,60); ctx.lineTo(290,80);
+    ctx.lineTo(260,120); ctx.lineTo(220,130); ctx.closePath(); ctx.fill();
+  },
+
+  dungeon_hall() {
+    const bg = sky('#050508','#080508');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,420,260);
+    // Floor perspective
+    ctx.fillStyle='#0e0e14'; ctx.fillRect(0,180,420,80);
+    // Perspective lines
+    ctx.strokeStyle='rgba(80,80,120,0.2)'; ctx.lineWidth=1;
+    for(let i=0;i<420;i+=40){
+      ctx.beginPath(); ctx.moveTo(210,130); ctx.lineTo(i,260); ctx.stroke();
+    }
+    // Ceiling
+    ctx.fillStyle='#080810'; ctx.fillRect(0,0,420,80);
+    // Walls
+    ctx.fillStyle='#0f0f1a'; ctx.fillRect(0,80,60,180); ctx.fillRect(360,80,60,180);
+    // Wall torches
+    function torch(x){
+      ctx.fillStyle='#4a2800'; ctx.fillRect(x-3,130,6,20);
+      const tg = ctx.createRadialGradient(x,128,0,x,128,35);
+      tg.addColorStop(0,'rgba(255,140,0,0.7)'); tg.addColorStop(1,'transparent');
+      ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(x,128,35,0,Math.PI*2); ctx.fill();
+      // Flame
+      ctx.fillStyle='#ff8c00';
+      ctx.beginPath(); ctx.moveTo(x-5,130); ctx.quadraticCurveTo(x,118,x+5,130); ctx.closePath(); ctx.fill();
+    }
+    torch(55); torch(365);
+    // Bones on floor
+    ctx.strokeStyle='rgba(200,190,160,0.4)'; ctx.lineWidth=2;
+    [[100,200,130,205],[105,208,120,198],[200,215,240,210],[205,205,235,218]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    // Skull
+    ctx.beginPath(); ctx.arc(310,212,8,0,Math.PI*2); ctx.fillStyle='rgba(200,190,160,0.5)'; ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.beginPath(); ctx.arc(306,211,2,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(314,211,2,0,Math.PI*2); ctx.fill();
+    // Glowing passage ahead
+    const passGlow = ctx.createRadialGradient(210,130,5,210,130,80);
+    passGlow.addColorStop(0,'rgba(180,80,0,0.3)'); passGlow.addColorStop(1,'transparent');
+    ctx.fillStyle=passGlow; ctx.fillRect(0,80,420,180);
+    // Dark arch
+    ctx.strokeStyle='#1e1e30'; ctx.lineWidth=10;
+    ctx.beginPath(); ctx.arc(210,180,70,Math.PI,0); ctx.stroke();
+    ctx.fillStyle='#030305'; ctx.beginPath(); ctx.arc(210,180,65,Math.PI,0); ctx.fill();
+    ctx.fillRect(145,180,130,80);
+  },
+
+  underground_lake() {
+    // Cavern ceiling
+    ctx.fillStyle='#060610'; ctx.fillRect(0,0,420,260);
+    // Stalactites
+    ctx.fillStyle='#0f0f1e';
+    [[30,0,18,50],[80,0,14,40],[140,0,20,60],[200,0,12,35],[270,0,22,55],[330,0,15,45],[390,0,18,50]].forEach(([x,y,w,h])=>{
+      ctx.beginPath(); ctx.moveTo(x-w/2,y); ctx.lineTo(x+w/2,y); ctx.lineTo(x,y+h); ctx.closePath(); ctx.fill();
+    });
+    // Water
+    const waterGrad = ctx.createLinearGradient(0,140,0,260);
+    waterGrad.addColorStop(0,'#001830'); waterGrad.addColorStop(1,'#000a18');
+    ctx.fillStyle=waterGrad; ctx.fillRect(0,140,420,120);
+    // Bioluminescent moss glow
+    [[0,140,140,120],[280,140,140,120]].forEach(([x,y,w,h])=>{
+      const mg = ctx.createRadialGradient(x+w/2,y+h/2,10,x+w/2,y+h/2,w/2);
+      mg.addColorStop(0,'rgba(0,180,140,0.25)'); mg.addColorStop(1,'transparent');
+      ctx.fillStyle=mg; ctx.fillRect(x,y,w,h);
+    });
+    // Reflections / ripples
+    ctx.strokeStyle='rgba(0,180,140,0.2)'; ctx.lineWidth=1;
+    [[100,175,60],[200,168,40],[320,180,55]].forEach(([x,y,r])=>{
+      ctx.beginPath(); ctx.ellipse(x,y,r,r/5,0,0,Math.PI*2); ctx.stroke();
+    });
+    // Rock shores
+    ctx.fillStyle='#0d0d1a'; ctx.fillRect(0,135,420,10);
+    ctx.fillStyle='#080810'; ctx.beginPath(); ctx.moveTo(0,140); ctx.lineTo(50,135); ctx.lineTo(100,138); ctx.lineTo(0,260); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#080810'; ctx.beginPath(); ctx.moveTo(420,140); ctx.lineTo(370,135); ctx.lineTo(320,140); ctx.lineTo(420,260); ctx.closePath(); ctx.fill();
+    // Raft
+    ctx.fillStyle='#4a2e0e'; ctx.fillRect(155,150,60,15);
+    ctx.fillStyle='#3a2008'; ctx.fillRect(158,152,10,11); ctx.fillRect(172,152,10,11); ctx.fillRect(186,152,10,11);
+    ctx.fillStyle='#6b3a10'; ctx.fillRect(181,140,4,15); // mast
+    ctx.fillStyle='rgba(200,160,80,0.5)'; ctx.beginPath(); ctx.moveTo(183,140); ctx.lineTo(183,148); ctx.lineTo(195,144); ctx.closePath(); ctx.fill();
+    // Glowing passage far shore
+    const gg = ctx.createRadialGradient(340,155,5,340,155,50);
+    gg.addColorStop(0,'rgba(180,80,10,0.5)'); gg.addColorStop(1,'transparent');
+    ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(340,155,50,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#030308'; ctx.beginPath(); ctx.arc(340,155,25,Math.PI,0); ctx.fill();
+    ctx.fillRect(315,155,50,50);
+    // Your reflection
+    ctx.fillStyle='rgba(100,200,180,0.08)'; ctx.fillRect(0,140,420,120);
+  },
+
+  treasure_room() {
+    ctx.fillStyle='#100800'; ctx.fillRect(0,0,420,260);
+    // Cracks in ceiling letting in light
+    const lightGrad = ctx.createLinearGradient(0,0,0,260);
+    lightGrad.addColorStop(0,'rgba(255,180,0,0.15)'); lightGrad.addColorStop(1,'transparent');
+    ctx.fillStyle=lightGrad; ctx.fillRect(0,0,420,260);
+    // Gold piles
+    function goldPile(cx, cy, r){
+      for(let i=0;i<40;i++){
+        const angle = Math.random()*Math.PI*2;
+        const dist  = Math.random()*r;
+        const x = cx+Math.cos(angle)*dist;
+        const y = cy+Math.sin(angle)*dist*0.4;
+        const coinR = 4+Math.random()*6;
+        ctx.beginPath(); ctx.ellipse(x,y,coinR,coinR*0.5,0,0,Math.PI*2);
+        const c = Math.random()>0.5 ? '#ffd54f' : '#ff8f00';
+        ctx.fillStyle=c; ctx.fill();
+        ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+      }
+    }
+    goldPile(80, 220, 70); goldPile(210, 230, 80); goldPile(340, 218, 65);
+    // Gems scattered
+    [['#e53935',110,190],['#42a5f5',250,185],['#66bb6a',320,195],['#ab47bc',170,188],['#ef5350',380,200]].forEach(([c,x,y])=>{
+      ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(x,y-6); ctx.lineTo(x+5,y); ctx.lineTo(x,y+6); ctx.lineTo(x-5,y); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.moveTo(x,y-6); ctx.lineTo(x+5,y); ctx.lineTo(x,y-2); ctx.closePath(); ctx.fill();
+    });
+    // Treasure chests
+    function chest(x,y){
+      ctx.fillStyle='#5c2d00'; ctx.fillRect(x,y,50,35);
+      ctx.fillStyle='#4a2400'; ctx.fillRect(x,y,50,12);
+      ctx.fillStyle='#ffd54f'; ctx.fillRect(x+20,y+8,10,8);
+      ctx.strokeStyle='#ff8f00'; ctx.lineWidth=2; ctx.strokeRect(x,y,50,35);
+      ctx.beginPath(); ctx.arc(x+25,y+12,4,0,Math.PI*2);
+      ctx.fillStyle='#ffd54f'; ctx.fill();
+    }
+    chest(30,185); chest(340,180);
+    // Goblets and crowns
+    ctx.fillStyle='#ffd54f'; ctx.beginPath(); ctx.moveTo(195,175); ctx.lineTo(185,175); ctx.lineTo(188,200); ctx.lineTo(192,200); ctx.lineTo(192,195); ctx.lineTo(198,195); ctx.lineTo(198,200); ctx.lineTo(202,200); ctx.lineTo(205,175); ctx.closePath(); ctx.fill();
+    // Glow
+    const gg2 = ctx.createRadialGradient(210,240,20,210,240,160);
+    gg2.addColorStop(0,'rgba(255,180,0,0.2)'); gg2.addColorStop(1,'transparent');
+    ctx.fillStyle=gg2; ctx.fillRect(0,0,420,260);
+  },
+
+  dragon_lair() {
+    ctx.fillStyle='#0a0000'; ctx.fillRect(0,0,420,260);
+    // Heat haze / lava glow from below
+    const lavaGlow = ctx.createLinearGradient(0,260,0,100);
+    lavaGlow.addColorStop(0,'rgba(200,30,0,0.5)');
+    lavaGlow.addColorStop(0.5,'rgba(100,10,0,0.2)');
+    lavaGlow.addColorStop(1,'transparent');
+    ctx.fillStyle=lavaGlow; ctx.fillRect(0,0,420,260);
+    // Lava cracks in floor
+    ctx.strokeStyle='rgba(255,100,0,0.6)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,250); ctx.lineTo(80,240); ctx.lineTo(120,255); ctx.lineTo(200,245); ctx.lineTo(280,255); ctx.lineTo(350,242); ctx.lineTo(420,252); ctx.stroke();
+    // Bones in foreground
+    ctx.strokeStyle='rgba(200,180,150,0.4)'; ctx.lineWidth=2;
+    [[20,248,80,242],[85,250,70,240],[280,245,340,252]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    // Gold mound (hoard)
+    const goldH = ctx.createRadialGradient(330,240,10,330,240,80);
+    goldH.addColorStop(0,'rgba(255,200,0,0.4)'); goldH.addColorStop(1,'transparent');
+    ctx.fillStyle=goldH; ctx.beginPath(); ctx.ellipse(330,250,80,25,0,0,Math.PI*2); ctx.fill();
+    // Dragon body (silhouette)
+    ctx.fillStyle='#1a0000';
+    // Body
+    ctx.beginPath(); ctx.ellipse(260,190,80,45,0.2,0,Math.PI*2); ctx.fill();
+    // Neck
+    ctx.beginPath(); ctx.ellipse(200,155,25,40,-0.4,0,Math.PI*2); ctx.fill();
+    // Head
+    ctx.beginPath(); ctx.ellipse(165,130,35,22,0.1,0,Math.PI*2); ctx.fill();
+    // Jaw
+    ctx.beginPath(); ctx.moveTo(135,130); ctx.lineTo(130,148); ctx.lineTo(170,140); ctx.closePath(); ctx.fill();
+    // Eye — glowing
+    ctx.beginPath(); ctx.arc(155,122,7,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,50,0,0.9)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(155,122,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,200,0,1)'; ctx.fill();
+    // Wings
+    ctx.fillStyle='rgba(30,0,0,0.9)';
+    ctx.beginPath(); ctx.moveTo(240,170); ctx.lineTo(180,80); ctx.lineTo(320,120); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(280,170); ctx.lineTo(380,70); ctx.lineTo(380,160); ctx.closePath(); ctx.fill();
+    // Wing membranes
+    ctx.strokeStyle='rgba(80,0,0,0.5)'; ctx.lineWidth=1;
+    [[190,85,200,120],[210,95,230,130],[230,105,260,135]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    // Smoke from nostrils
+    ctx.strokeStyle='rgba(60,0,0,0.4)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(133,128); ctx.quadraticCurveTo(110,110,100,90); ctx.stroke();
+    // Ambient ember glow
+    const emberGlow = ctx.createRadialGradient(210,130,20,210,130,200);
+    emberGlow.addColorStop(0,'rgba(180,30,0,0.1)'); emberGlow.addColorStop(1,'transparent');
+    ctx.fillStyle=emberGlow; ctx.fillRect(0,0,420,260);
+  },
+
+  tavern() {
+    ctx.fillStyle='#1a0e00'; ctx.fillRect(0,0,420,260);
+    // Warm lighting
+    const warmLight = ctx.createRadialGradient(210,100,10,210,100,200);
+    warmLight.addColorStop(0,'rgba(255,160,40,0.25)'); warmLight.addColorStop(1,'transparent');
+    ctx.fillStyle=warmLight; ctx.fillRect(0,0,420,260);
+    // Walls/floor
+    ctx.fillStyle='#1c1005'; ctx.fillRect(0,0,420,30);
+    ctx.fillStyle='#140c02'; ctx.fillRect(0,220,420,40);
+    // Wooden beams
+    ctx.fillStyle='#2e1800'; [0,140,280].forEach(x=>{ ctx.fillRect(x,0,18,260); });
+    // Back wall
+    ctx.fillStyle='#1a0e00'; ctx.fillRect(18,0,122,220); ctx.fillRect(158,0,122,220); ctx.fillRect(298,0,122,220);
+    // Central chandelier
+    ctx.strokeStyle='#4a2800'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(210,0); ctx.lineTo(210,40); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(210,42,40,6,0,0,Math.PI*2); ctx.strokeStyle='#5a3400'; ctx.stroke();
+    [[175,38],[195,38],[215,38],[235,38]].forEach(([x,y])=>{
+      ctx.fillStyle='#ffd54f';
+      ctx.beginPath(); ctx.moveTo(x-4,y+12); ctx.quadraticCurveTo(x,y,x+4,y+12); ctx.closePath(); ctx.fill();
+      const cg = ctx.createRadialGradient(x,y+5,0,x,y+5,20);
+      cg.addColorStop(0,'rgba(255,200,0,0.3)'); cg.addColorStop(1,'transparent');
+      ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(x,y+5,20,0,Math.PI*2); ctx.fill();
+    });
+    // Tables
+    function table(x,y){
+      ctx.fillStyle='#3d1c00'; ctx.fillRect(x,y,80,10);
+      ctx.fillStyle='#2e1400'; ctx.fillRect(x+10,y+10,8,30); ctx.fillRect(x+62,y+10,8,30);
+      // Mugs
+      ctx.fillStyle='#8B4513'; ctx.beginPath(); ctx.arc(x+25,y-5,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(180,120,0,0.6)'; ctx.beginPath(); ctx.arc(x+25,y-5,6,0,Math.PI*2); ctx.fill();
+    }
+    table(50,160); table(250,170);
+    // Fireplace
+    ctx.fillStyle='#2a1500'; ctx.fillRect(160,140,100,80);
+    ctx.fillStyle='#1a0d00'; ctx.fillRect(170,150,80,70);
+    const fireGrad = ctx.createRadialGradient(210,210,5,210,210,45);
+    fireGrad.addColorStop(0,'rgba(255,200,0,0.9)'); fireGrad.addColorStop(0.5,'rgba(255,80,0,0.6)'); fireGrad.addColorStop(1,'transparent');
+    ctx.fillStyle=fireGrad; ctx.beginPath(); ctx.arc(210,210,45,0,Math.PI*2); ctx.fill();
+    // Mantelpiece
+    ctx.fillStyle='#3d1c00'; ctx.fillRect(155,138,110,8);
+    // Mugs on shelf
+    ['#8B4513','#6B3410','#7B3A12'].forEach((c,i)=>{
+      ctx.fillStyle=c; ctx.fillRect(170+i*15,128,10,10);
+    });
+  },
+};
+
+function drawScene(sceneKey) {
+  ctx.clearRect(0, 0, 420, 260);
+  const fn = scenes[sceneKey] || scenes.dungeon_hall;
+  fn();
+}
+
+// ─── UI Refs ─────────────────────────────────────────────────────
+const logEl      = document.getElementById('log');
+const locationEl = document.getElementById('location-name');
+const exitsEl    = document.getElementById('exits-list');
+const cmdInput   = document.getElementById('cmd-input');
+
+function addLog(text, type='narrate') {
+  const d = document.createElement('div');
+  d.className = `log-entry ${type}`;
+  d.innerHTML = text;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function addSep() {
+  const hr = document.createElement('hr');
+  hr.className = 'log-sep';
+  logEl.appendChild(hr);
+}
+
+// ─── HUD Update ───────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-name').textContent    = player.name;
+  document.getElementById('hud-hp').textContent      = `${player.hp}/${player.maxHp}`;
+  document.getElementById('hud-atk').textContent     = player.atk;
+  document.getElementById('hud-def').textContent     = player.def;
+  document.getElementById('hud-lvl').textContent     = player.level;
+  document.getElementById('hud-xp').textContent      = `${player.xp}/${player.xpNext}`;
+  document.getElementById('hud-gold').textContent    = player.gold;
+  document.getElementById('hud-potions').textContent = player.potions;
+  document.getElementById('hp-bar').style.width  = `${Math.max(0,(player.hp/player.maxHp)*100)}%`;
+  document.getElementById('xp-bar').style.width  = `${Math.min(100,(player.xp/player.xpNext)*100)}%`;
+}
+
+// ─── Room Rendering ───────────────────────────────────────────────
+function renderRoom() {
+  const room = ROOMS[player.location];
+  drawScene(room.scene);
+  locationEl.textContent = room.name;
+  const exitNames = Object.keys(room.exits).map(d => d.toUpperCase()).join('  ·  ');
+  exitsEl.innerHTML = exitNames || '—';
+  updateDirectionButtons(room);
+}
+
+function updateDirectionButtons(room) {
+  ['n','s','e','w'].forEach(d => {
+    const full = {n:'north',s:'south',e:'east',w:'west'}[d];
+    const btn  = document.getElementById(`btn-${d}`);
+    btn.disabled = !room.exits[full];
+  });
+  // also disable up/down — handled by text commands
+}
+
+// ─── Look ─────────────────────────────────────────────────────────
+function lookAround() {
+  const room = ROOMS[player.location];
+  addSep();
+  addLog(`<strong>${room.name}</strong>`, 'look');
+  room.description.forEach(line => addLog(line, 'narrate'));
+
+  const exitList = Object.entries(room.exits)
+    .map(([dir]) => `<strong>${dir}</strong>`)
+    .join(', ');
+  addLog(`<em>Exits: ${exitList || 'none'}</em>`, 'system');
+
+  if (room.enemies.length > 0) {
+    addLog(`⚠ There are hostile creatures lurking here. Steel yourself.`, 'combat');
+  }
+  if (room.items.length > 0) {
+    const iNames = room.items.map(k => ITEMS[k]?.name || k).join(', ');
+    addLog(`✦ You notice: ${iNames}.`, 'reward');
+  }
+}
+
+// ─── Move ─────────────────────────────────────────────────────────
+function move(direction) {
+  if (player.dead) return;
+  if (isPaused) return;
+  if (player.inCombat) {
+    addLog('You cannot flee! Defeat your enemy first, or use a potion to survive.', 'combat');
+    return;
+  }
+  const room = ROOMS[player.location];
+  const dest = room.exits[direction];
+  if (!dest) {
+    addLog(`You attempt to go ${direction} but find only solid stone. No passage exists that way.`, 'system');
+    return;
+  }
+  player.location = dest;
+  const newRoom = ROOMS[dest];
+  addSep();
+  addLog(`You travel ${direction.toUpperCase()} into the unknown…`, 'move');
+  renderRoom();
+  lookAround();
+  maybeSpawnEnemy();
+}
+
+// ─── Enemy Spawning ───────────────────────────────────────────────
+function maybeSpawnEnemy() {
+  if (player.inCombat) return;
+  const room = ROOMS[player.location];
+  if (!room.enemies.length) return;
+  const chance = 0.6; // 60% encounter chance on entry
+  if (Math.random() > chance) return;
+
+  const key = room.enemies[Math.floor(Math.random() * room.enemies.length)];
+  const tmpl = ENEMIES[key];
+  if (!tmpl) return;
+
+  player.inCombat = true;
+  player.enemy = { key, name: tmpl.name, hp: tmpl.hp, maxHp: tmpl.hp };
+
+  addSep();
+  addLog(`⚠ <strong>ENCOUNTER!</strong>`, 'combat');
+  addLog(tmpl.desc, 'narrate');
+  addLog(`A <strong>${tmpl.name}</strong> bars your path! (HP: ${tmpl.hp})`, 'combat');
+  addLog(`Roll for initiative! Use <strong>⚔ Attack</strong> or type <em>attack</em> to fight.`, 'system');
+  updateCombatButtons();
+}
+
+function updateCombatButtons() {
+  document.getElementById('btn-attack').disabled = !player.inCombat || player.dead;
+}
+
+// ─── Combat ───────────────────────────────────────────────────────
+function attackEnemy() {
+  if (!player.inCombat || player.dead) {
+    addLog('There is nothing to attack.', 'system');
+    return;
+  }
+  const tmpl    = ENEMIES[player.enemy.key];
+  const hitRoll = rollD20();
+  const atkMod  = Math.floor((player.atk - 5) / 2);
+  const totalHit = hitRoll + atkMod;
+
+  addSep();
+  addLog(`🎲 You roll to attack… <strong>${hitRoll}</strong> + ${atkMod} = ${totalHit}`, 'combat');
+
+  if (hitRoll === 1) {
+    addLog(`A critical MISS! You stumble, leaving yourself exposed.`, 'combat');
+  } else if (hitRoll === 20 || totalHit >= 12) {
+    const dmg = Math.max(1, rollD8() + Math.floor(player.atk / 2));
+    if (hitRoll === 20) {
+      const critDmg = dmg * 2;
+      player.enemy.hp = Math.max(0, player.enemy.hp - critDmg);
+      addLog(`⚡ CRITICAL HIT! Your blade finds the gap in its defence for <strong>${critDmg} damage</strong>!`, 'combat');
+    } else {
+      player.enemy.hp = Math.max(0, player.enemy.hp - dmg);
+      addLog(`Your strike connects for <strong>${dmg} damage</strong>! (${player.enemy.name}: ${player.enemy.hp}/${tmpl.hp} HP)`, 'combat');
+    }
+  } else {
+    addLog(`Your attack glances off. The ${player.enemy.name} snarls.`, 'combat');
+  }
+
+  if (player.enemy.hp <= 0) {
+    defeatEnemy();
+    return;
+  }
+
+  // Enemy attacks back
+  const eHitRoll = rollD20();
+  const eDmg    = Math.max(0, rollD6() + Math.floor(tmpl.atk / 3) - player.def);
+  addLog(`The <strong>${player.enemy.name}</strong> retaliates! (rolls ${eHitRoll})`, 'combat');
+  if (eHitRoll >= 10) {
+    player.hp = Math.max(0, player.hp - eDmg);
+    addLog(`It strikes you for <strong>${eDmg} damage</strong>! (Your HP: ${player.hp}/${player.maxHp})`, 'combat');
+  } else {
+    addLog(`The blow glances off your guard.`, 'combat');
+  }
+
+  updateHUD();
+  if (player.hp <= 0) { die(); }
+}
+
+function defeatEnemy() {
+  const tmpl = ENEMIES[player.enemy.key];
+  addSep();
+  addLog(`☠ The <strong>${player.enemy.name}</strong> collapses with a final, shuddering groan. Silence reclaims the chamber.`, 'reward');
+  const xpGained   = tmpl.xp;
+  const goldGained = tmpl.gold ? (tmpl.gold + Math.floor(Math.random() * tmpl.gold)) : 0;
+  addLog(`✦ You gain <strong>${xpGained} XP</strong>${goldGained ? ` and <strong>${goldGained} gold</strong>` : ''}.`, 'reward');
+  player.xp   += xpGained;
+  player.gold += goldGained;
+  player.inCombat = false;
+  player.enemy    = null;
+  document.getElementById('btn-attack').disabled = true;
+  checkLevelUp();
+  updateHUD();
+  pickUpRoomItems();
+}
+
+function checkLevelUp() {
+  if (player.xp >= player.xpNext) {
+    player.level++;
+    player.xp -= player.xpNext;
+    player.xpNext = Math.floor(player.xpNext * 1.6);
+    const hpBonus  = rollD8() + 2;
+    const atkBonus = 2;
+    const defBonus = 1;
+    player.maxHp += hpBonus;
+    player.hp     = Math.min(player.hp + hpBonus, player.maxHp);
+    player.atk   += atkBonus;
+    player.def   += defBonus;
+    addSep();
+    addLog(`⬆ <strong>LEVEL UP!</strong> You are now level ${player.level}!`, 'reward');
+    addLog(`Max HP +${hpBonus} · ATK +${atkBonus} · DEF +${defBonus}`, 'reward');
+    addLog(`The dungeon notices your growing power… and grows darker in response.`, 'narrate');
+  }
+}
+
+function die() {
+  player.dead = true;
+  player.inCombat = false;
+  addSep();
+  addLog(t('death_msg'), 'death');
+  addLog(`Your vision dims, the cold of the stone seeping through your armour. The dungeon swallows your final breath without ceremony.`, 'narrate');
+  addLog(t('death_sub'), 'system');
+  disableAllActions();
+  updateHUD();
+}
+
+function disableAllActions() {
+  ['btn-n','btn-s','btn-e','btn-w','btn-attack','btn-heal','btn-look'].forEach(id=>{
+    document.getElementById(id).disabled = true;
+  });
+}
+
+// ─── Heal / Potion ────────────────────────────────────────────────
+function usePotion() {
+  if (player.dead) return;
+  if (player.potions <= 0) {
+    addLog('You have no potions left. Pray your armour holds.', 'system');
+    return;
+  }
+  if (player.hp >= player.maxHp) {
+    addLog('You are already at full health. Save the potion.', 'system');
+    return;
+  }
+  player.potions--;
+  const heal = 20 + rollD8();
+  player.hp  = Math.min(player.maxHp, player.hp + heal);
+  addLog(`You uncork the vial. Warm, copper-tasting liquid slides down your throat.`, 'heal-log');
+  addLog(`You recover <strong>${heal} HP</strong>. (${player.hp}/${player.maxHp})`, 'heal-log');
+  updateHUD();
+}
+
+// ─── Pick Up Items ────────────────────────────────────────────────
+function pickUpRoomItems() {
+  const room = ROOMS[player.location];
+  if (!room.items.length) return;
+  room.items.forEach(key => {
+    const item = ITEMS[key];
+    if (!item) return;
+    applyItem(key, item);
+  });
+  addLog(`✦ You search the area and find: ${room.items.map(k=>ITEMS[k]?.name||k).join(', ')}.`, 'reward');
+  room.items = [];
+}
+
+function applyItem(key, item) {
+  player.inventory.push(key);
+  if (item.type === 'gold')   { player.gold    += item.value; }
+  if (item.type === 'potion') { player.potions += 1; addLog(`🧪 Potion collected! (${player.potions} total)`, 'reward'); }
+  if (item.type === 'weapon' && item.atk > 0) { player.atk += item.atk; addLog(`⚔ Equipped ${item.name}: ATK +${item.atk}`, 'reward'); }
+  if (item.type === 'armor'  && item.def > 0) { player.def += item.def; addLog(`🛡 Equipped ${item.name}: DEF +${item.def}`, 'reward'); }
+  if (item.type === 'amulet' && item.maxhp)   { player.maxHp += item.maxhp; player.hp = Math.min(player.hp+item.maxhp, player.maxHp); addLog(`💎 Equipped ${item.name}: MaxHP +${item.maxhp}`, 'reward'); }
+  if (item.type === 'scroll' && item.xp)      { player.xp += item.xp; addLog(`📜 Studied ${item.name}: +${item.xp} XP`, 'reward'); checkLevelUp(); }
+  updateHUD();
+}
+
+// ─── Inventory ────────────────────────────────────────────────────
+function showInventory() {
+  addSep();
+  addLog('🎒 <strong>Inventory</strong>', 'look');
+  if (player.inventory.length === 0) {
+    addLog('Your pack is empty.', 'system');
+  } else {
+    const counts = {};
+    player.inventory.forEach(k=>{ counts[k]=(counts[k]||0)+1; });
+    Object.entries(counts).forEach(([k,n])=>{
+      const item = ITEMS[k];
+      addLog(`• ${item?.name||k}${n>1?` ×${n}`:''} — <em>${item?.desc||''}</em>`, 'narrate');
+    });
+  }
+  addLog(`🪙 Gold: ${player.gold}  |  🧪 Potions: ${player.potions}`, 'narrate');
+}
+
+// ─── Command Parser ───────────────────────────────────────────────
+const dirAliases = {
+  north:'north', n:'north', south:'south', s:'south',
+  east:'east',   e:'east',  west:'west',   w:'west',
+  up:'up',       down:'down',
+};
+
+function parseCommand(raw) {
+  if (player.dead) return;
+  if (isPaused) return;
+  const input = raw.trim().toLowerCase();
+  if (!input) return;
+
+  // Log player's command
+  addLog(`&gt; <em>${raw.trim()}</em>`, 'system');
+
+  const words = input.split(/\s+/);
+  const verb  = words[0];
+  const rest  = words.slice(1).join(' ');
+
+  // Movement
+  if (verb === 'go' && dirAliases[rest]) { move(dirAliases[rest]); return; }
+  if (dirAliases[verb])                  { move(dirAliases[verb]); return; }
+
+  // Actions
+  if (['attack','fight','hit','stab','strike','slash'].includes(verb)) { attackEnemy(); return; }
+  if (['potion','heal','drink','use'].includes(verb))                   { usePotion();   return; }
+  if (['look','l','examine','observe','inspect'].includes(verb))        { lookAround();  return; }
+  if (['inventory','inv','i','items','bag','pack'].includes(verb))      { showInventory();return; }
+  if (['help','?','h'].includes(verb))                                   { showHelp();    return; }
+
+  addLog(`You ponder the phrase "<em>${raw.trim()}</em>" but find no action springs to mind. Try: go north · attack · look · use potion · inventory · help`, 'system');
+}
+
+function showHelp() {
+  addSep();
+  addLog('📖 <strong>Commands</strong>', 'look');
+  addLog('• <strong>go north/south/east/west/up/down</strong> — Move', 'narrate');
+  addLog('• <strong>north / n / south / s / east / e / west / w</strong> — Move shorthand', 'narrate');
+  addLog('• <strong>attack / fight</strong> — Strike the current enemy', 'narrate');
+  addLog('• <strong>use potion / heal / drink</strong> — Use a healing potion', 'narrate');
+  addLog('• <strong>look / l</strong> — Describe the current location', 'narrate');
+  addLog('• <strong>inventory / inv / i</strong> — Show your items', 'narrate');
+  addLog('• <strong>help / ?</strong> — Show this help', 'narrate');
+  addLog('<em>Or use the on-screen direction and action buttons.</em>', 'system');
+}
+
+// ─── Event Wiring ─────────────────────────────────────────────────
+document.getElementById('btn-n').addEventListener('click',      ()=>move('north'));
+document.getElementById('btn-s').addEventListener('click',      ()=>move('south'));
+document.getElementById('btn-e').addEventListener('click',      ()=>move('east'));
+document.getElementById('btn-w').addEventListener('click',      ()=>move('west'));
+document.getElementById('btn-attack').addEventListener('click', attackEnemy);
+document.getElementById('btn-heal').addEventListener('click',   usePotion);
+document.getElementById('btn-look').addEventListener('click',   lookAround);
+document.getElementById('btn-inv').addEventListener('click',    showInventory);
+
+document.getElementById('cmd-btn').addEventListener('click', ()=>{
+  parseCommand(cmdInput.value);
+  cmdInput.value = '';
+});
+cmdInput.addEventListener('keydown', e=>{
+  if (e.key === 'Enter') { parseCommand(cmdInput.value); cmdInput.value = ''; }
+});
+
+// ─── Pause Logic ──────────────────────────────────────────────────
+const pauseBtn    = document.getElementById('pause-btn');
+const pauseOverlay= document.getElementById('pause-overlay');
+const ACTION_BUTTON_IDS = ['btn-n','btn-s','btn-e','btn-w','btn-attack','btn-heal','btn-look','btn-inv'];
+const actionBtns  = ACTION_BUTTON_IDS.map(id => document.getElementById(id));
+const cmdBtn      = document.getElementById('cmd-btn');
+
+// Store disabled state before pausing so we can restore it
+let savedDisabledStates = [];
+
+function pauseGame() {
+  isPaused = true;
+  savedDisabledStates = actionBtns.map(b => b.disabled);
+  actionBtns.forEach(b => { b.disabled = true; });
+  cmdInput.disabled = true;
+  cmdBtn.disabled   = true;
+  pauseOverlay.classList.add('active');
+  pauseBtn.classList.add('paused');
+  pauseBtn.textContent = t('resume_btn');
+}
+
+function resumeGame() {
+  isPaused = false;
+  actionBtns.forEach((b, i) => { b.disabled = savedDisabledStates[i]; });
+  cmdInput.disabled = false;
+  cmdBtn.disabled   = false;
+  pauseOverlay.classList.remove('active');
+  pauseBtn.classList.remove('paused');
+  pauseBtn.textContent = t('pause_btn');
+  // Re-sync button states with current game logic
+  if (!player.dead) updateCombatButtons();
+}
+
+function togglePause() {
+  if (isPaused) resumeGame(); else pauseGame();
+}
+
+pauseBtn.addEventListener('click', togglePause);
+
+// ─── Name Overlay ─────────────────────────────────────────────────
+const nameOverlay = document.getElementById('name-overlay');
+const nameInput   = document.getElementById('name-input');
+const nameStartBtn= document.getElementById('name-start-btn');
+
+function startGame(name) {
+  player.name = name.trim() || 'Adventurer';
+  nameOverlay.style.display = 'none';
+  // Reset pause state
+  isPaused = false;
+  pauseOverlay.classList.remove('active');
+  pauseBtn.classList.remove('paused');
+  pauseBtn.textContent = t('pause_btn');
+  pauseBtn.disabled = false;
+  updateHUD();
+  renderRoom();
+
+  addLog(`⚔ <strong>DUNGEON OF ECHOES</strong>`, 'reward');
+  addLog(`The bards will one day sing of <strong>${player.name}</strong>… if you survive long enough to earn the tale.`, 'narrate');
+  addSep();
+  lookAround();
+  addSep();
+  addLog('<em>Tip: Use the arrow buttons or type commands. Try <strong>help</strong> for a full list.</em>', 'system');
+}
+
+nameStartBtn.addEventListener('click', ()=>startGame(nameInput.value));
+nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') startGame(nameInput.value); });
+nameInput.focus();
+
+// Prevent starting with empty name but allow Enter on focus
+document.addEventListener('DOMContentLoaded', ()=>{ nameInput.focus(); });
+
+// ─── Language Toggle ──────────────────────────────────────────────
+document.getElementById('lang-btn').addEventListener('click', () => {
+  const newLang = currentLang === 'en' ? 'sv' : 'en';
+  localStorage.setItem('lang', newLang);
+  applyLang(newLang);
+  // Keep pause button text in sync with pause state after language change
+  if (isPaused) pauseBtn.textContent = t('resume_btn');
+  else pauseBtn.textContent = t('pause_btn');
+});
+</script>
+</body>
+</html>

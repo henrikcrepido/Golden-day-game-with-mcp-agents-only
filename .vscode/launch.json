@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Python Static+API Server",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.py",
+      "args": [
+        "8080"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    },
+    {
+      "name": "Run .NET Highscores API",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/HighscoresApi/bin/Debug/net10.0/HighscoresApi.dll",
+      "cwd": "${workspaceFolder}/HighscoresApi",
+      "preLaunchTask": "build highscores api",
+      "env": {
+        "ASPNETCORE_URLS": "http://localhost:5181",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:\\s+(https?://\\S+)"
+      }
+    }
+  ]
+}

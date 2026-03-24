@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Day Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 60, 0.5); }
+      50%       { box-shadow: 0 0 0 12px rgba(255, 200, 60, 0); }
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0d0d1a;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(80, 40, 160, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(30, 80, 180, 0.25) 0%, transparent 60%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e8e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      animation: floatUp 0.7s ease both;
+    }
+
+    header .logo {
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ffd54f, #ff8f00, #ffe082, #ff8f00, #ffd54f);
+      background-size: 400px 1px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    header .tagline {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #9090b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Grid ────────────────────────────────────────── */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.8rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    /* ── Card ────────────────────────────────────────── */
+    .game-card {
+      background: linear-gradient(145deg, #1c1c35, #14142a);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 18px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      animation: floatUp 0.6s ease both;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      border-color: rgba(255, 200, 60, 0.4);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      animation: pulse 1.4s ease infinite;
+    }
+
+    .card-icon {
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      user-select: none;
+    }
+
+    .card-body {
+      padding: 1.2rem 1.4rem 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f0eefc;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: #8080a8;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-badge {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-ready {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .badge-soon {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* ── Coming-soon placeholder ─────────────────────── */
+    .game-card.soon {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    /* ── Footer ────────────────────────────────────────── */
+    footer {
+      margin-top: 4rem;
+      font-size: 0.78rem;
+      color: #444466;
+      text-align: center;
+    }
+
+    /* ── Fullscreen button ──────────────────────────────── */
+    #fs-btn {
+      position: fixed;
+      top: 12px;
+      right: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #fs-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    /* ── Language toggle button ─────────────────────────── */
+    #lang-btn {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+    /* ── Settings button ─────────────────────────────────── */
+    #settings-btn {
+      position: fixed;
+      top: 48px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 1.6;
+      transition: background 0.2s, color 0.2s;
+    }
+    #settings-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <button id="lang-btn"></button>
+  <a id="settings-btn" href="settings.html">⚙ <span data-i18n="settings">Settings</span></a>
+  <button id="fs-btn" title="Toggle fullscreen" aria-label="Toggle fullscreen">⛶</button>
+
+  <header>
+    <div class="logo" data-i18n="logo">&#9733; Golden Day Games</div>
+    <p class="tagline" data-i18n="tagline">Pick a game &amp; play</p>
+  </header>
+
+  <div class="games-grid">
+
+    <!-- Minesweeper -->
+    <a class="game-card" href="minesweeper.html" style="animation-delay: 0.05s">
+      <div class="card-icon">💣</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="minesweeper-title">Minesweeper</div>
+        <div class="card-desc" data-i18n="minesweeper-desc">Reveal every safe cell without hitting a mine. Choose your difficulty and beat the clock.</div>
+        <span class="card-badge badge-ready" data-i18n="play-now">Play now</span>
+      </div>
+    </a>
+
+    <!-- Pinball Breaker -->
+    <a class="game-card" href="pinball-breaker.html" style="animation-delay: 0.10s">
+      <div class="card-icon">🎱</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="pinball-title">Pinball Breaker</div>
+        <div class="card-desc" data-i18n="pinball-desc">Arkanoid meets Pinball! Smash bricks, hit bumpers to multiply your score, grab power-ups and chase the high score.</div>
+        <span class="card-badge badge-ready" data-i18n="play-now">Play now</span>
+      </div>
+    </a>
+
+    <!-- MOD Adventure -->
+    <a class="game-card" href="mod-adventure.html" style="animation-delay: 0.15s">
+      <div class="card-icon">⚔️</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="mod-title">Dungeon of Echoes</div>
+        <div class="card-desc" data-i18n="mod-desc">A D&amp;D-style MOD text adventure. Explore cursed ruins, battle monsters, and claim the Dragon's Hoard — all in glorious text with canvas scene art.</div>
+        <span class="card-badge badge-ready" data-i18n="play-now">Play now</span>
+      </div>
+    </a>
+
+    <!-- Support Hero -->
+    <a class="game-card" href="support-hero.html" style="animation-delay: 0.20s">
+      <div class="card-icon">🎫</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="support-title">Support Hero</div>
+        <div class="card-desc" data-i18n="support-desc">Handle IBM MQ &amp; MSMQ backout queues, restart services &amp; IIS app pools, escalate correctly — earn achievements and become the Black Belt Support Master!</div>
+        <span class="card-badge badge-ready" data-i18n="play-now">Play now</span>
+      </div>
+    </a>
+
+    <!-- Settings -->
+    <a class="game-card" href="settings.html" style="animation-delay: 0.25s">
+      <div class="card-icon">⚙️</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="settings-title">Settings</div>
+        <div class="card-desc" data-i18n="settings-desc">View &amp; reset highscores for all games. Export your scores as a JSON file.</div>
+        <span class="card-badge badge-ready" data-i18n="open">Open</span>
+      </div>
+    </a>
+
+    <!-- Placeholder slot -->
+    <div class="game-card soon" style="animation-delay: 0.30s">
+      <div class="card-icon">🎮</div>
+      <div class="card-body">
+        <div class="card-title" data-i18n="more-title">More Games</div>
+        <div class="card-desc" data-i18n="more-desc">New games are on their way. Stay tuned!</div>
+        <span class="card-badge badge-soon" data-i18n="coming-soon">Coming soon</span>
+      </div>
+    </div>
+
+  </div>
+
+  <footer data-i18n="footer">Golden Day Games &copy; 2026</footer>
+
+  <script>
+    const fsBtn = document.getElementById('fs-btn');
+    const langBtn = document.getElementById('lang-btn');
+
+    const translations = {
+      en: {
+        title: 'Golden Day Games',
+        logo: '\u2605 Golden Day Games',
+        tagline: 'Pick a game \u0026 play',
+        'fs-on':  'Toggle fullscreen',
+        'fs-off': 'Exit fullscreen',
+        footer: 'Golden Day Games \u00a9 2026',
+        'minesweeper-title': 'Minesweeper',
+        'minesweeper-desc': 'Reveal every safe cell without hitting a mine. Choose your difficulty and beat the clock.',
+        'play-now': 'Play now',
+        'pinball-title': 'Pinball Breaker',
+        'pinball-desc': 'Arkanoid meets Pinball! Smash bricks, hit bumpers to multiply your score, grab power-ups and chase the high score.',
+        'mod-title': 'Dungeon of Echoes',
+        'mod-desc': 'A D\u0026D-style MOD text adventure. Explore cursed ruins, battle monsters, and claim the Dragon\u2019s Hoard \u2014 all in glorious text with canvas scene art.',
+        'support-title': 'Support Hero',
+        'support-desc': 'Handle IBM MQ \u0026 MSMQ backout queues, restart services \u0026 IIS app pools, escalate correctly \u2014 earn achievements and become the Black Belt Support Master!',
+        'more-title': 'More Games',
+        'more-desc': 'New games are on their way. Stay tuned!',
+        'coming-soon': 'Coming soon',
+        'settings': 'Settings',
+        'settings-title': 'Settings',
+        'settings-desc': 'View & reset highscores for all games. Export your scores as a JSON file.',
+        'open': 'Open',
+      },
+      sv: {
+        title: 'Gyllene Dag Spel',
+        logo: '\u2605 Gyllene Dag Spel',
+        tagline: 'V\u00e4lj ett spel \u0026 spela',
+        'fs-on':  'V\u00e4xla helsk\u00e4rm',
+        'fs-off': 'Avsluta helsk\u00e4rm',
+        footer: 'Gyllene Dag Spel \u00a9 2026',
+        'minesweeper-title': 'Minesweeper',
+        'minesweeper-desc': 'Avsl\u00f6ja varje s\u00e4ker cell utan att tr\u00e4ffa en mina. V\u00e4lj sv\u00e5righetsgrad och sl\u00e5 klockan.',
+        'play-now': 'Spela nu',
+        'pinball-title': 'Pinball Krossar',
+        'pinball-desc': 'Arkanoid m\u00f6ter Pinball! Krossa tegelstenar, tr\u00e4ffa st\u00f6tf\u00e5ngare f\u00f6r att multiplicera ditt po\u00e4ng, ta power-ups och jaga h\u00f6gsta po\u00e4nget.',
+        'mod-title': 'Ekoh\u00e5lans Dungeon',
+        'mod-desc': 'Ett D\u0026D-inspirerat text\u00e4ventyr. Utforska f\u00f6rbannade ruiner, strida mot monster och g\u00f6r anspr\u00e5k p\u00e5 Drakens Skatt \u2014 i text med canvas-scenkonst.',
+        'support-title': 'Supporthjalten',
+        'support-desc': 'Hantera IBM MQ \u0026 MSMQ backout-k\u00f6er, starta om tj\u00e4nster och IIS app pools, eskalera r\u00e4tt \u2014 tj\u00e4na prestationer och bli Svartb\u00e4lte Support M\u00e4staren!',
+        'more-title': 'Fler Spel',
+        'more-desc': 'Nya spel \u00e4r p\u00e5 v\u00e4g. H\u00e5ll utkik!',
+        'coming-soon': 'Kommer snart',
+        'settings': 'Inst\u00e4llningar',
+        'settings-title': 'Inst\u00e4llningar',
+        'settings-desc': 'Visa och \u00e5terst\u00e4ll highscores f\u00f6r alla spel. Exportera dina po\u00e4ng som en JSON-fil.',
+        'open': '\u00d6ppna',
+      }
+    };
+
+    function applyLang(lang) {
+      const t = translations[lang] || translations.en;
+      document.documentElement.lang = lang;
+      document.title = t.title;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key] !== undefined) el.textContent = t[key];
+      });
+      const isFs = !!document.fullscreenElement;
+      fsBtn.title = isFs ? t['fs-off'] : t['fs-on'];
+      fsBtn.setAttribute('aria-label', isFs ? t['fs-off'] : t['fs-on']);
+      langBtn.textContent = lang === 'en' ? '\uD83C\uDDF8\uD83C\uDDEA SV' : '\uD83C\uDDEC\uD83C\uDDE7 EN';
+    }
+
+    function updateFsIcon() {
+      const lang = localStorage.getItem('lang') || 'en';
+      const t = translations[lang] || translations.en;
+      fsBtn.textContent = document.fullscreenElement ? '\u2715' : '\u26F6';
+      fsBtn.title = document.fullscreenElement ? t['fs-off'] : t['fs-on'];
+      fsBtn.setAttribute('aria-label', document.fullscreenElement ? t['fs-off'] : t['fs-on']);
+    }
+
+    fsBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+    document.addEventListener('fullscreenchange', updateFsIcon);
+
+    langBtn.addEventListener('click', () => {
+      const next = (localStorage.getItem('lang') || 'en') === 'en' ? 'sv' : 'en';
+      localStorage.setItem('lang', next);
+      applyLang(next);
+    });
+
+    applyLang(localStorage.getItem('lang') || 'en');
+  </script>
+</body>
+</html>
