@@ -632,6 +632,21 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+    /* ── Pause button ────────────────────────── */
+    .pause-btn {
+      padding: 5px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .pause-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    .pause-btn.paused { border-color: rgba(255,200,60,0.5); color: #ffd54f; }
+
     /* ── Language button ─────────────────────── */
     #lang-btn {
       position: fixed;
@@ -684,6 +699,9 @@
       <div id="xp-bar-bg"><div id="xp-bar"></div></div>
     </div>
     <div id="rank-badge">🥋 Recruit</div>
+    <div class="hud-block" id="pause-block" style="display:none;">
+      <button id="pause-btn" class="pause-btn">⏸ Pause</button>
+    </div>
   </div>
 
   <!-- Game area -->
@@ -705,6 +723,7 @@
           <span id="timer-label" data-i18n="timer_label">⏱ Time left:</span>
           <div id="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
           <span id="timer-num">30</span>
+          <span id="pause-label" style="display:none; color: #ffd54f; font-weight: bold; margin-left: 8px;"></span>
         </div>
       </div>
       <div id="feedback"></div>
@@ -823,6 +842,9 @@ const I18N = {
     lb_col_rank:       'Rank',
     lb_empty:          'No scores yet \u2014 be the first!',
     start_desc:        'Test your IT support instincts across 8 scenario categories. Can you reach Black Belt?',
+    pause_btn:         '⏸ Pause',
+    resume_btn:        '▶ Resume',
+    paused_label:      'PAUSED',
   },
   sv: {
     lang_btn:      '🇬🇧 EN',
@@ -870,6 +892,9 @@ const I18N = {
     lb_col_rank:       'Rang',
     lb_empty:          'Inga po\u00e4ng \u00e4nnu \u2014 var den f\u00f6rsta!',
     start_desc:        'Testa dina IT-supportinstinkter inom 8 scenariokategorier. Kan du n\u00e5 Svartb\u00e4ltet?',
+    pause_btn:         '\u23f8 Pausa',
+    resume_btn:        '\u25b6 Forts\u00e4tt',
+    paused_label:      'PAUSAD',
   },
 };
 let currentLang  = localStorage.getItem('lang') || 'en';
@@ -1325,6 +1350,12 @@ function applyLang(lang) {
   if (nextBtn.style.display !== 'none') {
     nextBtn.textContent = t[nextBtnKey];
   }
+
+  // Update pause button text for current pause state
+  pauseBtn.textContent = isPaused ? t.resume_btn : t.pause_btn;
+  if (pauseLabel.style.display !== 'none') {
+    pauseLabel.textContent = t.paused_label;
+  }
 }
 
 document.getElementById('lang-btn').addEventListener('click', () => {
@@ -1373,6 +1404,45 @@ function updateTimerUI() {
     timerNum.className = 'danger';
   }
 }
+
+/* ═══════════════════════════════════════════════
+   PAUSE
+═══════════════════════════════════════════════ */
+let isPaused = false;
+const pauseBtn   = document.getElementById('pause-btn');
+const pauseBlock = document.getElementById('pause-block');
+const pauseLabel = document.getElementById('pause-label');
+
+function pauseGame() {
+  if (isPaused) return;
+  isPaused = true;
+  timerFrozen = true;
+  const tl = I18N[currentLang] || I18N.en;
+  pauseBtn.textContent = tl.resume_btn || '▶ Resume';
+  pauseBtn.classList.add('paused');
+  pauseLabel.textContent = tl.paused_label || 'PAUSED';
+  pauseLabel.style.display = 'inline';
+  actionsEl.querySelectorAll('button').forEach(b => b.disabled = true);
+  nextBtn.disabled = true;
+}
+
+function resumeGame() {
+  if (!isPaused) return;
+  isPaused = false;
+  timerFrozen = false;
+  const tl = I18N[currentLang] || I18N.en;
+  pauseBtn.textContent = tl.pause_btn || '⏸ Pause';
+  pauseBtn.classList.remove('paused');
+  pauseLabel.style.display = 'none';
+  actionsEl.querySelectorAll('button').forEach(b => b.disabled = false);
+  nextBtn.disabled = false;
+}
+
+function togglePause() {
+  if (isPaused) resumeGame();
+  else pauseGame();
+}
+pauseBtn.addEventListener('click', togglePause);
 
 /* ═══════════════════════════════════════════════
    HUD UPDATE
@@ -1539,6 +1609,7 @@ let currentScenario = null;
 let answered = false;
 
 function loadNextTicket() {
+  if (isPaused) resumeGame();
   if (state.queue.length === 0) {
     state.queue = buildQueue();
   }
@@ -1796,6 +1867,12 @@ function startGame() {
   playerName = name;
   state = freshState();
   state.queue = buildQueue();
+  isPaused = false;
+  timerFrozen = false;
+  pauseBlock.style.display = '';
+  pauseBtn.textContent = (I18N[currentLang] || I18N.en).pause_btn || '⏸ Pause';
+  pauseBtn.classList.remove('paused');
+  pauseLabel.style.display = 'none';
   overlay.style.display = 'none';
   renderAchievements();
   updateHUD();
