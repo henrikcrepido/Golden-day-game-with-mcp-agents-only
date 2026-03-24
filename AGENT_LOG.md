@@ -185,3 +185,32 @@
 | `index.html` | Replaced "Coming soon" with live Pinball Breaker card | +11, -7 |
 | `README.md` | Added game row | +1 |
 | `AGENT_LOG.md` | This session appended | +~60 |
+
+---
+
+# Agent Action Log — IIS / PHP Highscores Storage (2026-03-24)
+
+> **Session date:** 2026-03-24
+> **Agent:** GitHub Copilot Coding Agent
+> **Task:** Provide disk-based JSON highscore storage for IIS hosting without Python
+> **Outcome:** ✅ Success — `web.config` + `api/highscores.php` created
+
+## Timeline
+
+| # | Action | Notes |
+|---|--------|-------|
+| 1 | Explored repository structure | Read `server.py`, all HTML game files, `settings.html`, `README.md` |
+| 2 | Identified architecture | Games POST/GET `/api/highscores/{key}`; Python `server.py` writes `data/{key}.json` |
+| 3 | Created `api/highscores.php` | PHP handler replicating the Python API: validates key, atomic write with rename, same JSON format |
+| 4 | Created `web.config` | IIS URL Rewrite rule maps `/api/highscores/{key}` → `/api/highscores.php?key={key}`; blocks `data/` directory browsing; adds JSON MIME type |
+| 5 | Updated `README.md` | Added IIS prerequisites table, deployment steps, and `icacls` command for data-folder permissions |
+| 6 | Updated `AGENT_LOG.md` | This session appended |
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `api/highscores.php` | Created — PHP replacement for the Python highscores API |
+| `web.config` | Created — IIS URL Rewrite + security + MIME configuration |
+| `README.md` | Added "Hosting on IIS" section with prerequisites and deployment steps |
+| `AGENT_LOG.md` | This session appended |
