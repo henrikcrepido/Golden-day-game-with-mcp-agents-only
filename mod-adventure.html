@@ -329,6 +329,36 @@
       }
     }
 
+    /* ─── Pause Button ───────────────────────────────── */
+    #pause-btn {
+      padding: 5px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #c0cce0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #pause-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+    #pause-btn.paused { border-color: rgba(255,200,60,0.5); color: #ffd54f; }
+    #pause-btn:disabled { opacity: 0.4; cursor: default; }
+    #pause-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #fff;
+      font-weight: bold;
+      letter-spacing: 2px;
+      backdrop-filter: blur(4px);
+    }
+    #pause-overlay.active { display: flex; }
+
     /* ─── Language Toggle ────────────────────────────── */
     #lang-btn {
       position: fixed;
@@ -405,7 +435,10 @@
       <span class="hud-label">🧪</span>
       <span class="hud-val" id="hud-potions">3</span>
     </div>
+    <button id="pause-btn" data-i18n="pause_btn" data-i18n-title="pause_btn" disabled>⏸ Pause</button>
   </div>
+
+<div id="pause-overlay"><span id="pause-label" data-i18n="paused_label">⏸ PAUSED</span></div>
 
   <!-- Scene / Left Panel -->
   <div id="scene-panel">
@@ -491,6 +524,9 @@ const TRANSLATIONS = {
     cmd_btn:           '▶ DO',
     death_msg:         '☠☠☠ <strong>YOU HAVE FALLEN.</strong> ☠☠☠',
     death_sub:         '<em>Refresh the page to begin anew, brave soul.</em>',
+    pause_btn:         '⏸ Pause',
+    resume_btn:        '▶ Resume',
+    paused_label:      '⏸ PAUSED',
   },
   sv: {
     page_title:        'Ekornas Håla — Ett MOD Äventyr',
@@ -521,6 +557,9 @@ const TRANSLATIONS = {
     cmd_btn:           '▶ GÖR',
     death_msg:         '☠☠☠ <strong>DU HAR STUPAT.</strong> ☠☠☠',
     death_sub:         '<em>Ladda om sidan för att börja om, modige själ.</em>',
+    pause_btn:         '⏸ Pausa',
+    resume_btn:        '▶ Fortsätt',
+    paused_label:      '⏸ PAUSAD',
   },
 };
 
@@ -739,6 +778,8 @@ const player = {
   enemy:    null,  // current enemy instance {template, hp}
   dead:     false,
 };
+
+let isPaused = false;
 
 // ─── Scene Rendering ─────────────────────────────────────────────
 const canvas = document.getElementById('scene-canvas');
@@ -1266,6 +1307,7 @@ function lookAround() {
 // ─── Move ─────────────────────────────────────────────────────────
 function move(direction) {
   if (player.dead) return;
+  if (isPaused) return;
   if (player.inCombat) {
     addLog('You cannot flee! Defeat your enemy first, or use a potion to survive.', 'combat');
     return;
@@ -1484,6 +1526,7 @@ const dirAliases = {
 
 function parseCommand(raw) {
   if (player.dead) return;
+  if (isPaused) return;
   const input = raw.trim().toLowerCase();
   if (!input) return;
 
@@ -1539,6 +1582,45 @@ cmdInput.addEventListener('keydown', e=>{
   if (e.key === 'Enter') { parseCommand(cmdInput.value); cmdInput.value = ''; }
 });
 
+// ─── Pause Logic ──────────────────────────────────────────────────
+const pauseBtn    = document.getElementById('pause-btn');
+const pauseOverlay= document.getElementById('pause-overlay');
+const actionBtns  = ['btn-n','btn-s','btn-e','btn-w','btn-attack','btn-heal','btn-look','btn-inv']
+                      .map(id => document.getElementById(id));
+const cmdBtn      = document.getElementById('cmd-btn');
+
+// Store disabled state before pausing so we can restore it
+let _prepauseDisabled = [];
+
+function pauseGame() {
+  isPaused = true;
+  _prepauseDisabled = actionBtns.map(b => b.disabled);
+  actionBtns.forEach(b => { b.disabled = true; });
+  cmdInput.disabled = true;
+  cmdBtn.disabled   = true;
+  pauseOverlay.classList.add('active');
+  pauseBtn.classList.add('paused');
+  pauseBtn.textContent = t('resume_btn');
+}
+
+function resumeGame() {
+  isPaused = false;
+  actionBtns.forEach((b, i) => { b.disabled = _prepauseDisabled[i]; });
+  cmdInput.disabled = false;
+  cmdBtn.disabled   = false;
+  pauseOverlay.classList.remove('active');
+  pauseBtn.classList.remove('paused');
+  pauseBtn.textContent = t('pause_btn');
+  // Re-sync button states with current game logic
+  if (!player.dead) updateCombatButtons();
+}
+
+function togglePause() {
+  if (isPaused) resumeGame(); else pauseGame();
+}
+
+pauseBtn.addEventListener('click', togglePause);
+
 // ─── Name Overlay ─────────────────────────────────────────────────
 const nameOverlay = document.getElementById('name-overlay');
 const nameInput   = document.getElementById('name-input');
@@ -1547,6 +1629,12 @@ const nameStartBtn= document.getElementById('name-start-btn');
 function startGame(name) {
   player.name = name.trim() || 'Adventurer';
   nameOverlay.style.display = 'none';
+  // Reset pause state
+  isPaused = false;
+  pauseOverlay.classList.remove('active');
+  pauseBtn.classList.remove('paused');
+  pauseBtn.textContent = t('pause_btn');
+  pauseBtn.disabled = false;
   updateHUD();
   renderRoom();
 
@@ -1570,6 +1658,9 @@ document.getElementById('lang-btn').addEventListener('click', () => {
   const newLang = currentLang === 'en' ? 'sv' : 'en';
   localStorage.setItem('lang', newLang);
   applyLang(newLang);
+  // Keep pause button text in sync with pause state after language change
+  if (isPaused) pauseBtn.textContent = t('resume_btn');
+  else pauseBtn.textContent = t('pause_btn');
 });
 </script>
 </body>
