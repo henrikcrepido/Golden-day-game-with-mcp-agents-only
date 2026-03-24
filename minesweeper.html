@@ -113,6 +113,7 @@
     /* ── Game container ───────────────────────────────────────────── */
     #game-container {
       display: inline-block;
+      position: relative;
       background: linear-gradient(145deg, #1e1b4b, #2d2770);
       border-radius: 16px;
       padding: 14px;
@@ -176,6 +177,58 @@
     #reset-btn:active {
       transform: translateY(3px);
       box-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    /* Pause button */
+    #pause-btn {
+      font-size: 1.2rem;
+      width: 46px;
+      height: 38px;
+      cursor: pointer;
+      background: linear-gradient(145deg, #4a4080, #332d6e);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      color: #fff;
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: transform 0.08s, box-shadow 0.08s, background 0.15s;
+    }
+    #pause-btn:hover:not(:disabled) {
+      background: linear-gradient(145deg, #5a50a0, #3e3880);
+    }
+    #pause-btn:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    #pause-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    #pause-btn.paused {
+      background: linear-gradient(145deg, #a06020, #7a4810);
+      border-color: rgba(255,180,50,0.3);
+    }
+
+    /* Pause overlay */
+    #pause-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 20, 0.72);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 4px;
+      pointer-events: none;
     }
 
     /* ── Board ────────────────────────────────────────────────────── */
@@ -453,10 +506,14 @@
 <div id="game-container">
   <div id="header">
     <div id="mine-counter" class="display">000</div>
-    <div id="reset-btn" title="New game" data-i18n-title="resetTitle">🙂</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="reset-btn" title="New game" data-i18n-title="resetTitle">🙂</div>
+      <button id="pause-btn" title="Pause game" aria-label="Pause game" disabled>⏸</button>
+    </div>
     <div id="timer" class="display">000</div>
   </div>
   <div id="board"></div>
+  <div id="pause-overlay" style="display:none;">⏸ PAUSED</div>
 </div>
 
 <!-- Win / Lose overlay -->
@@ -503,6 +560,8 @@ const TRANSLATIONS = {
     saveScore:      'Save Score',
     fsToggle:       'Toggle fullscreen',
     fsExit:         'Exit fullscreen',
+    pauseBtn:       'Pause',
+    resumeBtn:      'Resume',
   },
   sv: {
     title:          'Minesweeper',
@@ -525,6 +584,8 @@ const TRANSLATIONS = {
     saveScore:      'Spara Poäng',
     fsToggle:       'Växla helskärm',
     fsExit:         'Avsluta helskärm',
+    pauseBtn:       'Pausa',
+    resumeBtn:      'Fortsätt',
   },
 };
 
@@ -557,6 +618,14 @@ function applyLang(lang) {
   // Overlay button text reflects current state
   setOverlayBtn(overlayBtnKey);
   updateFsIcon();
+  // Update pause button title
+  if (isPaused) {
+    pauseBtn.title = t('resumeBtn');
+    pauseBtn.setAttribute('aria-label', t('resumeBtn'));
+  } else {
+    pauseBtn.title = t('pauseBtn');
+    pauseBtn.setAttribute('aria-label', t('pauseBtn'));
+  }
 }
 
 function setOverlayBtn(key) {
@@ -580,6 +649,7 @@ let revealedCount;
 let timerInterval;
 let seconds;
 let firstClick;
+let isPaused = false;
 
 /* ── DOM references ──────────────────────────────────────────────── */
 const boardEl       = document.getElementById('board');
@@ -596,6 +666,8 @@ const playerNameEl  = document.getElementById('player-name');
 const hsSection     = document.getElementById('hs-section');
 const hsBody        = document.getElementById('hs-body');
 const langBtn       = document.getElementById('lang-btn');
+const pauseBtn      = document.getElementById('pause-btn');
+const pauseOverlay  = document.getElementById('pause-overlay');
 
 /* ── Highscore helpers ───────────────────────────────────────────── */
 const HS_MAX = 5;
@@ -673,6 +745,36 @@ function startTimer() {
 
 function stopTimer() { clearInterval(timerInterval); }
 
+function pauseGame() {
+  if (gameState !== 'playing' || isPaused) return;
+  isPaused = true;
+  clearInterval(timerInterval);
+  pauseOverlay.style.display = 'flex';
+  pauseBtn.textContent = '▶';
+  pauseBtn.title = t('resumeBtn');
+  pauseBtn.setAttribute('aria-label', t('resumeBtn'));
+  pauseBtn.classList.add('paused');
+}
+
+function resumeGame() {
+  if (!isPaused) return;
+  isPaused = false;
+  timerInterval = setInterval(() => {
+    seconds = Math.min(seconds + 1, 999);
+    timerEl.textContent = padDisplayNumber(seconds);
+  }, 1000);
+  pauseOverlay.style.display = 'none';
+  pauseBtn.textContent = '⏸';
+  pauseBtn.title = t('pauseBtn');
+  pauseBtn.setAttribute('aria-label', t('pauseBtn'));
+  pauseBtn.classList.remove('paused');
+}
+
+function togglePause() {
+  if (isPaused) resumeGame();
+  else pauseGame();
+}
+
 /* ── Initialise ──────────────────────────────────────────────────── */
 function initGame() {
   const cfg = DIFFICULTIES[diffSelect.value];
@@ -690,6 +792,11 @@ function initGame() {
   timerEl.textContent = '000';
   updateMineCounter();
   resetBtn.textContent = '🙂';
+  isPaused = false;
+  pauseOverlay.style.display = 'none';
+  pauseBtn.textContent = '⏸';
+  pauseBtn.classList.remove('paused');
+  pauseBtn.disabled = true;
   overlay.classList.remove('active');
   resetHSOverlay();
 
@@ -841,6 +948,13 @@ function checkWin() {
 function endGame(won) {
   gameState = won ? 'won' : 'lost';
   stopTimer();
+  pauseBtn.disabled = true;
+  if (isPaused) {
+    isPaused = false;
+    pauseOverlay.style.display = 'none';
+    pauseBtn.textContent = '⏸';
+    pauseBtn.classList.remove('paused');
+  }
 
   if (won) {
     resetBtn.textContent = '😎';
@@ -897,6 +1011,7 @@ function endGame(won) {
 /* ── Event handlers ──────────────────────────────────────────────── */
 function onLeftClick(e) {
   if (gameState === 'won' || gameState === 'lost') return;
+  if (isPaused) return;
   const r = +e.currentTarget.dataset.row;
   const c = +e.currentTarget.dataset.col;
   const cell = grid[r][c];
@@ -908,6 +1023,7 @@ function onLeftClick(e) {
     gameState = 'playing';
     placeMines(r, c);
     startTimer();
+    pauseBtn.disabled = false;
   }
 
   if (cell.revealed) {
@@ -923,6 +1039,7 @@ function onLeftClick(e) {
 function onRightClick(e) {
   e.preventDefault();
   if (gameState === 'won' || gameState === 'lost') return;
+  if (isPaused) return;
   const r = +e.currentTarget.dataset.row;
   const c = +e.currentTarget.dataset.col;
   const cell = grid[r][c];
@@ -948,6 +1065,7 @@ function onMiddleClick(e) {
   if (e.button !== 1) return;
   e.preventDefault();
   if (gameState !== 'playing') return;
+  if (isPaused) return;
   const r = +e.currentTarget.dataset.row;
   const c = +e.currentTarget.dataset.col;
   chordCell(r, c);
@@ -956,6 +1074,9 @@ function onMiddleClick(e) {
 
 /* ── Reset button ────────────────────────────────────────────────── */
 resetBtn.addEventListener('click', initGame);
+
+/* ── Pause button ────────────────────────────────────────────────── */
+pauseBtn.addEventListener('click', togglePause);
 
 /* ── Overlay play-again / save-score ────────────────────────────── */
 overlayBtn.addEventListener('click', () => {
