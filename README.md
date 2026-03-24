@@ -40,46 +40,104 @@ that syncs scores between all users connected to the same server.
 ## 🖥 Hosting on IIS (no Python required)
 
 The repository ships a `web.config` and a PHP API handler so the app can run
-on any IIS 7+ server without Python.
+on any IIS 7+ server without Python and **without .NET Core or ASP.NET**.
 
-### Prerequisites
+> **TL;DR — just drop the files in `wwwroot`?**  
+> Yes. Copy the whole folder to `C:\inetpub\wwwroot\goldendaygames`, point an
+> IIS site at it, and the games load immediately. The two extra steps (URL
+> Rewrite module + PHP) are only needed for the shared leaderboard API.
 
-| Requirement | Notes |
-|-------------|-------|
-| **IIS 7+** | Windows Server 2008 R2 or later, or Windows 10/11 with IIS feature enabled |
-| **URL Rewrite module** | [Download from Microsoft](https://www.iis.net/downloads/microsoft/url-rewrite) |
-| **PHP (any 7.x / 8.x)** | [Install guide for IIS](https://www.php.net/manual/en/install.windows.iis7.php) |
+---
 
-### Deployment steps
+### Step 1 — Enable IIS on Windows
 
-1. **Copy** the entire repository folder to your IIS site root (e.g.
-   `C:\inetpub\wwwroot\goldendaygames`).
+**Windows 10 / 11:**
+1. Open *Control Panel → Programs → Turn Windows features on or off*.
+2. Tick **Internet Information Services** (expand it and also tick
+   **World Wide Web Services → Application Development Features → CGI**).
+3. Click OK and wait for installation to finish.
 
-2. **Create the site** in IIS Manager (or use an existing one) pointing to
-   that folder.
+**Windows Server:**
+1. Open *Server Manager → Add Roles and Features*.
+2. Select **Web Server (IIS)** and on the *Role Services* page also tick
+   **Application Development → CGI**.
+3. Complete the wizard.
 
-3. **Grant write access** to the `data\` sub-folder for the application-pool
-   identity (e.g. `IIS AppPool\DefaultAppPool`):
+---
+
+### Step 2 — Install the URL Rewrite module
+
+> Required for the `/api/highscores/…` routes. Skip this step if you only
+> need the games to load (leaderboards will silently fall back to local
+> browser storage).
+
+1. Download the installer from
+   <https://www.iis.net/downloads/microsoft/url-rewrite>.
+2. Run the `.msi` and follow the prompts.
+3. Restart IIS: open a command prompt as Administrator and run
+   ```bat
+   iisreset
+   ```
+
+---
+
+### Step 3 — Install PHP
+
+> Also required for the leaderboard API. Skip if not needed.
+
+1. Download the **Non-Thread Safe (NTS) x64** ZIP from <https://windows.php.net/download/>.
+2. Extract to `C:\PHP` (or any folder without spaces).
+3. Copy `php.ini-production` to `php.ini` inside that folder.
+4. Register PHP as a FastCGI handler in IIS:
+   - Open **IIS Manager** → select your server node → double-click
+     **Handler Mappings** → click *Add Module Mapping…*
+   - Fill in:
+     | Field | Value |
+     |-------|-------|
+     | Request path | `*.php` |
+     | Module | `FastCgiModule` |
+     | Executable | `C:\PHP\php-cgi.exe` |
+     | Name | `PHP_via_FastCGI` |
+   - Click OK and confirm adding the FastCGI application when prompted.
+
+---
+
+### Step 4 — Deploy the application
+
+1. **Copy** the entire repository folder to your IIS site root, e.g.:
+   ```bat
+   xcopy /E /I /Y "C:\path\to\repo" "C:\inetpub\wwwroot\goldendaygames"
+   ```
+
+2. **Create a site** (or use *Default Web Site*):
+   - In IIS Manager right-click *Sites → Add Website…*
+   - Set *Physical path* to `C:\inetpub\wwwroot\goldendaygames`.
+   - Choose a port (e.g. 8080) and click OK.
+
+3. **Grant write access** to the `data\` folder for the application-pool
+   identity. Open PowerShell as Administrator:
    ```powershell
    icacls "C:\inetpub\wwwroot\goldendaygames\data" /grant "IIS AppPool\DefaultAppPool:(OI)(CI)M"
    ```
+   *(Replace `DefaultAppPool` with the actual app-pool name shown in IIS
+   Manager if it differs.)*
 
-4. **Verify** the URL Rewrite module is installed — open IIS Manager and look
-   for the *URL Rewrite* icon on the server or site level.
+4. **Browse** to `http://localhost:8080/` (or your configured port).
 
-5. Browse to `http://<your-server>/index.html`.
+---
 
 ### How it works
 
 | File | Purpose |
 |------|---------|
-| `web.config` | Tells IIS to route `/api/highscores/{key}` → `api/highscores.php` and blocks direct access to `data/` |
+| `web.config` | Routes `/api/highscores/{key}` → `api/highscores.php`; sets default document; adds JSON MIME type; blocks access to `data/` |
 | `api/highscores.php` | PHP handler — reads/writes `data/{key}.json`; mirrors the Python server API |
-| `data/` | JSON files written here (one file per score key) |
+| `data/` | JSON files written here at runtime (one file per score key) |
 
-The `web.config` also registers `index.html` as the default document and adds
-the correct MIME type for `.json` files.
+No .NET Core or ASP.NET runtime is needed — `web.config` only uses native
+IIS modules (URL Rewrite, static content handler, request filtering).
 
-> **Note:** If PHP is not available on your IIS server you can still run
-> the Python server locally, or adapt `api/highscores.php` to an ASP /
-> ASP.NET handler following the same GET / POST contract.
+> **Without PHP?** The games still load and store scores in the browser's
+> `localStorage`. The leaderboard API calls will silently fail (404) and
+> each browser will keep its own local copy — same behaviour as opening the
+> `.html` files directly from disk.
