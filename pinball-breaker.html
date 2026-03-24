@@ -1621,7 +1621,8 @@ function draw() {
 
 // ── Game loop ─────────────────────────────────────────────────────────────────
 function loop() {
-  if (!isPaused) update();
+  if (isPaused) { draw(); requestAnimationFrame(loop); return; }
+  update();
   draw();
   requestAnimationFrame(loop);
 }

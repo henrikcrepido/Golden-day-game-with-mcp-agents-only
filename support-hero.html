@@ -646,6 +646,8 @@
     }
     .pause-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
     .pause-btn.paused { border-color: rgba(255,200,60,0.5); color: #ffd54f; }
+    .pause-label { display: none; color: #ffd54f; font-weight: bold; margin-left: 8px; }
+    .pause-label.visible { display: inline; }
 
     /* ── Language button ─────────────────────── */
     #lang-btn {
@@ -723,7 +725,7 @@
           <span id="timer-label" data-i18n="timer_label">⏱ Time left:</span>
           <div id="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
           <span id="timer-num">30</span>
-          <span id="pause-label" role="status" aria-live="polite" style="display:none; color: #ffd54f; font-weight: bold; margin-left: 8px;"></span>
+          <span id="pause-label" role="status" aria-live="polite" class="pause-label"></span>
         </div>
       </div>
       <div id="feedback"></div>
@@ -1353,7 +1355,7 @@ function applyLang(lang) {
 
   // Update pause button text for current pause state
   pauseBtn.textContent = isPaused ? t.resume_btn : t.pause_btn;
-  if (pauseLabel.style.display !== 'none') {
+  if (pauseLabel.classList.contains('visible')) {
     pauseLabel.textContent = t.paused_label;
   }
 }
@@ -1422,7 +1424,7 @@ function pauseGame() {
   pauseBtn.setAttribute('aria-label', tl.resume_btn || '▶ Resume');
   pauseBtn.classList.add('paused');
   pauseLabel.textContent = tl.paused_label || 'PAUSED';
-  pauseLabel.style.display = 'inline';
+  pauseLabel.classList.add('visible');
   actionsEl.querySelectorAll('button').forEach(b => { b.disabled = true; b.setAttribute('aria-disabled', 'true'); });
   nextBtn.disabled = true;
   nextBtn.setAttribute('aria-disabled', 'true');
@@ -1436,7 +1438,7 @@ function resumeGame() {
   pauseBtn.textContent = tl.pause_btn || '⏸ Pause';
   pauseBtn.setAttribute('aria-label', tl.pause_btn || '⏸ Pause');
   pauseBtn.classList.remove('paused');
-  pauseLabel.style.display = 'none';
+  pauseLabel.classList.remove('visible');
   actionsEl.querySelectorAll('button').forEach(b => { b.disabled = false; b.removeAttribute('aria-disabled'); });
   nextBtn.disabled = false;
   nextBtn.removeAttribute('aria-disabled');
@@ -1876,7 +1878,7 @@ function startGame() {
   pauseBlock.style.display = '';
   pauseBtn.textContent = (I18N[currentLang] || I18N.en).pause_btn || '⏸ Pause';
   pauseBtn.classList.remove('paused');
-  pauseLabel.style.display = 'none';
+  pauseLabel.classList.remove('visible');
   overlay.style.display = 'none';
   renderAchievements();
   updateHUD();

@@ -231,6 +231,13 @@
       pointer-events: none;
     }
 
+    /* Center button group in header */
+    .header-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     /* ── Board ────────────────────────────────────────────────────── */
     #board {
       display: grid;
@@ -506,7 +513,7 @@
 <div id="game-container">
   <div id="header">
     <div id="mine-counter" class="display">000</div>
-    <div style="display:flex;gap:8px;align-items:center;">
+    <div class="header-controls">
       <div id="reset-btn" title="New game" data-i18n-title="resetTitle">🙂</div>
       <button id="pause-btn" title="Pause game" aria-label="Pause game" disabled>⏸</button>
     </div>

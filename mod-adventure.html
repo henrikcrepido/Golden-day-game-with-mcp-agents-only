@@ -1585,16 +1585,16 @@ cmdInput.addEventListener('keydown', e=>{
 // ─── Pause Logic ──────────────────────────────────────────────────
 const pauseBtn    = document.getElementById('pause-btn');
 const pauseOverlay= document.getElementById('pause-overlay');
-const actionBtns  = ['btn-n','btn-s','btn-e','btn-w','btn-attack','btn-heal','btn-look','btn-inv']
-                      .map(id => document.getElementById(id));
+const ACTION_BUTTON_IDS = ['btn-n','btn-s','btn-e','btn-w','btn-attack','btn-heal','btn-look','btn-inv'];
+const actionBtns  = ACTION_BUTTON_IDS.map(id => document.getElementById(id));
 const cmdBtn      = document.getElementById('cmd-btn');
 
 // Store disabled state before pausing so we can restore it
-let _prepauseDisabled = [];
+let savedDisabledStates = [];
 
 function pauseGame() {
   isPaused = true;
-  _prepauseDisabled = actionBtns.map(b => b.disabled);
+  savedDisabledStates = actionBtns.map(b => b.disabled);
   actionBtns.forEach(b => { b.disabled = true; });
   cmdInput.disabled = true;
   cmdBtn.disabled   = true;
@@ -1605,7 +1605,7 @@ function pauseGame() {
 
 function resumeGame() {
   isPaused = false;
-  actionBtns.forEach((b, i) => { b.disabled = _prepauseDisabled[i]; });
+  actionBtns.forEach((b, i) => { b.disabled = savedDisabledStates[i]; });
   cmdInput.disabled = false;
   cmdBtn.disabled   = false;
   pauseOverlay.classList.remove('active');
