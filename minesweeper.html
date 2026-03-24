@@ -609,6 +609,26 @@ function getHighscores() {
 
 function saveHighscores(scores) {
   localStorage.setItem(hsKey(), JSON.stringify(scores));
+  fetch('/api/highscores/' + hsKey(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scores),
+  }).catch(() => {});
+}
+
+async function syncHighscoresFromServer() {
+  await Promise.all(Object.keys(DIFFICULTIES).map(async diff => {
+    try {
+      const r = await fetch('/api/highscores/ms_hs_' + diff);
+      if (r.ok) {
+        const data = await r.json();
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('ms_hs_' + diff, JSON.stringify(data));
+        }
+      }
+    } catch(e) {}
+  }));
+  renderHS(getHighscores(), -1);
 }
 
 function qualifiesForHS(time) {
@@ -987,6 +1007,7 @@ diffSelect.addEventListener('change', initGame);
 
 /* ── Kick off ────────────────────────────────────────────────────── */
 initGame();
+syncHighscoresFromServer();
 
 /* ── Fullscreen ──────────────────────────────────────────────────── */
 const fsBtn = document.getElementById('fs-btn');
