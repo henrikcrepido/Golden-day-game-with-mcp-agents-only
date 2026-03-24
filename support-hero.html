@@ -700,7 +700,7 @@
     </div>
     <div id="rank-badge">🥋 Recruit</div>
     <div class="hud-block" id="pause-block" style="display:none;">
-      <button id="pause-btn" class="pause-btn">⏸ Pause</button>
+      <button id="pause-btn" class="pause-btn" aria-label="Pause game" title="Pause game">⏸ Pause</button>
     </div>
   </div>
 
@@ -723,7 +723,7 @@
           <span id="timer-label" data-i18n="timer_label">⏱ Time left:</span>
           <div id="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
           <span id="timer-num">30</span>
-          <span id="pause-label" style="display:none; color: #ffd54f; font-weight: bold; margin-left: 8px;"></span>
+          <span id="pause-label" role="status" aria-live="polite" style="display:none; color: #ffd54f; font-weight: bold; margin-left: 8px;"></span>
         </div>
       </div>
       <div id="feedback"></div>
@@ -1419,11 +1419,13 @@ function pauseGame() {
   timerFrozen = true;
   const tl = I18N[currentLang] || I18N.en;
   pauseBtn.textContent = tl.resume_btn || '▶ Resume';
+  pauseBtn.setAttribute('aria-label', tl.resume_btn || '▶ Resume');
   pauseBtn.classList.add('paused');
   pauseLabel.textContent = tl.paused_label || 'PAUSED';
   pauseLabel.style.display = 'inline';
-  actionsEl.querySelectorAll('button').forEach(b => b.disabled = true);
+  actionsEl.querySelectorAll('button').forEach(b => { b.disabled = true; b.setAttribute('aria-disabled', 'true'); });
   nextBtn.disabled = true;
+  nextBtn.setAttribute('aria-disabled', 'true');
 }
 
 function resumeGame() {
@@ -1432,10 +1434,12 @@ function resumeGame() {
   timerFrozen = false;
   const tl = I18N[currentLang] || I18N.en;
   pauseBtn.textContent = tl.pause_btn || '⏸ Pause';
+  pauseBtn.setAttribute('aria-label', tl.pause_btn || '⏸ Pause');
   pauseBtn.classList.remove('paused');
   pauseLabel.style.display = 'none';
-  actionsEl.querySelectorAll('button').forEach(b => b.disabled = false);
+  actionsEl.querySelectorAll('button').forEach(b => { b.disabled = false; b.removeAttribute('aria-disabled'); });
   nextBtn.disabled = false;
+  nextBtn.removeAttribute('aria-disabled');
 }
 
 function togglePause() {
