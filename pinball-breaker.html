@@ -280,7 +280,7 @@
   </div>
 </div>
 
-<button id="pause-btn" class="pause-btn hidden">⏸ Pause</button>
+<button id="pause-btn" class="pause-btn hidden"></button>
 
 <div id="canvas-wrap">
   <canvas id="c" width="480" height="600"></canvas>
@@ -387,6 +387,7 @@ const TRANSLATIONS = {
     lifePopup:    '❤️ +1 Life!',
     btnPause:     '⏸ Pause',
     btnResume:    '▶ Resume',
+    txtPaused:    '⏸ PAUSED',
   },
   sv: {
     pageTitle:    'Pinball Krossar – Gyllene Dag Spel',
@@ -422,6 +423,7 @@ const TRANSLATIONS = {
     lifePopup:    '❤️ +1 Liv!',
     btnPause:     '⏸ Pausa',
     btnResume:    '▶ Fortsätt',
+    txtPaused:    '⏸ PAUSAD',
   }
 };
 
@@ -1609,7 +1611,7 @@ function draw() {
     ctx.font = 'bold 36px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⏸ PAUSED', W/2, H/2);
+    ctx.fillText(t('txtPaused'), W/2, H/2);
     ctx.font = '16px system-ui';
     ctx.fillStyle = '#9090b8';
     ctx.fillText(t('btnResume'), W/2, H/2 + 48);
