@@ -586,7 +586,7 @@ function drawFinishLine() {
   if (cy < -20 || cy > CH + 20) return;
 
   const cols = ['#ff4444','#ff8800','#ffdd00','#44ff44','#00aaff','#aa44ff'];
-  const STRIPES_PER_COLOR = 2; /* two stripes of each colour across the canvas */
+  const STRIPES_PER_COLOR = 2; /* two stripes of each color across the canvas */
   const blockW = Math.ceil(CW / (cols.length * STRIPES_PER_COLOR));
   let x = 0;
   let colIdx = 0;
