@@ -1,0 +1,2439 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ture &amp; Selma – Hitta Orden! – Golden Day Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky: #87ceeb;
+      --grass: #4caf50;
+      --gold: #ffd54f;
+      --pink: #ff80ab;
+      --blue: #42a5f5;
+      --text: #1a1a2e;
+      --panel: rgba(255,255,255,0.92);
+    }
+
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.06); }
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+      100% { transform: translateY(520px) rotate(720deg); opacity: 0; }
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0.3); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes letterPop {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.3) rotate(5deg); }
+      100% { transform: scale(1)   rotate(0deg); opacity: 1; }
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #e0f7fa 0%, #b2ebf2 50%, #e8f5e9 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0.5rem 2rem;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Back link ─────────────────────────────── */
+    #back-link {
+      align-self: flex-start;
+      text-decoration: none;
+      color: #37474f;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.3rem 0.7rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.12);
+      transition: background 0.2s;
+      margin-bottom: 0.3rem;
+    }
+    #back-link:hover { background: rgba(255,255,255,1); }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      animation: floatUp 0.5s ease both;
+    }
+    header .logo {
+      font-size: 1.9rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #e91e63, #ff9800, #4caf50, #2196f3, #9c27b0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
+    }
+    header .sub {
+      font-size: 0.75rem;
+      color: #78909c;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 0.1rem;
+    }
+
+    /* ── Canvas wrapper ─────────────────────────── */
+    #canvas-wrap {
+      position: relative;
+      animation: floatUp 0.5s ease 0.15s both;
+    }
+    #game-canvas {
+      display: block;
+      border-radius: 14px;
+      border: 3px solid rgba(255,255,255,0.9);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+      background: var(--sky);
+      max-width: 100%;
+    }
+
+    /* ── Touch controls ─────────────────────────── */
+    #touch-controls {
+      display: none;
+      gap: 1rem;
+      margin-top: 0.7rem;
+      animation: floatUp 0.5s ease 0.2s both;
+    }
+    @media (max-width: 860px) {
+      #touch-controls { display: flex; }
+    }
+    .tc-btn {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.55);
+      font-size: 1.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.1s, transform 0.1s;
+    }
+    .tc-btn:active, .tc-btn.pressed {
+      background: rgba(255,255,255,0.85);
+      transform: scale(0.93);
+    }
+
+    /* ── Pause btn ──────────────────────────────── */
+    #pause-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.45);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #37474f;
+      font-weight: 700;
+      transition: background 0.15s;
+      z-index: 10;
+    }
+    #pause-btn:hover { background: rgba(255,255,255,0.8); }
+
+    /* ── Footer hint ────────────────────────────── */
+    #key-hint {
+      font-size: 0.72rem;
+      color: #78909c;
+      margin-top: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+  <a id="back-link" href="index.html">← Tillbaka</a>
+
+  <header>
+    <div class="logo">🌟 Ture &amp; Selma</div>
+    <div class="sub">Hitta Orden! – Golden Day Games</div>
+  </header>
+
+  <div id="canvas-wrap">
+    <canvas id="game-canvas" width="800" height="500"></canvas>
+    <button id="pause-btn" title="Pausa (P)">⏸</button>
+  </div>
+
+  <div id="touch-controls">
+    <button class="tc-btn" id="tc-left">◀</button>
+    <button class="tc-btn" id="tc-jump">⬆</button>
+    <button class="tc-btn" id="tc-right">▶</button>
+  </div>
+
+  <div id="key-hint">Piltangenter för att röra sig &nbsp;|&nbsp; ↑ eller Mellanslag för att hoppa &nbsp;|&nbsp; P = Paus</div>
+
+  <script>
+  (function() {
+    "use strict";
+
+    /* ── Canvas setup ─────────────────────────────────── */
+    const canvas = document.getElementById('game-canvas');
+    const ctx    = canvas.getContext('2d');
+    const W = 800, H = 500;
+
+    function scaleCanvas() {
+      const maxW = window.innerWidth - 16;
+      const scale = Math.min(1, maxW / W);
+      canvas.style.width  = (W * scale) + 'px';
+      canvas.style.height = (H * scale) + 'px';
+    }
+    scaleCanvas();
+    window.addEventListener('resize', scaleCanvas);
+
+    /* ── Audio ────────────────────────────────────────── */
+    let audioCtx = null;
+    let melodyInterval = null;
+
+    function getAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playNote(freq, start, dur, vol) {
+      const ac = getAudio();
+      const osc  = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ac.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + start + dur);
+      osc.start(ac.currentTime + start);
+      osc.stop(ac.currentTime + start + dur + 0.05);
+    }
+
+    // Simple cheerful melody
+    const MELODY = [
+      [523, 0.4], [587, 0.4], [659, 0.4], [698, 0.4],
+      [784, 0.6], [784, 0.2], [740, 0.4], [698, 0.4],
+      [659, 0.4], [587, 0.4], [523, 0.8],
+      [440, 0.4], [494, 0.4], [523, 0.4], [587, 0.4],
+      [659, 0.6], [659, 0.2], [587, 0.4], [523, 0.4],
+      [494, 0.4], [440, 0.4], [523, 0.8],
+    ];
+
+    let melodyPlaying = false;
+
+    function startMusic() {
+      if (melodyPlaying) return;
+      melodyPlaying = true;
+      playMelodyLoop();
+    }
+
+    function playMelodyLoop() {
+      if (!melodyPlaying) return;
+      let t = 0;
+      for (const [freq, dur] of MELODY) {
+        playNote(freq, t, dur * 0.85, 0.07);
+        t += dur;
+      }
+      setTimeout(playMelodyLoop, t * 1000 + 200);
+    }
+
+    function stopMusic() {
+      melodyPlaying = false;
+    }
+
+    function playSfx(type) {
+      try {
+        const ac = getAudio();
+        if (type === 'collect') {
+          playNote(880, 0,    0.1, 0.12);
+          playNote(1047, 0.1, 0.15, 0.1);
+        } else if (type === 'jump') {
+          playNote(330, 0, 0.08, 0.08);
+          playNote(440, 0.07, 0.08, 0.06);
+        } else if (type === 'die') {
+          playNote(220, 0,    0.12, 0.1);
+          playNote(165, 0.12, 0.2,  0.1);
+        } else if (type === 'win') {
+          const chime = [523, 659, 784, 1047];
+          chime.forEach((f, i) => playNote(f, i * 0.12, 0.2, 0.1));
+        } else if (type === 'stomp') {
+          playNote(120, 0, 0.15, 0.12);
+          playNote(80,  0.1, 0.1, 0.08);
+        }
+      } catch(e) {}
+    }
+
+    /* ── Game state enum ──────────────────────────────── */
+    const STATE = { START: 0, SELECT: 1, MODE_SELECT: 2, PLAYING: 3, POPUP: 4, PAUSED: 5, WIN: 6, DEAD: 7 };
+    let state = STATE.START;
+
+    /* ── Input ────────────────────────────────────────── */
+    const keys = { left: false, right: false, up: false, space: false };
+    let jumpPressed = false;
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  keys.left  = true;
+      if (e.key === 'ArrowRight') keys.right = true;
+      if (e.key === 'ArrowUp' || e.key === ' ') {
+        keys.up = true;
+        if (!jumpPressed) { jumpPressed = true; handleJump(); }
+        e.preventDefault();
+      }
+      if (e.key === 'p' || e.key === 'P') togglePause();
+      if (e.key === ' ' && state === STATE.POPUP && popup.phase !== 'spell') { e.preventDefault(); advancePopup(); }
+      if (e.key === 'Enter' && state === STATE.WIN)  resetGame();
+      if (e.key === 'Enter' && state === STATE.DEAD) respawn();
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft')  keys.left  = false;
+      if (e.key === 'ArrowRight') keys.right = false;
+      if (e.key === 'ArrowUp' || e.key === ' ') { keys.up = false; jumpPressed = false; }
+    });
+
+    // Pause button
+    document.getElementById('pause-btn').addEventListener('click', togglePause);
+
+    // Touch buttons
+    function bindTouch(id, key) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; btn.classList.add('pressed'); if (key === 'up') handleJump(); }, { passive: false });
+      btn.addEventListener('touchend',   e => { e.preventDefault(); keys[key] = false; btn.classList.remove('pressed'); jumpPressed = false; }, { passive: false });
+      btn.addEventListener('mousedown',  e => { keys[key] = true;  btn.classList.add('pressed'); if (key === 'up') handleJump(); });
+      btn.addEventListener('mouseup',    e => { keys[key] = false; btn.classList.remove('pressed'); jumpPressed = false; });
+    }
+    bindTouch('tc-left',  'left');
+    bindTouch('tc-right', 'right');
+    bindTouch('tc-jump',  'up');
+
+    /* ── Level data ───────────────────────────────────── */
+    const ITEM_DEFS = [
+      { word: 'ÄPPLE',   emoji: '🍎', color: '#e53935' },
+      { word: 'BOLL',    emoji: '⚽', color: '#1565c0' },
+      { word: 'KATT',    emoji: '🐱', color: '#ff8f00' },
+      { word: 'HUND',    emoji: '🐶', color: '#6d4c41' },
+      { word: 'BIL',     emoji: '🚗', color: '#e53935' },
+      { word: 'BLOMMA',  emoji: '🌸', color: '#e91e63' },
+      { word: 'SOL',     emoji: '☀️', color: '#fdd835' },
+      { word: 'STJÄRNA', emoji: '⭐', color: '#fdd835' },
+      { word: 'BOK',     emoji: '📚', color: '#5c6bc0' },
+      { word: 'FISK',    emoji: '🐟', color: '#26c6da' },
+      { word: 'TÅG',     emoji: '🚂', color: '#546e7a' },
+      { word: 'HUS',     emoji: '🏠', color: '#8d6e63' },
+    ];
+
+    const EASTER_ITEM_DEFS = [
+      { word: 'PÅSKÄGG',  emoji: '🥚', color: '#e91e63' },
+      { word: 'KANIN',    emoji: '🐰', color: '#ff8f00' },
+      { word: 'BLOMMA',   emoji: '🌸', color: '#e91e63' },
+      { word: 'KYCKLING', emoji: '🐣', color: '#fdd835' },
+      { word: 'FJÄRIL',   emoji: '🦋', color: '#7b1fa2' },
+      { word: 'GRÄS',     emoji: '🌿', color: '#4caf50' },
+      { word: 'SOL',      emoji: '☀️',  color: '#fdd835' },
+      { word: 'KORG',     emoji: '🧺', color: '#8d6e63' },
+      { word: 'TULPAN',   emoji: '🌷', color: '#e91e63' },
+      { word: 'FJÄDER',   emoji: '🪶', color: '#42a5f5' },
+      { word: 'GODIS',    emoji: '🍬', color: '#e91e63' },
+      { word: 'VÅR',      emoji: '🌱', color: '#4caf50' },
+    ];
+
+    // Platform definitions: [x, y, w, h]  (relative to level scroll)
+    const PLATFORM_DEFS = [
+      // Ground
+      [0, 450, 4000, 50],
+      // Floating platforms
+      [200, 360, 120, 18],
+      [400, 300, 140, 18],
+      [600, 360, 120, 18],
+      [780, 270, 160, 18],
+      [1020, 340, 130, 18],
+      [1200, 260, 140, 18],
+      [1400, 350, 110, 18],
+      [1580, 290, 130, 18],
+      [1780, 360, 150, 18],
+      [1950, 270, 120, 18],
+      [2150, 340, 140, 18],
+      [2350, 280, 130, 18],
+      [2530, 360, 120, 18],
+      [2700, 300, 160, 18],
+      [2950, 360, 140, 18],
+      [3150, 270, 130, 18],
+      [3400, 340, 150, 18],
+      [3600, 260, 120, 18],
+      [3800, 360, 120, 18],
+    ];
+
+    // Pit definitions: [x, w]
+    const PIT_DEFS = [
+      [550, 80],
+      [1100, 100],
+      [1700, 90],
+      [2400, 110],
+      [3000, 100],
+      [3700, 80],
+    ];
+
+    // Enemy patrol areas: [x, minX, maxX]
+    const ENEMY_DEFS = [
+      { x: 300,  minX: 180,  maxX: 520,  dir: 1 },
+      { x: 900,  minX: 750,  maxX: 1100, dir: -1 },
+      { x: 1500, minX: 1350, maxX: 1750, dir: 1 },
+      { x: 2200, minX: 2050, maxX: 2450, dir: -1 },
+      { x: 2800, minX: 2650, maxX: 3000, dir: 1 },
+      { x: 3300, minX: 3100, maxX: 3600, dir: -1 },
+    ];
+
+    // Item positions scattered around level
+    const ITEM_POSITIONS = [
+      { x: 230,  y: 320 },
+      { x: 430,  y: 260 },
+      { x: 630,  y: 320 },
+      { x: 820,  y: 230 },
+      { x: 1040, y: 300 },
+      { x: 1230, y: 220 },
+      { x: 1420, y: 310 },
+      { x: 1600, y: 250 },
+      { x: 1810, y: 320 },
+      { x: 1970, y: 230 },
+      { x: 2180, y: 300 },
+      { x: 2370, y: 240 },
+    ];
+
+    /* ── Game objects ─────────────────────────────────── */
+    let player = null;
+    let platforms = [];
+    let enemies  = [];
+    let items    = [];
+    let confetti = [];
+    let particles = [];
+    let cameraX  = 0;
+    let lives    = 3;
+    let selectedChar = null; // 'ture' | 'selma' | 'mamma' | 'pappa'
+    let selectedMode = null; // 'hitta_orden' | 'paskjakt'
+    let deathTimer   = 0;
+    let invincTimer  = 0;
+    const LEVEL_END_X = 3950;
+
+    /* ── Popup tile size constant ─────────────────────── */
+    const POPUP_TILE      = 40;
+    const POPUP_TILE_STEP = POPUP_TILE + 6; // center-to-center pitch
+    const POPUP_COMPLETE_DELAY = 120;       // frames before auto-close (~2 s at 60 fps)
+    const POPUP_TAP_THRESHOLD  = 8;         // px — max movement still counted as a tap
+    const POPUP_SNAP_DIST      = POPUP_TILE; // px — how close to a slot centre to snap
+
+    /* ── Popup state ──────────────────────────────────── */
+    let popup = {
+      active: false,
+      word: '',
+      emoji: '',
+      phase: 'show_word', // 'show_word' | 'spell' | 'complete'
+      phaseTimer: 0,
+      sourceTiles: [],   // { letter, placed, originalX, originalY }
+      targetSlots: [],   // { letter, filled, x, y }
+      dragging: null,    // { tileIdx, startX, startY, curX, curY }
+      selectedTile: null,
+      completeTimer: 0,
+    };
+
+    /* ── Player ───────────────────────────────────────── */
+    function createPlayer() {
+      return {
+        x: 80, y: 360, w: 32, h: 48,
+        vx: 0, vy: 0,
+        onGround: false,
+        facing: 1,
+        walkFrame: 0,
+        walkTimer: 0,
+        dead: false,
+        collected: [],
+      };
+    }
+
+    function initLevel() {
+      player    = createPlayer();
+      cameraX   = 0;
+      invincTimer = 0;
+
+      platforms = PLATFORM_DEFS.map(([x, y, w, h]) => ({ x, y, w, h }));
+
+      enemies = ENEMY_DEFS.map(d => ({
+        x: d.x, y: 0, w: 34, h: 28,
+        vx: d.dir * 1.2, minX: d.minX, maxX: d.maxX,
+        onGround: false, alive: true,
+        walkFrame: 0, walkTimer: 0,
+      }));
+
+      // Shuffle item defs and assign positions (Fisher-Yates)
+      const itemDefs = selectedMode === 'paskjakt' ? EASTER_ITEM_DEFS : ITEM_DEFS;
+      const shuffled = [...itemDefs];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      items = ITEM_POSITIONS.map((pos, i) => ({
+        x: pos.x, y: pos.y,
+        def: shuffled[i % shuffled.length],
+        collected: false,
+        bobTimer: Math.random() * Math.PI * 2,
+      }));
+
+      confetti  = [];
+      particles = [];
+    }
+
+    /* ── Physics helpers ──────────────────────────────── */
+    const GRAVITY    = 0.55;
+    const JUMP_VEL   = -11.5;
+    const MOVE_SPEED = 3.8;
+    const FRICTION   = 0.82;
+    const PLATFORM_LAND_TOLERANCE = 1; // px — leniency for one-way platform landing
+
+    function rectOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x &&
+             a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function resolveCollisions(obj) {
+      obj.onGround = false;
+      for (const p of platforms) {
+        if (!rectOverlap(obj, p)) continue;
+        const isGround = p.h > 30;
+        if (isGround) {
+          // Solid ground — full collision on all sides
+          const overlapLeft  = (obj.x + obj.w) - p.x;
+          const overlapRight = (p.x + p.w) - obj.x;
+          const overlapTop   = (obj.y + obj.h) - p.y;
+          const overlapBot   = (p.y + p.h) - obj.y;
+          const minO = Math.min(overlapLeft, overlapRight, overlapTop, overlapBot);
+          if (minO === overlapTop && obj.vy >= 0) {
+            obj.y = p.y - obj.h;
+            obj.vy = 0;
+            obj.onGround = true;
+          } else if (minO === overlapBot && obj.vy < 0) {
+            obj.y = p.y + p.h;
+            obj.vy = 0;
+          } else if (minO === overlapLeft) {
+            obj.x = p.x - obj.w;
+            obj.vx = 0;
+          } else if (minO === overlapRight) {
+            obj.x = p.x + p.w;
+            obj.vx = 0;
+          }
+        } else {
+          // Jump-through / one-way platform: only land when falling from above.
+          // Check that the object's bottom was at or above the platform top
+          // before this frame's movement (prevents tunnelling and allows jumping through).
+          if (obj.vy >= 0) {
+            const prevBottom = (obj.y + obj.h) - obj.vy;
+            if (prevBottom <= p.y + PLATFORM_LAND_TOLERANCE) {
+              obj.y = p.y - obj.h;
+              obj.vy = 0;
+              obj.onGround = true;
+            }
+          }
+        }
+      }
+    }
+
+    function handleJump() {
+      if (state === STATE.PLAYING && player && player.onGround && !player.dead) {
+        player.vy = JUMP_VEL;
+        playSfx('jump');
+      }
+    }
+
+    function checkPit(obj) {
+      for (const pit of PIT_DEFS) {
+        const cx = obj.x + obj.w / 2;
+        if (cx >= pit[0] && cx <= pit[0] + pit[1] && obj.y > 430) {
+          return true;
+        }
+      }
+      return obj.y > H + 60;
+    }
+
+    /* ── Death / respawn ──────────────────────────────── */
+    function killPlayer() {
+      if (invincTimer > 0 || player.dead) return;
+      lives--;
+      playSfx('die');
+      player.dead = true;
+      player.vy = -8;
+      deathTimer = 90;
+      state = STATE.DEAD;
+    }
+
+    function respawn() {
+      if (lives <= 0) {
+        resetGame();
+        return;
+      }
+      player.dead = false;
+      player.x = 80;
+      player.y = 360;
+      player.vx = 0;
+      player.vy = 0;
+      cameraX = 0;
+      invincTimer = 120;
+      state = STATE.PLAYING;
+    }
+
+    /* ── Popup logic ──────────────────────────────────── */
+    function initSpellPhase() {
+      const word = popup.word;
+      const n = word.length;
+      const totalW = n * POPUP_TILE_STEP - 6;
+      const startX = W / 2 - totalW / 2 + POPUP_TILE / 2;
+      const targetCY = H / 2 - 10;
+      const sourceCY = H / 2 + 80;
+
+      popup.targetSlots = Array.from({ length: n }, (_, i) => ({
+        letter: word[i],
+        filled: false,
+        x: startX + i * POPUP_TILE_STEP,
+        y: targetCY,
+      }));
+
+      // Shuffle source letters (Fisher-Yates)
+      const letters = word.split('');
+      for (let i = letters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [letters[i], letters[j]] = [letters[j], letters[i]];
+      }
+      popup.sourceTiles = letters.map((letter, i) => ({
+        letter,
+        placed: false,
+        originalX: startX + i * POPUP_TILE_STEP,
+        originalY: sourceCY,
+      }));
+    }
+
+    function showPopup(def) {
+      popup.active      = true;
+      popup.word        = def.word;
+      popup.emoji       = def.emoji;
+      popup.phase       = 'show_word';
+      popup.phaseTimer  = 90;
+      popup.dragging    = null;
+      popup.selectedTile = null;
+      popup.completeTimer = 0;
+      initSpellPhase();
+      state = STATE.POPUP;
+      playSfx('collect');
+    }
+
+    function advancePopup() {
+      if (popup.phase === 'show_word') {
+        popup.phase = 'spell';
+      } else if (popup.phase === 'complete') {
+        closePopup();
+      }
+    }
+
+    function checkSpellComplete() {
+      if (popup.targetSlots.every(s => s.filled)) {
+        popup.phase = 'complete';
+        popup.completeTimer = 0;
+        playSfx('win');
+      }
+    }
+
+    function closePopup() {
+      popup.active = false;
+      state = STATE.PLAYING;
+    }
+
+    function updatePopup() {
+      if (popup.phase === 'show_word') {
+        popup.phaseTimer--;
+        if (popup.phaseTimer <= 0) {
+          popup.phase = 'spell';
+        }
+      } else if (popup.phase === 'complete') {
+        popup.completeTimer++;
+        if (popup.completeTimer >= POPUP_COMPLETE_DELAY) {
+          closePopup();
+        }
+      }
+    }
+
+    /* ── Confetti ─────────────────────────────────────── */
+    const CONFETTI_COLORS = ['#e91e63','#ff9800','#ffeb3b','#4caf50','#2196f3','#9c27b0','#00bcd4'];
+    function spawnConfetti() {
+      for (let i = 0; i < 120; i++) {
+        confetti.push({
+          x: Math.random() * W,
+          y: -20 - Math.random() * 100,
+          vx: (Math.random() - 0.5) * 3,
+          vy: 2 + Math.random() * 3,
+          rot: Math.random() * Math.PI * 2,
+          rotV: (Math.random() - 0.5) * 0.2,
+          w: 8 + Math.random() * 8,
+          h: 5 + Math.random() * 5,
+          color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        });
+      }
+    }
+
+    function updateConfetti() {
+      for (const c of confetti) {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.rot += c.rotV;
+        c.vx *= 0.99;
+      }
+      for (let i = confetti.length - 1; i >= 0; i--) {
+        if (confetti[i].y > H + 20) confetti.splice(i, 1);
+      }
+    }
+
+    /* ── Enemy drawing helpers ────────────────────────── */
+    function drawBug(cx, cy, facingLeft, walkFrame) {
+      const t = walkFrame;
+      const legSwing = Math.sin(t * 0.3) * 4;
+
+      // Body
+      ctx.fillStyle = '#558b2f';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 16, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head
+      ctx.fillStyle = '#33691e';
+      const hx = facingLeft ? cx - 14 : cx + 14;
+      ctx.beginPath();
+      ctx.ellipse(hx, cy - 2, 9, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#fff';
+      const ex = facingLeft ? hx - 3 : hx + 3;
+      ctx.beginPath();
+      ctx.arc(ex, cy - 4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.arc(ex + (facingLeft ? -1 : 1), cy - 4, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spots
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      [[-6, -2], [0, -4], [6, -2]].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.arc(cx + dx, cy + dy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Legs (3 pairs)
+      ctx.strokeStyle = '#33691e';
+      ctx.lineWidth = 2;
+      for (let i = -1; i <= 1; i++) {
+        const lx = cx + i * 8;
+        const swing = i % 2 === 0 ? legSwing : -legSwing;
+        // left legs
+        ctx.beginPath();
+        ctx.moveTo(lx, cy + 6);
+        ctx.lineTo(lx - 10, cy + 14 + swing);
+        ctx.stroke();
+        // right legs
+        ctx.beginPath();
+        ctx.moveTo(lx, cy + 6);
+        ctx.lineTo(lx + 10, cy + 14 - swing);
+        ctx.stroke();
+      }
+    }
+
+    /* ── Player drawing ───────────────────────────────── */
+    function drawPlayer(x, y, char, facing, walkFrame, invincTimer_) {
+      if (invincTimer_ > 0 && Math.floor(invincTimer_ / 6) % 2 === 0) return;
+
+      const cx = x + 16;
+      const cy = y + 24;
+      const f  = facing;
+      const wf = walkFrame;
+      const legSwing = player.onGround ? Math.sin(wf * 0.25) * 5 : 0;
+
+      if (char === 'ture') {
+        // Shoes
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(cx - 10 + legSwing,  cy + 18, 11, 7);
+        ctx.fillRect(cx + 1  - legSwing, cy + 18, 11, 7);
+
+        // Legs / trousers
+        ctx.fillStyle = '#1565c0';
+        ctx.fillRect(cx - 9 + legSwing,  cy + 8, 10, 14);
+        ctx.fillRect(cx + 0  - legSwing, cy + 8, 10, 14);
+
+        // Body / shirt
+        ctx.fillStyle = '#1976d2';
+        ctx.fillRect(cx - 12, cy - 12, 24, 22);
+
+        // Arms
+        ctx.fillStyle = '#ffd54f';
+        const armSwing = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 5 : 0;
+        ctx.fillRect(cx - 18 + f * armSwing, cy - 10, 8, 16);
+        ctx.fillRect(cx + 10 - f * armSwing, cy - 10, 8, 16);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(cx - 11, cy - 30, 22, 10);
+        ctx.beginPath();
+        ctx.arc(cx, cy - 30, 11, Math.PI, 0);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+      } else if (char === 'selma') {
+        // Selma — pink dress
+        // Shoes
+        ctx.fillStyle = '#e91e63';
+        ctx.beginPath();
+        ctx.ellipse(cx - 7 + legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 7 - legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Dress skirt
+        ctx.fillStyle = '#f48fb1';
+        ctx.beginPath();
+        ctx.moveTo(cx - 15, cy + 4);
+        ctx.lineTo(cx + 15, cy + 4);
+        ctx.lineTo(cx + 18, cy + 22);
+        ctx.lineTo(cx - 18, cy + 22);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dress top
+        ctx.fillStyle = '#e91e63';
+        ctx.fillRect(cx - 11, cy - 14, 22, 20);
+
+        // Arms
+        ctx.fillStyle = '#ffd54f';
+        const armSwing2 = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 4 : 0;
+        ctx.fillRect(cx - 17 + f * armSwing2, cy - 12, 7, 15);
+        ctx.fillRect(cx + 10 - f * armSwing2, cy - 12, 7, 15);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pigtails
+        ctx.fillStyle = '#ff8f00';
+        ctx.beginPath(); ctx.ellipse(cx - 14, cy - 26, 5, 8, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 14, cy - 26, 5, 8, 0.4,  0, Math.PI * 2); ctx.fill();
+
+        // Hair top
+        ctx.fillStyle = '#ff8f00';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 30, 11, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(cx - 11, cy - 30, 22, 8);
+
+        // Hair bow
+        ctx.fillStyle = '#e91e63';
+        ctx.beginPath(); ctx.ellipse(cx - 5, cy - 36, 5, 3, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 5, cy - 36, 5, 3,  0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, cy - 36, 3, 0, Math.PI * 2); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Lashes
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        [[cx - 6, cy - 23], [cx - 4, cy - 24], [cx - 2, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+        [[cx + 2, cy - 23], [cx + 4, cy - 24], [cx + 6, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 17, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+      } else if (char === 'mamma') {
+        // Mamma — purple dress
+        // Shoes
+        ctx.fillStyle = '#6a1b9a';
+        ctx.beginPath();
+        ctx.ellipse(cx - 7 + legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 7 - legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Dress skirt
+        ctx.fillStyle = '#ce93d8';
+        ctx.beginPath();
+        ctx.moveTo(cx - 15, cy + 4);
+        ctx.lineTo(cx + 15, cy + 4);
+        ctx.lineTo(cx + 19, cy + 22);
+        ctx.lineTo(cx - 19, cy + 22);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dress top
+        ctx.fillStyle = '#9c27b0';
+        ctx.fillRect(cx - 12, cy - 14, 24, 20);
+
+        // Arms
+        ctx.fillStyle = '#ffd54f';
+        const armSwing3 = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 4 : 0;
+        ctx.fillRect(cx - 18 + f * armSwing3, cy - 12, 7, 15);
+        ctx.fillRect(cx + 11 - f * armSwing3, cy - 12, 7, 15);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair bun base
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 32, 11, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(cx - 11, cy - 32, 22, 8);
+        // Bun
+        ctx.beginPath();
+        ctx.arc(cx, cy - 36, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Earrings
+        ctx.fillStyle = '#fdd835';
+        ctx.beginPath(); ctx.arc(cx - 12, cy - 20, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 12, cy - 20, 2, 0, Math.PI * 2); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Lashes
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        [[cx - 6, cy - 23], [cx - 4, cy - 24], [cx - 2, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+        [[cx + 2, cy - 23], [cx + 4, cy - 24], [cx + 6, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 17, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+      } else if (char === 'pappa') {
+        // Pappa — green sweater
+        // Shoes
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 10 + legSwing,  cy + 18, 11, 7);
+        ctx.fillRect(cx + 1  - legSwing, cy + 18, 11, 7);
+
+        // Legs / pants (brown)
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(cx - 9 + legSwing,  cy + 8, 10, 14);
+        ctx.fillRect(cx + 0  - legSwing, cy + 8, 10, 14);
+
+        // Sweater (green)
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 12, cy - 12, 24, 22);
+        // Collar detail
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillRect(cx - 3, cy - 12, 6, 7);
+
+        // Arms (skin + green sleeves)
+        ctx.fillStyle = '#ffd54f';
+        const armSwing4 = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 5 : 0;
+        ctx.fillRect(cx - 18 + f * armSwing4, cy - 10, 8, 16);
+        ctx.fillRect(cx + 10 - f * armSwing4, cy - 10, 8, 16);
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 18 + f * armSwing4, cy - 10, 8, 9);
+        ctx.fillRect(cx + 10 - f * armSwing4, cy - 10, 8, 9);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair (brown)
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 11, cy - 30, 22, 10);
+        ctx.beginPath();
+        ctx.arc(cx, cy - 30, 11, Math.PI, 0);
+        ctx.fill();
+
+        // Mustache
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath();
+        ctx.ellipse(cx - 4, cy - 12, 4, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 4, cy - 12, 4, 2.5,  0.2, 0, Math.PI * 2); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      }
+    }
+
+    /* ── Background drawing ───────────────────────────── */
+    function drawBackground() {
+      // Sky gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0,   '#87ceeb');
+      grad.addColorStop(0.6, '#b3e5fc');
+      grad.addColorStop(1,   '#e8f5e9');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Sun
+      const sunX = (600 - cameraX * 0.1 + W * 5) % (W + 200) - 100;
+      ctx.fillStyle = '#fdd835';
+      ctx.beginPath();
+      ctx.arc(sunX, 70, 38, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(253,216,53,0.4)';
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.arc(sunX, 70, 52, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Clouds (parallax)
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      const cloudOff = cameraX * 0.18;
+      const clouds = [[80, 60], [280, 80], [520, 50], [750, 70], [950, 55], [1150, 75], [1380, 60]];
+      for (const [cx2, cy2] of clouds) {
+        const bx = ((cx2 - cloudOff % 1300 + 1300) % 1300);
+        ctx.beginPath();
+        ctx.ellipse(bx,      cy2,      38, 22, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(bx + 30, cy2 - 10, 30, 20, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(bx - 30, cy2 - 8,  26, 18, 0, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Background hills
+      ctx.fillStyle = '#a5d6a7';
+      for (let hx = -200 + Math.floor(cameraX * 0.3 / 300) * 300 - 300;
+               hx < W + 200; hx += 300) {
+        const bx = hx - (cameraX * 0.3) % 300;
+        ctx.beginPath();
+        ctx.arc(bx + 150, H - 30, 130, Math.PI, 0);
+        ctx.fill();
+      }
+
+      // Easter decorations: flowers and eggs at grass level
+      if (selectedMode === 'paskjakt') {
+        ctx.font = '18px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const flowerOff = cameraX * 0.95;
+        for (let fx = 60 - (flowerOff % 240); fx < W + 60; fx += 240) {
+          ctx.fillText('🌷', fx,        H - 60);
+          ctx.fillText('🌸', fx + 80,   H - 60);
+          ctx.fillText('🥚', fx + 160,  H - 60);
+        }
+      }
+    }
+
+    /* ── Platform drawing ─────────────────────────────── */
+    function drawPlatforms() {
+      for (const p of platforms) {
+        const sx = p.x - cameraX;
+        if (sx + p.w < -10 || sx > W + 10) continue;
+
+        const isGround = p.h > 30;
+        if (isGround) {
+          // Ground: layered grass/dirt
+          // Dirt
+          ctx.fillStyle = '#8d6e63';
+          ctx.fillRect(sx, p.y + 10, p.w, p.h - 10);
+          // Grass
+          ctx.fillStyle = '#4caf50';
+          ctx.fillRect(sx, p.y, p.w, 14);
+          // Grass blades decoration
+          ctx.fillStyle = '#66bb6a';
+          for (let gx = sx + 8; gx < sx + p.w - 4; gx += 16) {
+            ctx.fillRect(gx, p.y - 4, 3, 7);
+            ctx.fillRect(gx + 6, p.y - 2, 3, 5);
+          }
+        } else {
+          // Floating platform — wood plank look
+          ctx.fillStyle = '#8d6e63';
+          ctx.fillRect(sx, p.y + 4, p.w, p.h - 4);
+          ctx.fillStyle = '#a1887f';
+          ctx.fillRect(sx, p.y, p.w, 7);
+          // Wood grain
+          ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+          ctx.lineWidth = 1;
+          for (let gx2 = sx + 16; gx2 < sx + p.w; gx2 += 18) {
+            ctx.beginPath();
+            ctx.moveTo(gx2, p.y);
+            ctx.lineTo(gx2, p.y + p.h);
+            ctx.stroke();
+          }
+          // Moss edge
+          ctx.fillStyle = '#81c784';
+          ctx.fillRect(sx + 4, p.y - 3, p.w - 8, 4);
+        }
+      }
+    }
+
+    /* ── Pit drawing (gaps in ground) ────────────────── */
+    function drawPits() {
+      for (const [px, pw] of PIT_DEFS) {
+        const sx = px - cameraX;
+        if (sx + pw < 0 || sx > W) continue;
+        // Dark abyss
+        const grad = ctx.createLinearGradient(0, 450, 0, H);
+        grad.addColorStop(0, '#1a1a2e');
+        grad.addColorStop(1, '#000');
+        ctx.fillStyle = grad;
+        ctx.fillRect(sx, 450, pw, 50);
+        // Danger glow
+        ctx.fillStyle = 'rgba(230,57,70,0.25)';
+        ctx.fillRect(sx, 440, pw, 12);
+      }
+    }
+
+    /* ── Item drawing ─────────────────────────────────── */
+    function drawItems() {
+      for (const item of items) {
+        if (item.collected) continue;
+        const sx = item.x - cameraX;
+        if (sx < -40 || sx > W + 40) continue;
+
+        item.bobTimer += 0.05;
+        const bobY = item.y + Math.sin(item.bobTimer) * 5;
+
+        // Glow ring
+        ctx.save();
+        ctx.shadowColor = item.def.color;
+        ctx.shadowBlur  = 16;
+        ctx.fillStyle   = item.def.color + '44';
+        ctx.beginPath();
+        ctx.arc(sx + 16, bobY + 16, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Emoji
+        ctx.font = '28px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.def.emoji, sx + 16, bobY + 16);
+      }
+    }
+
+    /* ── Enemy drawing ────────────────────────────────── */
+    function drawEnemies() {
+      for (const e of enemies) {
+        if (!e.alive) continue;
+        const sx = e.x - cameraX;
+        if (sx < -50 || sx > W + 50) continue;
+        const facingLeft = e.vx < 0;
+        drawBug(sx + e.w / 2, e.y + e.h / 2, facingLeft, e.walkFrame);
+      }
+    }
+
+    /* ── HUD drawing ──────────────────────────────────── */
+    function drawHUD() {
+      const collected = player ? player.collected.length : 0;
+      const total     = items.length;
+
+      // Panel background
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      roundRect(ctx, 8, 8, 220, 44, 10);
+      ctx.fill();
+
+      // Score
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 14px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const hudLabel = selectedMode === 'paskjakt'
+        ? `🥚 Ägg: ${collected} / ${total}`
+        : `🌟 Ord: ${collected} / ${total}`;
+      ctx.fillText(hudLabel, 18, 30);
+
+      // Lives
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      roundRect(ctx, W - 120, 8, 112, 44, 10);
+      ctx.fill();
+      ctx.fillStyle = '#e53935';
+      ctx.font = 'bold 18px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const hearts = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, 3 - lives));
+      ctx.fillText(hearts, W - 64, 30);
+
+      // Character name tag
+      if (selectedChar) {
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        roundRect(ctx, W / 2 - 60, 8, 120, 28, 8);
+        ctx.fill();
+        const charColors = { ture: '#1565c0', selma: '#e91e63', mamma: '#7b1fa2', pappa: '#2e7d32' };
+        ctx.fillStyle = charColors[selectedChar] || '#37474f';
+        ctx.font = 'bold 13px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const charLabels = { ture: 'Ture (5 år)', selma: 'Selma (3 år)', mamma: 'Mamma', pappa: 'Pappa' };
+        const name = charLabels[selectedChar] || selectedChar;
+        ctx.fillText(name, W / 2, 22);
+      }
+
+      ctx.restore();
+    }
+
+    /* ── Round rect helper ────────────────────────────── */
+    function roundRect(ctx2, x, y, w, h, r) {
+      ctx2.beginPath();
+      ctx2.moveTo(x + r, y);
+      ctx2.lineTo(x + w - r, y);
+      ctx2.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx2.lineTo(x + w, y + h - r);
+      ctx2.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx2.lineTo(x + r, y + h);
+      ctx2.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx2.lineTo(x, y + r);
+      ctx2.quadraticCurveTo(x, y, x + r, y);
+      ctx2.closePath();
+    }
+
+    /* ── Start screen ─────────────────────────────────── */
+    function drawStartScreen() {
+      // Sky background
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#87ceeb');
+      grad.addColorStop(1, '#e8f5e9');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Ground
+      ctx.fillStyle = '#4caf50';
+      ctx.fillRect(0, H - 60, W, 60);
+      ctx.fillStyle = '#66bb6a';
+      for (let gx = 0; gx < W; gx += 16) ctx.fillRect(gx, H - 64, 3, 6);
+
+      // Title box
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur  = 20;
+      roundRect(ctx, W / 2 - 220, 60, 440, 180, 22);
+      ctx.fill();
+      ctx.restore();
+
+      // Star
+      ctx.font = '52px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⭐', W / 2, 110);
+
+      // Title
+      ctx.fillStyle = '#e91e63';
+      ctx.font = 'bold 36px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Ture & Selma', W / 2, 160);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 22px Segoe UI, sans-serif';
+      ctx.fillText('Hitta Orden & Påskjakt!', W / 2, 196);
+
+      // Subtitle prompt
+      ctx.fillStyle = '#37474f';
+      ctx.font = '15px Segoe UI, sans-serif';
+      ctx.fillText('Nu med Mamma och Pappa! Välj din karaktär!', W / 2, 225);
+
+      // Start button hint
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      roundRect(ctx, W / 2 - 130, 290, 260, 50, 14);
+      ctx.fill();
+      ctx.fillStyle = '#4caf50';
+      ctx.font = 'bold 18px Segoe UI, sans-serif';
+      ctx.fillText('Tryck Enter eller klicka', W / 2, 316);
+
+      // Characters preview — four characters in a row
+      ctx.save();
+      ctx.translate(160, H - 130);
+      drawPlayerMiniature('ture');
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(320, H - 130);
+      drawPlayerMiniature('selma');
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(480, H - 130);
+      drawPlayerMiniature('mamma');
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(640, H - 130);
+      drawPlayerMiniature('pappa');
+      ctx.restore();
+
+      // Character labels
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 14px Segoe UI, sans-serif';
+      ctx.fillText('Ture', 160, H - 55);
+      ctx.fillStyle = '#e91e63';
+      ctx.fillText('Selma', 320, H - 55);
+      ctx.fillStyle = '#7b1fa2';
+      ctx.fillText('Mamma', 480, H - 55);
+      ctx.fillStyle = '#2e7d32';
+      ctx.fillText('Pappa', 640, H - 55);
+    }
+
+    /* ── Character select screen ──────────────────────── */
+    function drawSelectScreen() {
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#fff9c4');
+      grad.addColorStop(1, '#f3e5f5');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Title
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 26px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Välj din karaktär! 🌟', W / 2, 36);
+
+      const chars = [
+        { id: 'ture',  name: 'Ture',  age: '5 år', desc: 'Äventyrlig!', color: '#1565c0', bg: '#e3f2fd', hov: selectHoverTure },
+        { id: 'selma', name: 'Selma', age: '3 år', desc: 'Nyfiken!',    color: '#e91e63', bg: '#fce4ec', hov: selectHoverSelma },
+        { id: 'mamma', name: 'Mamma', age: '',      desc: 'Omtänksam!', color: '#7b1fa2', bg: '#f3e5f5', hov: selectHoverMamma },
+        { id: 'pappa', name: 'Pappa', age: '',      desc: 'Modig!',     color: '#2e7d32', bg: '#e8f5e9', hov: selectHoverPappa },
+      ];
+
+      const CARD_W = 168;
+      const CARD_H = 272;
+      const GAP    = 14;
+      const totalW = chars.length * CARD_W + (chars.length - 1) * GAP;
+      const startX = Math.round((W - totalW) / 2);
+      const cardY  = 60;
+
+      chars.forEach((ch, i) => {
+        const cx2    = startX + i * (CARD_W + GAP);
+        const centerX = cx2 + CARD_W / 2;
+
+        ctx.save();
+        ctx.fillStyle   = ch.hov ? ch.bg : '#fff';
+        ctx.shadowColor = ch.color + '66';
+        ctx.shadowBlur  = ch.hov ? 22 : 8;
+        roundRect(ctx, cx2, cardY, CARD_W, CARD_H, 18);
+        ctx.fill();
+        ctx.strokeStyle = ch.hov ? ch.color : ch.color + '55';
+        ctx.lineWidth   = ch.hov ? 3 : 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        // Character miniature
+        ctx.save();
+        ctx.translate(centerX, cardY + 130);
+        ctx.scale(1.35, 1.35);
+        drawPlayerMiniature(ch.id);
+        ctx.restore();
+
+        // Name
+        ctx.fillStyle = ch.color;
+        ctx.font = 'bold 18px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ch.name, centerX, cardY + CARD_H - 72);
+
+        // Age (if any)
+        if (ch.age) {
+          ctx.fillStyle = '#546e7a';
+          ctx.font = '13px Segoe UI, sans-serif';
+          ctx.fillText(ch.age, centerX, cardY + CARD_H - 52);
+        }
+
+        // Description
+        ctx.fillStyle = '#37474f';
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.fillText(ch.desc, centerX, cardY + CARD_H - (ch.age ? 32 : 42));
+      });
+
+      // Hint
+      ctx.fillStyle = '#78909c';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Klicka på en karaktär!  (1=Ture  2=Selma  3=Mamma  4=Pappa)', W / 2, 460);
+    }
+
+    let selectHoverTure  = false;
+    let selectHoverSelma = false;
+    let selectHoverMamma = false;
+    let selectHoverPappa = false;
+    let selectHoverHittaOrden = false;
+    let selectHoverPaskjakt   = false;
+
+    function drawPlayerMiniature(char) {
+      // Tiny static player drawing for cards / start screen
+      const cx = 0, cy = 0;
+      if (char === 'ture') {
+        // shoes
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(cx - 9, cy + 19, 9, 6);
+        ctx.fillRect(cx + 1, cy + 19, 9, 6);
+        // trousers
+        ctx.fillStyle = '#1565c0';
+        ctx.fillRect(cx - 8, cy + 9, 8, 12);
+        ctx.fillRect(cx + 1, cy + 9, 8, 12);
+        // shirt
+        ctx.fillStyle = '#1976d2';
+        ctx.fillRect(cx - 10, cy - 10, 20, 20);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 15, cy - 9, 6, 14);
+        ctx.fillRect(cx + 10, cy - 9, 6, 14);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 27, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 27, 18, 7);
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (char === 'selma') {
+        // shoes
+        ctx.fillStyle = '#e91e63';
+        ctx.beginPath(); ctx.ellipse(cx - 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        // skirt
+        ctx.fillStyle = '#f48fb1';
+        ctx.beginPath();
+        ctx.moveTo(cx - 13, cy + 4);
+        ctx.lineTo(cx + 13, cy + 4);
+        ctx.lineTo(cx + 16, cy + 20);
+        ctx.lineTo(cx - 16, cy + 20);
+        ctx.closePath(); ctx.fill();
+        // dress top
+        ctx.fillStyle = '#e91e63';
+        ctx.fillRect(cx - 9, cy - 12, 18, 18);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 15, cy - 10, 6, 13);
+        ctx.fillRect(cx + 10, cy - 10, 6, 13);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair
+        ctx.fillStyle = '#ff8f00';
+        ctx.beginPath(); ctx.arc(cx, cy - 28, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 28, 18, 7);
+        // pigtails
+        ctx.beginPath(); ctx.ellipse(cx - 12, cy - 24, 4, 6, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 12, cy - 24, 4, 6,  0.4, 0, Math.PI * 2); ctx.fill();
+        // bow
+        ctx.fillStyle = '#e91e63';
+        ctx.beginPath(); ctx.ellipse(cx - 4, cy - 33, 4, 2.5, -0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 4, cy - 33, 4, 2.5,  0.5, 0, Math.PI * 2); ctx.fill();
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (char === 'mamma') {
+        // shoes
+        ctx.fillStyle = '#6a1b9a';
+        ctx.beginPath(); ctx.ellipse(cx - 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        // skirt
+        ctx.fillStyle = '#ce93d8';
+        ctx.beginPath();
+        ctx.moveTo(cx - 13, cy + 4);
+        ctx.lineTo(cx + 13, cy + 4);
+        ctx.lineTo(cx + 17, cy + 20);
+        ctx.lineTo(cx - 17, cy + 20);
+        ctx.closePath(); ctx.fill();
+        // dress top
+        ctx.fillStyle = '#9c27b0';
+        ctx.fillRect(cx - 10, cy - 12, 20, 18);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 16, cy - 10, 6, 13);
+        ctx.fillRect(cx + 11, cy - 10, 6, 13);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair bun
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath(); ctx.arc(cx, cy - 28, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 28, 18, 7);
+        ctx.beginPath(); ctx.arc(cx, cy - 32, 5, 0, Math.PI * 2); ctx.fill();
+        // earrings
+        ctx.fillStyle = '#fdd835';
+        ctx.beginPath(); ctx.arc(cx - 10, cy - 20, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 10, cy - 20, 1.5, 0, Math.PI * 2); ctx.fill();
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (char === 'pappa') {
+        // shoes
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 9, cy + 19, 9, 6);
+        ctx.fillRect(cx + 1, cy + 19, 9, 6);
+        // trousers
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(cx - 8, cy + 9, 8, 12);
+        ctx.fillRect(cx + 1, cy + 9, 8, 12);
+        // sweater
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 10, cy - 10, 20, 20);
+        // collar
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillRect(cx - 2, cy - 10, 5, 6);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 15, cy - 9, 6, 14);
+        ctx.fillRect(cx + 10, cy - 9, 6, 14);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 27, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 27, 18, 7);
+        // mustache
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath(); ctx.ellipse(cx - 3, cy - 11, 3.5, 2, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 3, cy - 11, 3.5, 2,  0.2, 0, Math.PI * 2); ctx.fill();
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    /* ── Mode select screen ───────────────────────────── */
+    function drawModeSelectScreen() {
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#e8f5e9');
+      grad.addColorStop(1, '#fff8e1');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Back hint
+      ctx.fillStyle = '#90a4ae';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('← Esc för att byta karaktär', 20, 22);
+
+      // Title with chosen character name
+      const charNames2 = { ture: 'Ture', selma: 'Selma', mamma: 'Mamma', pappa: 'Pappa' };
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 26px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Hej ${charNames2[selectedChar] || ''}! Välj spelläge 🎮`, W / 2, 52);
+
+      // ── Hitta Orden card ──────────────────────────────
+      ctx.save();
+      ctx.fillStyle   = selectHoverHittaOrden ? '#e3f2fd' : '#fff';
+      ctx.shadowColor = 'rgba(21,101,192,0.35)';
+      ctx.shadowBlur  = selectHoverHittaOrden ? 24 : 10;
+      roundRect(ctx, 80, 100, 280, 300, 22);
+      ctx.fill();
+      ctx.strokeStyle = selectHoverHittaOrden ? '#1565c0' : 'rgba(21,101,192,0.3)';
+      ctx.lineWidth   = selectHoverHittaOrden ? 3 : 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '64px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📚', 220, 210);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 20px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Hitta Orden!', 220, 290);
+
+      ctx.fillStyle = '#546e7a';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.fillText('Samla föremål och lär', 220, 318);
+      ctx.fillText('dig svenska ord!', 220, 338);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('Tryck 1 eller klicka', 220, 372);
+
+      // ── Påskjakt card ─────────────────────────────────
+      ctx.save();
+      ctx.fillStyle   = selectHoverPaskjakt ? '#fff8e1' : '#fff';
+      ctx.shadowColor = 'rgba(255,152,0,0.35)';
+      ctx.shadowBlur  = selectHoverPaskjakt ? 24 : 10;
+      roundRect(ctx, 440, 100, 280, 300, 22);
+      ctx.fill();
+      ctx.strokeStyle = selectHoverPaskjakt ? '#ff8f00' : 'rgba(255,152,0,0.3)';
+      ctx.lineWidth   = selectHoverPaskjakt ? 3 : 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '64px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🥚', 580, 210);
+
+      ctx.fillStyle = '#ff8f00';
+      ctx.font = 'bold 20px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Påskjakt! 🐰', 580, 290);
+
+      ctx.fillStyle = '#546e7a';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.fillText('Hitta påskägg gömda', 580, 318);
+      ctx.fillText('runt om i världen!', 580, 338);
+
+      ctx.fillStyle = '#ff8f00';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('Tryck 2 eller klicka', 580, 372);
+    }
+
+    /* ── Pop-up drawing ───────────────────────────────── */
+    function drawPopup() {
+      // Dim background
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Panel
+      ctx.save();
+      ctx.fillStyle = '#fffde7';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur  = 30;
+      roundRect(ctx, W / 2 - 220, H / 2 - 170, 440, 360, 24);
+      ctx.fill();
+      ctx.restore();
+
+      // Border
+      ctx.strokeStyle = '#fdd835';
+      ctx.lineWidth = 4;
+      roundRect(ctx, W / 2 - 220, H / 2 - 170, 440, 360, 24);
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (popup.phase === 'show_word') {
+        // Emoji big
+        ctx.font = '72px serif';
+        ctx.fillText(popup.emoji, W / 2, H / 2 - 80);
+
+        // Word
+        ctx.fillStyle = '#1a1a2e';
+        ctx.font = 'bold 38px Segoe UI, sans-serif';
+        ctx.fillText(popup.word, W / 2, H / 2 + 10);
+
+        // Subtitle
+        ctx.fillStyle = '#546e7a';
+        ctx.font = '16px Segoe UI, sans-serif';
+        const foundText = selectedMode === 'paskjakt'
+          ? 'Du hittade ett påskägg! 🥚'
+          : 'Du hittade ett nytt ord! 🎉';
+        ctx.fillText(foundText, W / 2, H / 2 + 70);
+
+        ctx.fillStyle = '#9e9e9e';
+        ctx.font = '14px Segoe UI, sans-serif';
+        ctx.fillText('Tryck Mellanslag för att stava det', W / 2, H / 2 + 110);
+
+      } else {
+        // Spell / complete phase — drag-and-drop UI
+        ctx.font = '44px serif';
+        ctx.fillText(popup.emoji, W / 2, H / 2 - 130);
+
+        ctx.fillStyle = '#546e7a';
+        ctx.font = 'bold 16px Segoe UI, sans-serif';
+        ctx.fillText('Dra bokstäverna till rätt ruta!', W / 2, H / 2 - 85);
+
+        const T = POPUP_TILE;
+
+        // ── Target slots ──
+        for (let i = 0; i < popup.targetSlots.length; i++) {
+          const slot = popup.targetSlots[i];
+          const sx = slot.x - T / 2;
+          const sy = slot.y - T / 2;
+
+          ctx.save();
+          if (slot.filled) {
+            ctx.fillStyle = '#4caf50';
+            ctx.strokeStyle = '#2e7d32';
+          } else {
+            // Highlight if selected tile letter matches this slot
+            const sel = popup.selectedTile;
+            const selMatch = sel !== null &&
+              !popup.sourceTiles[sel].placed &&
+              popup.sourceTiles[sel].letter === slot.letter;
+            ctx.fillStyle = selMatch ? '#fff9c4' : '#e0e0e0';
+            ctx.strokeStyle = selMatch ? '#fdd835' : '#9e9e9e';
+          }
+          ctx.lineWidth = 2;
+          roundRect(ctx, sx, sy, T, T, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          if (slot.filled) {
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 22px Segoe UI, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(slot.letter, slot.x, slot.y);
+          } else {
+            ctx.fillStyle = '#bdbdbd';
+            ctx.font = 'bold 18px Segoe UI, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('_', slot.x, slot.y + 4);
+          }
+          ctx.restore();
+        }
+
+        // ── Source tiles ──
+        for (let i = 0; i < popup.sourceTiles.length; i++) {
+          const tile = popup.sourceTiles[i];
+          if (tile.placed) continue;
+          if (popup.dragging && popup.dragging.tileIdx === i) continue;
+
+          const sx = tile.originalX - T / 2;
+          const sy = tile.originalY - T / 2;
+          const isSelected = popup.selectedTile === i;
+
+          ctx.save();
+          ctx.fillStyle = isSelected ? '#ff9800' : '#42a5f5';
+          ctx.strokeStyle = isSelected ? '#e65100' : '#1565c0';
+          ctx.lineWidth = isSelected ? 3 : 2;
+          if (isSelected) {
+            ctx.shadowColor = 'rgba(255,152,0,0.6)';
+            ctx.shadowBlur  = 12;
+          }
+          roundRect(ctx, sx, sy, T, T, 8);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 22px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(tile.letter, tile.originalX, tile.originalY);
+          ctx.restore();
+        }
+
+        // ── Dragged tile (drawn on top) ──
+        if (popup.dragging !== null) {
+          const tile = popup.sourceTiles[popup.dragging.tileIdx];
+          const dx = popup.dragging.curX;
+          const dy = popup.dragging.curY;
+          ctx.save();
+          ctx.fillStyle = '#ff9800';
+          ctx.strokeStyle = '#e65100';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = 'rgba(0,0,0,0.35)';
+          ctx.shadowBlur = 14;
+          roundRect(ctx, dx - T / 2, dy - T / 2, T, T, 8);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 22px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(tile.letter, dx, dy);
+          ctx.restore();
+        }
+
+        if (popup.phase === 'complete') {
+          ctx.fillStyle = '#e91e63';
+          ctx.font = 'bold 24px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Bra jobbat! 🌟', W / 2, H / 2 + 140);
+        } else {
+          ctx.fillStyle = '#78909c';
+          ctx.font = '13px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Dra (eller tryck) varje bokstav till rätt ruta', W / 2, H / 2 + 140);
+        }
+      }
+    }
+
+    /* ── Pause overlay ────────────────────────────────── */
+    function drawPauseOverlay() {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur  = 20;
+      roundRect(ctx, W / 2 - 150, H / 2 - 80, 300, 160, 20);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 32px Segoe UI, sans-serif';
+      ctx.fillText('⏸ Paus', W / 2, H / 2 - 30);
+
+      ctx.fillStyle = '#546e7a';
+      ctx.font = '16px Segoe UI, sans-serif';
+      ctx.fillText('Tryck P för att fortsätta', W / 2, H / 2 + 20);
+    }
+
+    /* ── Win / death overlays ─────────────────────────── */
+    function drawWinScreen() {
+      // Semi-transparent background
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Panel
+      ctx.save();
+      ctx.fillStyle = '#fff9c4';
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur  = 30;
+      roundRect(ctx, W / 2 - 240, H / 2 - 160, 480, 320, 28);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = '#fdd835';
+      ctx.lineWidth = 5;
+      roundRect(ctx, W / 2 - 240, H / 2 - 160, 480, 320, 28);
+      ctx.stroke();
+
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.font = '56px serif';
+      ctx.fillText('🎉', W / 2, H / 2 - 100);
+
+      const charNames3 = { ture: 'Ture', selma: 'Selma', mamma: 'Mamma', pappa: 'Pappa' };
+      const name = charNames3[selectedChar] || selectedChar;
+      ctx.fillStyle = '#e91e63';
+      ctx.font = 'bold 28px Segoe UI, sans-serif';
+      ctx.fillText(`Bra jobbat, ${name}!`, W / 2, H / 2 - 40);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 20px Segoe UI, sans-serif';
+      const winText = selectedMode === 'paskjakt'
+        ? 'Du hittade alla påskägg! 🥚🐰'
+        : 'Du hittade alla orden! 🌟';
+      ctx.fillText(winText, W / 2, H / 2 + 10);
+
+      // Words found list
+      ctx.fillStyle = '#37474f';
+      ctx.font = '14px Segoe UI, sans-serif';
+      const words = player.collected.map(i => i.word).join('  •  ');
+      const words1 = words.slice(0, 40);
+      const words2 = words.slice(40);
+      ctx.fillText(words1, W / 2, H / 2 + 60);
+      if (words2) ctx.fillText(words2, W / 2, H / 2 + 82);
+
+      // Replay button
+      ctx.save();
+      ctx.fillStyle = '#4caf50';
+      ctx.shadowColor = 'rgba(76,175,80,0.5)';
+      ctx.shadowBlur  = 16;
+      roundRect(ctx, W / 2 - 100, H / 2 + 108, 200, 48, 14);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Segoe UI, sans-serif';
+      ctx.fillText('Spela igen? 🎮', W / 2, H / 2 + 132);
+
+      // Confetti
+      for (const c of confetti) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+        ctx.restore();
+      }
+    }
+
+    function drawDeadOverlay() {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.2)';
+      ctx.shadowBlur  = 20;
+      roundRect(ctx, W / 2 - 180, H / 2 - 90, 360, 180, 20);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (lives > 0) {
+        ctx.font = '44px serif';
+        ctx.fillText('💫', W / 2, H / 2 - 40);
+        ctx.fillStyle = '#e53935';
+        ctx.font = 'bold 22px Segoe UI, sans-serif';
+        ctx.fillText('Hoppsan!', W / 2, H / 2 + 10);
+        ctx.fillStyle = '#e91e63';
+        ctx.font = '16px Segoe UI, sans-serif';
+        const hearts = '♥'.repeat(lives);
+        ctx.fillText(`Liv kvar: ${hearts}`, W / 2, H / 2 + 44);
+        ctx.fillStyle = '#9e9e9e';
+        ctx.font = '14px Segoe UI, sans-serif';
+        ctx.fillText('Tryck Enter för att fortsätta', W / 2, H / 2 + 74);
+      } else {
+        ctx.font = '44px serif';
+        ctx.fillText('😢', W / 2, H / 2 - 40);
+        ctx.fillStyle = '#e53935';
+        ctx.font = 'bold 22px Segoe UI, sans-serif';
+        ctx.fillText('Spelet är slut!', W / 2, H / 2 + 10);
+        ctx.fillStyle = '#9e9e9e';
+        ctx.font = '14px Segoe UI, sans-serif';
+        ctx.fillText('Tryck Enter för att börja om', W / 2, H / 2 + 60);
+      }
+    }
+
+    /* ── Game update ──────────────────────────────────── */
+    function updateGame() {
+      if (!player) return;
+
+      // Movement
+      if (keys.left) {
+        player.vx -= 0.8;
+        player.facing = -1;
+      }
+      if (keys.right) {
+        player.vx += 0.8;
+        player.facing = 1;
+      }
+
+      player.vx *= FRICTION;
+      player.vx  = Math.max(-MOVE_SPEED, Math.min(MOVE_SPEED, player.vx));
+
+      player.vy += GRAVITY;
+      player.x  += player.vx;
+      player.y  += player.vy;
+
+      // Clamp left
+      if (player.x < 0) { player.x = 0; player.vx = 0; }
+
+      resolveCollisions(player);
+
+      // Walk animation
+      if (player.onGround && (keys.left || keys.right)) {
+        player.walkTimer++;
+        if (player.walkTimer > 5) { player.walkTimer = 0; player.walkFrame++; }
+      } else {
+        player.walkTimer = 0;
+      }
+
+      if (invincTimer > 0) invincTimer--;
+
+      // Pit / fall check
+      if (checkPit(player)) {
+        killPlayer();
+        return;
+      }
+
+      // Camera
+      const targetCamX = player.x - W / 3;
+      cameraX += (targetCamX - cameraX) * 0.12;
+      cameraX = Math.max(0, Math.min(LEVEL_END_X - W, cameraX));
+
+      // Enemies update
+      for (const e of enemies) {
+        if (!e.alive) continue;
+
+        e.vx = e.vx > 0 ? Math.abs(e.vx) : -Math.abs(e.vx);
+        e.x += e.vx;
+        if (e.x < e.minX) { e.vx =  Math.abs(e.vx); e.x = e.minX; }
+        if (e.x > e.maxX) { e.vx = -Math.abs(e.vx); e.x = e.maxX; }
+
+        // Snap to ground
+        e.vy = (e.vy || 0) + GRAVITY;
+        e.y += e.vy;
+        resolveCollisions(e);
+
+        e.walkTimer++;
+        if (e.walkTimer > 4) { e.walkTimer = 0; e.walkFrame++; }
+
+        // Collision with player
+        if (invincTimer === 0 && rectOverlap(player, { x: e.x, y: e.y, w: e.w, h: e.h })) {
+          const playerBottom = player.y + player.h;
+          const enemyTop     = e.y;
+          if (player.vy > 0 && playerBottom - enemyTop < 20) {
+            // Stomp!
+            e.alive = false;
+            player.vy = -8;
+            playSfx('stomp');
+            spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#558b2f');
+          } else {
+            killPlayer();
+            return;
+          }
+        }
+      }
+
+      // Items collision
+      for (const item of items) {
+        if (item.collected) continue;
+        const iRect = { x: item.x, y: item.y, w: 32, h: 32 };
+        if (rectOverlap(player, iRect)) {
+          item.collected = true;
+          player.collected.push({ word: item.def.word, emoji: item.def.emoji });
+          showPopup(item.def);
+          spawnParticles(item.x + 16, item.y + 16, item.def.color);
+          return;
+        }
+      }
+
+      // Win condition
+      if (player.collected.length >= items.length) {
+        triggerWin();
+      }
+    }
+
+    /* ── Particles ────────────────────────────────────── */
+    function spawnParticles(x, y, color) {
+      for (let i = 0; i < 14; i++) {
+        const angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.3;
+        const speed = 2 + Math.random() * 4;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3,
+          life: 40 + Math.random() * 20,
+          maxLife: 60,
+          color,
+          size: 3 + Math.random() * 4,
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.25;
+        p.life--;
+      }
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        const alpha = p.life / p.maxLife;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        const sx = p.x - cameraX;
+        ctx.beginPath();
+        ctx.arc(sx, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* ── Win trigger ──────────────────────────────────── */
+    function triggerWin() {
+      state = STATE.WIN;
+      stopMusic();
+      playSfx('win');
+      spawnConfetti();
+      setTimeout(spawnConfetti, 600);
+      setTimeout(spawnConfetti, 1200);
+    }
+
+    /* ── Reset ────────────────────────────────────────── */
+    function resetGame() {
+      lives = 3;
+      selectedChar = null;
+      selectedMode = null;
+      confetti = [];
+      particles = [];
+      state = STATE.START;
+    }
+
+    /* ── Pause toggle ─────────────────────────────────── */
+    function togglePause() {
+      if (state === STATE.PLAYING) {
+        state = STATE.PAUSED;
+      } else if (state === STATE.PAUSED) {
+        state = STATE.PLAYING;
+      }
+    }
+
+    /* ── Click handling (start/select/win screens) ────── */
+    canvas.addEventListener('click', e => {
+      const rect  = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top)  * scaleY;
+
+      if (state === STATE.START) {
+        state = STATE.SELECT;
+        try { getAudio(); } catch(ex) {}
+        return;
+      }
+
+      if (state === STATE.SELECT) {
+        // 4-column card layout: CARD_W=168, GAP=14, startX=43, cardY=60, cardH=272
+        const CARD_W2 = 168, GAP2 = 14;
+        const sx2 = Math.round((W - (4 * CARD_W2 + 3 * GAP2)) / 2);
+        const chars2 = ['ture', 'selma', 'mamma', 'pappa'];
+        for (let i = 0; i < chars2.length; i++) {
+          const cx2 = sx2 + i * (CARD_W2 + GAP2);
+          if (mx >= cx2 && mx <= cx2 + CARD_W2 && my >= 60 && my <= 332) {
+            selectedChar = chars2[i];
+            state = STATE.MODE_SELECT;
+            return;
+          }
+        }
+        return;
+      }
+
+      if (state === STATE.MODE_SELECT) {
+        if (mx >= 80 && mx <= 360 && my >= 100 && my <= 400) {
+          startGame('hitta_orden');
+        } else if (mx >= 440 && mx <= 720 && my >= 100 && my <= 400) {
+          startGame('paskjakt');
+        }
+        return;
+      }
+
+      if (state === STATE.WIN) {
+        // Replay button area
+        if (mx >= W / 2 - 100 && mx <= W / 2 + 100 && my >= H / 2 + 108 && my <= H / 2 + 156) {
+          resetGame();
+        }
+        return;
+      }
+
+      if (state === STATE.POPUP) {
+        if (popup.phase !== 'spell') advancePopup();
+        return;
+      }
+
+      if (state === STATE.DEAD) {
+        respawn();
+        return;
+      }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      const rect  = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top)  * scaleY;
+
+      if (state === STATE.SELECT) {
+        const CARD_W3 = 168, GAP3 = 14;
+        const sx3 = Math.round((W - (4 * CARD_W3 + 3 * GAP3)) / 2);
+        selectHoverTure  = mx >= sx3               && mx <= sx3 + CARD_W3               && my >= 60 && my <= 332;
+        selectHoverSelma = mx >= sx3 + CARD_W3 + GAP3       && mx <= sx3 + 2*(CARD_W3+GAP3) - GAP3 && my >= 60 && my <= 332;
+        selectHoverMamma = mx >= sx3 + 2*(CARD_W3+GAP3)     && mx <= sx3 + 3*(CARD_W3+GAP3) - GAP3 && my >= 60 && my <= 332;
+        selectHoverPappa = mx >= sx3 + 3*(CARD_W3+GAP3)     && mx <= sx3 + 4*CARD_W3 + 3*GAP3      && my >= 60 && my <= 332;
+      }
+      if (state === STATE.MODE_SELECT) {
+        selectHoverHittaOrden = mx >= 80  && mx <= 360 && my >= 100 && my <= 400;
+        selectHoverPaskjakt   = mx >= 440 && mx <= 720 && my >= 100 && my <= 400;
+      }
+      if (state === STATE.POPUP && popup.dragging) {
+        popup.dragging.curX = mx;
+        popup.dragging.curY = my;
+      }
+    });
+
+    /* ── Popup drag helpers ───────────────────────────── */
+    function getCanvasXY(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) * (W / rect.width),
+        y: (clientY - rect.top)  * (H / rect.height),
+      };
+    }
+
+    function popupDragStart(mx, my) {
+      if (popup.phase !== 'spell') return;
+      const T = POPUP_TILE;
+      // Check if tapping a source tile
+      for (let i = 0; i < popup.sourceTiles.length; i++) {
+        const tile = popup.sourceTiles[i];
+        if (tile.placed) continue;
+        if (Math.abs(mx - tile.originalX) <= T / 2 && Math.abs(my - tile.originalY) <= T / 2) {
+          popup.dragging = { tileIdx: i, startX: mx, startY: my, curX: mx, curY: my };
+          popup.selectedTile = null;
+          return;
+        }
+      }
+      // Check if tapping a target slot while a tile is selected
+      if (popup.selectedTile !== null) {
+        const tile = popup.sourceTiles[popup.selectedTile];
+        if (!tile.placed) {
+          for (const slot of popup.targetSlots) {
+            if (slot.filled) continue;
+            if (Math.abs(mx - slot.x) <= T / 2 && Math.abs(my - slot.y) <= T / 2) {
+              if (slot.letter === tile.letter) {
+                slot.filled = true;
+                tile.placed = true;
+                popup.selectedTile = null;
+                playSfx('collect');
+                checkSpellComplete();
+              } else {
+                popup.selectedTile = null;
+              }
+              return;
+            }
+          }
+        }
+        popup.selectedTile = null;
+      }
+    }
+
+    function popupDragEnd(mx, my) {
+      const d = popup.dragging;
+      popup.dragging = null;
+      if (!d) return;
+      const tile = popup.sourceTiles[d.tileIdx];
+      const T = POPUP_TILE;
+      // Small movement = tap → toggle selection
+      if (Math.hypot(mx - d.startX, my - d.startY) < POPUP_TAP_THRESHOLD) {
+        popup.selectedTile = popup.selectedTile === d.tileIdx ? null : d.tileIdx;
+        return;
+      }
+      // Drag ended — find nearest unfilled slot
+      let bestSlot = null;
+      let bestDist = Infinity;
+      for (const slot of popup.targetSlots) {
+        if (slot.filled) continue;
+        const dist = Math.hypot(mx - slot.x, my - slot.y);
+        if (dist < POPUP_SNAP_DIST && dist < bestDist) { bestDist = dist; bestSlot = slot; }
+      }
+      if (bestSlot && bestSlot.letter === tile.letter) {
+        bestSlot.filled = true;
+        tile.placed = true;
+        popup.selectedTile = null;
+        playSfx('collect');
+        checkSpellComplete();
+      }
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      if (state !== STATE.POPUP) return;
+      const { x, y } = getCanvasXY(e.clientX, e.clientY);
+      popupDragStart(x, y);
+    });
+
+    canvas.addEventListener('mouseup', e => {
+      if (state !== STATE.POPUP || !popup.dragging) return;
+      const { x, y } = getCanvasXY(e.clientX, e.clientY);
+      popupDragEnd(x, y);
+    });
+
+    canvas.addEventListener('touchstart', e => {
+      if (state !== STATE.POPUP) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const { x, y } = getCanvasXY(t.clientX, t.clientY);
+      popupDragStart(x, y);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+      if (state !== STATE.POPUP || !popup.dragging) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const { x, y } = getCanvasXY(t.clientX, t.clientY);
+      popup.dragging.curX = x;
+      popup.dragging.curY = y;
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', e => {
+      if (state !== STATE.POPUP || !popup.dragging) return;
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      const { x, y } = getCanvasXY(t.clientX, t.clientY);
+      popupDragEnd(x, y);
+    }, { passive: false });
+
+    /* ── Start game ───────────────────────────────────── */
+    // Called after character has been selected; sets the mode and starts the level.
+    function startGame(mode) {
+      selectedMode = mode;
+      lives = 3;
+      initLevel();
+      state = STATE.PLAYING;
+      startMusic();
+    }
+
+    // Keyboard to start/select
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && state === STATE.START) {
+        state = STATE.SELECT;
+      } else if (e.key === '1' && state === STATE.SELECT) {
+        selectedChar = 'ture';  state = STATE.MODE_SELECT;
+      } else if (e.key === '2' && state === STATE.SELECT) {
+        selectedChar = 'selma'; state = STATE.MODE_SELECT;
+      } else if (e.key === '3' && state === STATE.SELECT) {
+        selectedChar = 'mamma'; state = STATE.MODE_SELECT;
+      } else if (e.key === '4' && state === STATE.SELECT) {
+        selectedChar = 'pappa'; state = STATE.MODE_SELECT;
+      } else if ((e.key === 'Escape' || e.key === 'Esc') && state === STATE.MODE_SELECT) {
+        selectedChar = null;
+        state = STATE.SELECT;
+      } else if (e.key === '1' && state === STATE.MODE_SELECT) {
+        startGame('hitta_orden');
+      } else if (e.key === '2' && state === STATE.MODE_SELECT) {
+        startGame('paskjakt');
+      }
+    });
+
+    /* ── Main loop ────────────────────────────────────── */
+    function gameLoop() {
+      ctx.clearRect(0, 0, W, H);
+
+      if (state === STATE.START) {
+        drawStartScreen();
+      } else if (state === STATE.SELECT) {
+        drawSelectScreen();
+      } else if (state === STATE.MODE_SELECT) {
+        drawModeSelectScreen();
+      } else if (state === STATE.WIN) {
+        drawBackground();
+        drawPits();
+        drawPlatforms();
+        drawItems();
+        drawEnemies();
+        if (player) drawPlayer(player.x - cameraX, player.y, selectedChar, player.facing, player.walkFrame, invincTimer);
+        updateConfetti();
+        drawWinScreen();
+      } else if (state === STATE.DEAD) {
+        drawBackground();
+        drawPits();
+        drawPlatforms();
+        drawItems();
+        drawEnemies();
+        if (player) {
+          player.vy += GRAVITY;
+          player.y  += player.vy;
+          drawPlayer(player.x - cameraX, player.y, selectedChar, player.facing, player.walkFrame, 0);
+        }
+        drawHUD();
+        drawDeadOverlay();
+      } else if (state === STATE.POPUP) {
+        drawBackground();
+        drawPits();
+        drawPlatforms();
+        drawEnemies();
+        drawItems();
+        if (player) drawPlayer(player.x - cameraX, player.y, selectedChar, player.facing, player.walkFrame, invincTimer);
+        drawParticles();
+        drawHUD();
+        updatePopup();
+        drawPopup();
+      } else if (state === STATE.PAUSED) {
+        drawBackground();
+        drawPits();
+        drawPlatforms();
+        drawEnemies();
+        drawItems();
+        if (player) drawPlayer(player.x - cameraX, player.y, selectedChar, player.facing, player.walkFrame, invincTimer);
+        drawHUD();
+        drawPauseOverlay();
+      } else {
+        // STATE.PLAYING
+        updateGame();
+        if (state === STATE.PLAYING || state === STATE.POPUP) {
+          drawBackground();
+          drawPits();
+          drawPlatforms();
+          drawItems();
+          drawEnemies();
+          if (player) drawPlayer(player.x - cameraX, player.y, selectedChar, player.facing, player.walkFrame, invincTimer);
+          updateParticles();
+          drawParticles();
+          drawHUD();
+        }
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  })();
+  </script>
+</body>
+</html>
