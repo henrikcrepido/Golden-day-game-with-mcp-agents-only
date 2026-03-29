@@ -284,7 +284,7 @@
     }
 
     /* ── Game state enum ──────────────────────────────── */
-    const STATE = { START: 0, SELECT: 1, PLAYING: 2, POPUP: 3, PAUSED: 4, WIN: 5, DEAD: 6 };
+    const STATE = { START: 0, SELECT: 1, MODE_SELECT: 2, PLAYING: 3, POPUP: 4, PAUSED: 5, WIN: 6, DEAD: 7 };
     let state = STATE.START;
 
     /* ── Input ────────────────────────────────────────── */
@@ -340,6 +340,21 @@
       { word: 'FISK',    emoji: '🐟', color: '#26c6da' },
       { word: 'TÅG',     emoji: '🚂', color: '#546e7a' },
       { word: 'HUS',     emoji: '🏠', color: '#8d6e63' },
+    ];
+
+    const EASTER_ITEM_DEFS = [
+      { word: 'PÅSKÄGG',  emoji: '🥚', color: '#e91e63' },
+      { word: 'KANIN',    emoji: '🐰', color: '#ff8f00' },
+      { word: 'BLOMMA',   emoji: '🌸', color: '#e91e63' },
+      { word: 'KYCKLING', emoji: '🐣', color: '#fdd835' },
+      { word: 'FJÄRIL',   emoji: '🦋', color: '#7b1fa2' },
+      { word: 'GRÄS',     emoji: '🌿', color: '#4caf50' },
+      { word: 'SOL',      emoji: '☀️',  color: '#fdd835' },
+      { word: 'KORG',     emoji: '🧺', color: '#8d6e63' },
+      { word: 'TULPAN',   emoji: '🌷', color: '#e91e63' },
+      { word: 'FJÄDER',   emoji: '🪶', color: '#42a5f5' },
+      { word: 'GODIS',    emoji: '🍬', color: '#e91e63' },
+      { word: 'VÅR',      emoji: '🌱', color: '#4caf50' },
     ];
 
     // Platform definitions: [x, y, w, h]  (relative to level scroll)
@@ -413,7 +428,8 @@
     let particles = [];
     let cameraX  = 0;
     let lives    = 3;
-    let selectedChar = null; // 'ture' | 'selma'
+    let selectedChar = null; // 'ture' | 'selma' | 'mamma' | 'pappa'
+    let selectedMode = null; // 'hitta_orden' | 'paskjakt'
     let deathTimer   = 0;
     let invincTimer  = 0;
     const LEVEL_END_X = 3950;
@@ -468,7 +484,8 @@
       }));
 
       // Shuffle item defs and assign positions (Fisher-Yates)
-      const shuffled = [...ITEM_DEFS];
+      const itemDefs = selectedMode === 'paskjakt' ? EASTER_ITEM_DEFS : ITEM_DEFS;
+      const shuffled = [...itemDefs];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -802,7 +819,7 @@
         ctx.arc(cx, cy - 15, 4, 0.2, Math.PI - 0.2);
         ctx.stroke();
 
-      } else {
+      } else if (char === 'selma') {
         // Selma — pink dress
         // Shoes
         ctx.fillStyle = '#e91e63';
@@ -876,6 +893,139 @@
         ctx.beginPath();
         ctx.arc(cx, cy - 17, 4, 0.2, Math.PI - 0.2);
         ctx.stroke();
+
+      } else if (char === 'mamma') {
+        // Mamma — purple dress
+        // Shoes
+        ctx.fillStyle = '#6a1b9a';
+        ctx.beginPath();
+        ctx.ellipse(cx - 7 + legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 7 - legSwing, cy + 24, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Dress skirt
+        ctx.fillStyle = '#ce93d8';
+        ctx.beginPath();
+        ctx.moveTo(cx - 15, cy + 4);
+        ctx.lineTo(cx + 15, cy + 4);
+        ctx.lineTo(cx + 19, cy + 22);
+        ctx.lineTo(cx - 19, cy + 22);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dress top
+        ctx.fillStyle = '#9c27b0';
+        ctx.fillRect(cx - 12, cy - 14, 24, 20);
+
+        // Arms
+        ctx.fillStyle = '#ffd54f';
+        const armSwing3 = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 4 : 0;
+        ctx.fillRect(cx - 18 + f * armSwing3, cy - 12, 7, 15);
+        ctx.fillRect(cx + 11 - f * armSwing3, cy - 12, 7, 15);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair bun base
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 32, 11, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(cx - 11, cy - 32, 22, 8);
+        // Bun
+        ctx.beginPath();
+        ctx.arc(cx, cy - 36, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Earrings
+        ctx.fillStyle = '#fdd835';
+        ctx.beginPath(); ctx.arc(cx - 12, cy - 20, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 12, cy - 20, 2, 0, Math.PI * 2); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 21, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Lashes
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        [[cx - 6, cy - 23], [cx - 4, cy - 24], [cx - 2, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+        [[cx + 2, cy - 23], [cx + 4, cy - 24], [cx + 6, cy - 23]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.moveTo(lx, ly + 0.5); ctx.lineTo(lx, ly - 3); ctx.stroke();
+        });
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 17, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+
+      } else if (char === 'pappa') {
+        // Pappa — green sweater
+        // Shoes
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 10 + legSwing,  cy + 18, 11, 7);
+        ctx.fillRect(cx + 1  - legSwing, cy + 18, 11, 7);
+
+        // Legs / pants (brown)
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(cx - 9 + legSwing,  cy + 8, 10, 14);
+        ctx.fillRect(cx + 0  - legSwing, cy + 8, 10, 14);
+
+        // Sweater (green)
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 12, cy - 12, 24, 22);
+        // Collar detail
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillRect(cx - 3, cy - 12, 6, 7);
+
+        // Arms (skin + green sleeves)
+        ctx.fillStyle = '#ffd54f';
+        const armSwing4 = player.onGround ? Math.sin(wf * 0.25 + Math.PI) * 5 : 0;
+        ctx.fillRect(cx - 18 + f * armSwing4, cy - 10, 8, 16);
+        ctx.fillRect(cx + 10 - f * armSwing4, cy - 10, 8, 16);
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 18 + f * armSwing4, cy - 10, 8, 9);
+        ctx.fillRect(cx + 10 - f * armSwing4, cy - 10, 8, 9);
+
+        // Head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair (brown)
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 11, cy - 30, 22, 10);
+        ctx.beginPath();
+        ctx.arc(cx, cy - 30, 11, Math.PI, 0);
+        ctx.fill();
+
+        // Mustache
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath();
+        ctx.ellipse(cx - 4, cy - 12, 4, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 4, cy - 12, 4, 2.5,  0.2, 0, Math.PI * 2); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 4, cy - 19, 2.5, 0, Math.PI * 2); ctx.fill();
+
+        // Smile
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15, 4, 0.2, Math.PI - 0.2);
+        ctx.stroke();
       }
     }
 
@@ -923,6 +1073,19 @@
         ctx.beginPath();
         ctx.arc(bx + 150, H - 30, 130, Math.PI, 0);
         ctx.fill();
+      }
+
+      // Easter decorations: flowers and eggs at grass level
+      if (selectedMode === 'paskjakt') {
+        ctx.font = '18px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const flowerOff = cameraX * 0.95;
+        for (let fx = 60 - (flowerOff % 240); fx < W + 60; fx += 240) {
+          ctx.fillText('🌷', fx,        H - 60);
+          ctx.fillText('🌸', fx + 80,   H - 60);
+          ctx.fillText('🥚', fx + 160,  H - 60);
+        }
       }
     }
 
@@ -1041,7 +1204,10 @@
       ctx.font = 'bold 14px Segoe UI, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`🌟 Ord: ${collected} / ${total}`, 18, 30);
+      const hudLabel = selectedMode === 'paskjakt'
+        ? `🥚 Ägg: ${collected} / ${total}`
+        : `🌟 Ord: ${collected} / ${total}`;
+      ctx.fillText(hudLabel, 18, 30);
 
       // Lives
       ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -1059,11 +1225,13 @@
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         roundRect(ctx, W / 2 - 60, 8, 120, 28, 8);
         ctx.fill();
-        ctx.fillStyle = selectedChar === 'ture' ? '#1565c0' : '#e91e63';
+        const charColors = { ture: '#1565c0', selma: '#e91e63', mamma: '#7b1fa2', pappa: '#2e7d32' };
+        ctx.fillStyle = charColors[selectedChar] || '#37474f';
         ctx.font = 'bold 13px Segoe UI, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const name = selectedChar === 'ture' ? 'Ture (5 år)' : 'Selma (3 år)';
+        const charLabels = { ture: 'Ture (5 år)', selma: 'Selma (3 år)', mamma: 'Mamma', pappa: 'Pappa' };
+        const name = charLabels[selectedChar] || selectedChar;
         ctx.fillText(name, W / 2, 22);
       }
 
@@ -1124,12 +1292,12 @@
 
       ctx.fillStyle = '#1565c0';
       ctx.font = 'bold 22px Segoe UI, sans-serif';
-      ctx.fillText('Hitta Orden!', W / 2, 196);
+      ctx.fillText('Hitta Orden & Påskjakt!', W / 2, 196);
 
       // Subtitle prompt
       ctx.fillStyle = '#37474f';
-      ctx.font = '16px Segoe UI, sans-serif';
-      ctx.fillText('Välj din karaktär nedan', W / 2, 225);
+      ctx.font = '15px Segoe UI, sans-serif';
+      ctx.fillText('Nu med Mamma och Pappa! Välj din karaktär!', W / 2, 225);
 
       // Start button hint
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
@@ -1139,23 +1307,37 @@
       ctx.font = 'bold 18px Segoe UI, sans-serif';
       ctx.fillText('Tryck Enter eller klicka', W / 2, 316);
 
-      // Characters preview
+      // Characters preview — four characters in a row
       ctx.save();
-      ctx.translate(240, H - 130);
+      ctx.translate(160, H - 130);
       drawPlayerMiniature('ture');
       ctx.restore();
 
       ctx.save();
-      ctx.translate(560, H - 130);
+      ctx.translate(320, H - 130);
       drawPlayerMiniature('selma');
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(480, H - 130);
+      drawPlayerMiniature('mamma');
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(640, H - 130);
+      drawPlayerMiniature('pappa');
       ctx.restore();
 
       // Character labels
       ctx.fillStyle = '#1565c0';
-      ctx.font = 'bold 16px Segoe UI, sans-serif';
-      ctx.fillText('Ture', 240, H - 55);
+      ctx.font = 'bold 14px Segoe UI, sans-serif';
+      ctx.fillText('Ture', 160, H - 55);
       ctx.fillStyle = '#e91e63';
-      ctx.fillText('Selma', 560, H - 55);
+      ctx.fillText('Selma', 320, H - 55);
+      ctx.fillStyle = '#7b1fa2';
+      ctx.fillText('Mamma', 480, H - 55);
+      ctx.fillStyle = '#2e7d32';
+      ctx.fillText('Pappa', 640, H - 55);
     }
 
     /* ── Character select screen ──────────────────────── */
@@ -1169,78 +1351,81 @@
 
       // Title
       ctx.fillStyle = '#1a1a2e';
-      ctx.font = 'bold 30px Segoe UI, sans-serif';
+      ctx.font = 'bold 26px Segoe UI, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Välj din karaktär! 🌟', W / 2, 60);
+      ctx.fillText('Välj din karaktär! 🌟', W / 2, 36);
 
-      // Ture card
-      const tureHover = selectHoverTure;
-      ctx.save();
-      ctx.fillStyle = tureHover ? '#e3f2fd' : '#fff';
-      ctx.shadowColor = 'rgba(21,101,192,0.3)';
-      ctx.shadowBlur  = tureHover ? 20 : 8;
-      roundRect(ctx, 120, 100, 220, 300, 20);
-      ctx.fill();
-      ctx.strokeStyle = tureHover ? '#1565c0' : 'rgba(21,101,192,0.3)';
-      ctx.lineWidth   = tureHover ? 3 : 1.5;
-      ctx.stroke();
-      ctx.restore();
+      const chars = [
+        { id: 'ture',  name: 'Ture',  age: '5 år', desc: 'Äventyrlig!', color: '#1565c0', bg: '#e3f2fd', hov: selectHoverTure },
+        { id: 'selma', name: 'Selma', age: '3 år', desc: 'Nyfiken!',    color: '#e91e63', bg: '#fce4ec', hov: selectHoverSelma },
+        { id: 'mamma', name: 'Mamma', age: '',      desc: 'Omtänksam!', color: '#7b1fa2', bg: '#f3e5f5', hov: selectHoverMamma },
+        { id: 'pappa', name: 'Pappa', age: '',      desc: 'Modig!',     color: '#2e7d32', bg: '#e8f5e9', hov: selectHoverPappa },
+      ];
 
-      // Draw Ture big
-      ctx.save();
-      ctx.translate(230, 280);
-      ctx.scale(1.6, 1.6);
-      drawPlayerMiniature('ture');
-      ctx.restore();
+      const CARD_W = 168;
+      const CARD_H = 272;
+      const GAP    = 14;
+      const totalW = chars.length * CARD_W + (chars.length - 1) * GAP;
+      const startX = Math.round((W - totalW) / 2);
+      const cardY  = 60;
 
-      ctx.fillStyle = '#1565c0';
-      ctx.font = 'bold 22px Segoe UI, sans-serif';
-      ctx.fillText('Ture', 230, 350);
-      ctx.fillStyle = '#546e7a';
-      ctx.font = '14px Segoe UI, sans-serif';
-      ctx.fillText('5 år', 230, 372);
-      ctx.fillStyle = '#37474f';
-      ctx.font = '13px Segoe UI, sans-serif';
-      ctx.fillText('Äventyrlig och modig!', 230, 390);
+      chars.forEach((ch, i) => {
+        const cx2    = startX + i * (CARD_W + GAP);
+        const centerX = cx2 + CARD_W / 2;
 
-      // Selma card
-      const selmaHover = selectHoverSelma;
-      ctx.save();
-      ctx.fillStyle = selmaHover ? '#fce4ec' : '#fff';
-      ctx.shadowColor = 'rgba(233,30,99,0.3)';
-      ctx.shadowBlur  = selmaHover ? 20 : 8;
-      roundRect(ctx, 460, 100, 220, 300, 20);
-      ctx.fill();
-      ctx.strokeStyle = selmaHover ? '#e91e63' : 'rgba(233,30,99,0.3)';
-      ctx.lineWidth   = selmaHover ? 3 : 1.5;
-      ctx.stroke();
-      ctx.restore();
+        ctx.save();
+        ctx.fillStyle   = ch.hov ? ch.bg : '#fff';
+        ctx.shadowColor = ch.color + '66';
+        ctx.shadowBlur  = ch.hov ? 22 : 8;
+        roundRect(ctx, cx2, cardY, CARD_W, CARD_H, 18);
+        ctx.fill();
+        ctx.strokeStyle = ch.hov ? ch.color : ch.color + '55';
+        ctx.lineWidth   = ch.hov ? 3 : 1.5;
+        ctx.stroke();
+        ctx.restore();
 
-      ctx.save();
-      ctx.translate(570, 280);
-      ctx.scale(1.6, 1.6);
-      drawPlayerMiniature('selma');
-      ctx.restore();
+        // Character miniature
+        ctx.save();
+        ctx.translate(centerX, cardY + 130);
+        ctx.scale(1.35, 1.35);
+        drawPlayerMiniature(ch.id);
+        ctx.restore();
 
-      ctx.fillStyle = '#e91e63';
-      ctx.font = 'bold 22px Segoe UI, sans-serif';
-      ctx.fillText('Selma', 570, 350);
-      ctx.fillStyle = '#546e7a';
-      ctx.font = '14px Segoe UI, sans-serif';
-      ctx.fillText('3 år', 570, 372);
-      ctx.fillStyle = '#37474f';
-      ctx.font = '13px Segoe UI, sans-serif';
-      ctx.fillText('Nyfiken och glad!', 570, 390);
+        // Name
+        ctx.fillStyle = ch.color;
+        ctx.font = 'bold 18px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ch.name, centerX, cardY + CARD_H - 72);
 
-      // Click hint
+        // Age (if any)
+        if (ch.age) {
+          ctx.fillStyle = '#546e7a';
+          ctx.font = '13px Segoe UI, sans-serif';
+          ctx.fillText(ch.age, centerX, cardY + CARD_H - 52);
+        }
+
+        // Description
+        ctx.fillStyle = '#37474f';
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.fillText(ch.desc, centerX, cardY + CARD_H - (ch.age ? 32 : 42));
+      });
+
+      // Hint
       ctx.fillStyle = '#78909c';
-      ctx.font = '15px Segoe UI, sans-serif';
-      ctx.fillText('Klicka på en karaktär för att börja!', W / 2, 450);
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Klicka på en karaktär!  (1=Ture  2=Selma  3=Mamma  4=Pappa)', W / 2, 460);
     }
 
     let selectHoverTure  = false;
     let selectHoverSelma = false;
+    let selectHoverMamma = false;
+    let selectHoverPappa = false;
+    let selectHoverHittaOrden = false;
+    let selectHoverPaskjakt   = false;
 
     function drawPlayerMiniature(char) {
       // Tiny static player drawing for cards / start screen
@@ -1274,7 +1459,7 @@
         ctx.fillStyle = '#1a1a1a';
         ctx.beginPath(); ctx.arc(cx - 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(cx + 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
-      } else {
+      } else if (char === 'selma') {
         // shoes
         ctx.fillStyle = '#e91e63';
         ctx.beginPath(); ctx.ellipse(cx - 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
@@ -1313,7 +1498,169 @@
         ctx.fillStyle = '#1a1a1a';
         ctx.beginPath(); ctx.arc(cx - 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(cx + 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (char === 'mamma') {
+        // shoes
+        ctx.fillStyle = '#6a1b9a';
+        ctx.beginPath(); ctx.ellipse(cx - 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 6, cy + 22, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        // skirt
+        ctx.fillStyle = '#ce93d8';
+        ctx.beginPath();
+        ctx.moveTo(cx - 13, cy + 4);
+        ctx.lineTo(cx + 13, cy + 4);
+        ctx.lineTo(cx + 17, cy + 20);
+        ctx.lineTo(cx - 17, cy + 20);
+        ctx.closePath(); ctx.fill();
+        // dress top
+        ctx.fillStyle = '#9c27b0';
+        ctx.fillRect(cx - 10, cy - 12, 20, 18);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 16, cy - 10, 6, 13);
+        ctx.fillRect(cx + 11, cy - 10, 6, 13);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 20, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair bun
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath(); ctx.arc(cx, cy - 28, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 28, 18, 7);
+        ctx.beginPath(); ctx.arc(cx, cy - 32, 5, 0, Math.PI * 2); ctx.fill();
+        // earrings
+        ctx.fillStyle = '#fdd835';
+        ctx.beginPath(); ctx.arc(cx - 10, cy - 20, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 10, cy - 20, 1.5, 0, Math.PI * 2); ctx.fill();
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 21, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (char === 'pappa') {
+        // shoes
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(cx - 9, cy + 19, 9, 6);
+        ctx.fillRect(cx + 1, cy + 19, 9, 6);
+        // trousers
+        ctx.fillStyle = '#795548';
+        ctx.fillRect(cx - 8, cy + 9, 8, 12);
+        ctx.fillRect(cx + 1, cy + 9, 8, 12);
+        // sweater
+        ctx.fillStyle = '#388e3c';
+        ctx.fillRect(cx - 10, cy - 10, 20, 20);
+        // collar
+        ctx.fillStyle = '#2e7d32';
+        ctx.fillRect(cx - 2, cy - 10, 5, 6);
+        // arms
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(cx - 15, cy - 9, 6, 14);
+        ctx.fillRect(cx + 10, cy - 9, 6, 14);
+        // head
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 18, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+        // hair
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 27, 9, Math.PI, 0); ctx.fill();
+        ctx.fillRect(cx - 9, cy - 27, 18, 7);
+        // mustache
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath(); ctx.ellipse(cx - 3, cy - 11, 3.5, 2, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + 3, cy - 11, 3.5, 2,  0.2, 0, Math.PI * 2); ctx.fill();
+        // eyes
+        ctx.fillStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.arc(cx - 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 3, cy - 19, 2, 0, Math.PI * 2); ctx.fill();
       }
+    }
+
+    /* ── Mode select screen ───────────────────────────── */
+    function drawModeSelectScreen() {
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#e8f5e9');
+      grad.addColorStop(1, '#fff8e1');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Back hint
+      ctx.fillStyle = '#90a4ae';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('← Esc för att byta karaktär', 20, 22);
+
+      // Title with chosen character name
+      const charNames2 = { ture: 'Ture', selma: 'Selma', mamma: 'Mamma', pappa: 'Pappa' };
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 26px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Hej ${charNames2[selectedChar] || ''}! Välj spelläge 🎮`, W / 2, 52);
+
+      // ── Hitta Orden card ──────────────────────────────
+      ctx.save();
+      ctx.fillStyle   = selectHoverHittaOrden ? '#e3f2fd' : '#fff';
+      ctx.shadowColor = 'rgba(21,101,192,0.35)';
+      ctx.shadowBlur  = selectHoverHittaOrden ? 24 : 10;
+      roundRect(ctx, 80, 100, 280, 300, 22);
+      ctx.fill();
+      ctx.strokeStyle = selectHoverHittaOrden ? '#1565c0' : 'rgba(21,101,192,0.3)';
+      ctx.lineWidth   = selectHoverHittaOrden ? 3 : 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '64px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📚', 220, 210);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 20px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Hitta Orden!', 220, 290);
+
+      ctx.fillStyle = '#546e7a';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.fillText('Samla föremål och lär', 220, 318);
+      ctx.fillText('dig svenska ord!', 220, 338);
+
+      ctx.fillStyle = '#1565c0';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('Tryck 1 eller klicka', 220, 372);
+
+      // ── Påskjakt card ─────────────────────────────────
+      ctx.save();
+      ctx.fillStyle   = selectHoverPaskjakt ? '#fff8e1' : '#fff';
+      ctx.shadowColor = 'rgba(255,152,0,0.35)';
+      ctx.shadowBlur  = selectHoverPaskjakt ? 24 : 10;
+      roundRect(ctx, 440, 100, 280, 300, 22);
+      ctx.fill();
+      ctx.strokeStyle = selectHoverPaskjakt ? '#ff8f00' : 'rgba(255,152,0,0.3)';
+      ctx.lineWidth   = selectHoverPaskjakt ? 3 : 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = '64px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🥚', 580, 210);
+
+      ctx.fillStyle = '#ff8f00';
+      ctx.font = 'bold 20px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Påskjakt! 🐰', 580, 290);
+
+      ctx.fillStyle = '#546e7a';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.fillText('Hitta påskägg gömda', 580, 318);
+      ctx.fillText('runt om i världen!', 580, 338);
+
+      ctx.fillStyle = '#ff8f00';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('Tryck 2 eller klicka', 580, 372);
     }
 
     /* ── Pop-up drawing ───────────────────────────────── */
@@ -1353,7 +1700,10 @@
         // Subtitle
         ctx.fillStyle = '#546e7a';
         ctx.font = '16px Segoe UI, sans-serif';
-        ctx.fillText('Du hittade ett nytt ord! 🎉', W / 2, H / 2 + 70);
+        const foundText = selectedMode === 'paskjakt'
+          ? 'Du hittade ett påskägg! 🥚'
+          : 'Du hittade ett nytt ord! 🎉';
+        ctx.fillText(foundText, W / 2, H / 2 + 70);
 
         ctx.fillStyle = '#9e9e9e';
         ctx.font = '14px Segoe UI, sans-serif';
@@ -1527,14 +1877,18 @@
       ctx.font = '56px serif';
       ctx.fillText('🎉', W / 2, H / 2 - 100);
 
-      const name = selectedChar === 'ture' ? 'Ture' : 'Selma';
+      const charNames3 = { ture: 'Ture', selma: 'Selma', mamma: 'Mamma', pappa: 'Pappa' };
+      const name = charNames3[selectedChar] || selectedChar;
       ctx.fillStyle = '#e91e63';
       ctx.font = 'bold 28px Segoe UI, sans-serif';
       ctx.fillText(`Bra jobbat, ${name}!`, W / 2, H / 2 - 40);
 
       ctx.fillStyle = '#1565c0';
       ctx.font = 'bold 20px Segoe UI, sans-serif';
-      ctx.fillText('Du hittade alla orden! 🌟', W / 2, H / 2 + 10);
+      const winText = selectedMode === 'paskjakt'
+        ? 'Du hittade alla påskägg! 🥚🐰'
+        : 'Du hittade alla orden! 🌟';
+      ctx.fillText(winText, W / 2, H / 2 + 10);
 
       // Words found list
       ctx.fillStyle = '#37474f';
@@ -1766,6 +2120,7 @@
     function resetGame() {
       lives = 3;
       selectedChar = null;
+      selectedMode = null;
       confetti = [];
       particles = [];
       state = STATE.START;
@@ -1795,10 +2150,26 @@
       }
 
       if (state === STATE.SELECT) {
-        if (mx >= 120 && mx <= 340 && my >= 100 && my <= 400) {
-          startGame('ture');
-        } else if (mx >= 460 && mx <= 680 && my >= 100 && my <= 400) {
-          startGame('selma');
+        // 4-column card layout: CARD_W=168, GAP=14, startX=43, cardY=60, cardH=272
+        const CARD_W2 = 168, GAP2 = 14;
+        const sx2 = Math.round((W - (4 * CARD_W2 + 3 * GAP2)) / 2);
+        const chars2 = ['ture', 'selma', 'mamma', 'pappa'];
+        for (let i = 0; i < chars2.length; i++) {
+          const cx2 = sx2 + i * (CARD_W2 + GAP2);
+          if (mx >= cx2 && mx <= cx2 + CARD_W2 && my >= 60 && my <= 332) {
+            selectedChar = chars2[i];
+            state = STATE.MODE_SELECT;
+            return;
+          }
+        }
+        return;
+      }
+
+      if (state === STATE.MODE_SELECT) {
+        if (mx >= 80 && mx <= 360 && my >= 100 && my <= 400) {
+          startGame('hitta_orden');
+        } else if (mx >= 440 && mx <= 720 && my >= 100 && my <= 400) {
+          startGame('paskjakt');
         }
         return;
       }
@@ -1830,8 +2201,16 @@
       const my = (e.clientY - rect.top)  * scaleY;
 
       if (state === STATE.SELECT) {
-        selectHoverTure  = mx >= 120 && mx <= 340 && my >= 100 && my <= 400;
-        selectHoverSelma = mx >= 460 && mx <= 680 && my >= 100 && my <= 400;
+        const CARD_W3 = 168, GAP3 = 14;
+        const sx3 = Math.round((W - (4 * CARD_W3 + 3 * GAP3)) / 2);
+        selectHoverTure  = mx >= sx3               && mx <= sx3 + CARD_W3               && my >= 60 && my <= 332;
+        selectHoverSelma = mx >= sx3 + CARD_W3 + GAP3       && mx <= sx3 + 2*(CARD_W3+GAP3) - GAP3 && my >= 60 && my <= 332;
+        selectHoverMamma = mx >= sx3 + 2*(CARD_W3+GAP3)     && mx <= sx3 + 3*(CARD_W3+GAP3) - GAP3 && my >= 60 && my <= 332;
+        selectHoverPappa = mx >= sx3 + 3*(CARD_W3+GAP3)     && mx <= sx3 + 4*CARD_W3 + 3*GAP3      && my >= 60 && my <= 332;
+      }
+      if (state === STATE.MODE_SELECT) {
+        selectHoverHittaOrden = mx >= 80  && mx <= 360 && my >= 100 && my <= 400;
+        selectHoverPaskjakt   = mx >= 440 && mx <= 720 && my >= 100 && my <= 400;
       }
       if (state === STATE.POPUP && popup.dragging) {
         popup.dragging.curX = mx;
@@ -1951,8 +2330,9 @@
     }, { passive: false });
 
     /* ── Start game ───────────────────────────────────── */
-    function startGame(char) {
-      selectedChar = char;
+    // Called after character has been selected; sets the mode and starts the level.
+    function startGame(mode) {
+      selectedMode = mode;
       lives = 3;
       initLevel();
       state = STATE.PLAYING;
@@ -1964,9 +2344,20 @@
       if (e.key === 'Enter' && state === STATE.START) {
         state = STATE.SELECT;
       } else if (e.key === '1' && state === STATE.SELECT) {
-        startGame('ture');
+        selectedChar = 'ture';  state = STATE.MODE_SELECT;
       } else if (e.key === '2' && state === STATE.SELECT) {
-        startGame('selma');
+        selectedChar = 'selma'; state = STATE.MODE_SELECT;
+      } else if (e.key === '3' && state === STATE.SELECT) {
+        selectedChar = 'mamma'; state = STATE.MODE_SELECT;
+      } else if (e.key === '4' && state === STATE.SELECT) {
+        selectedChar = 'pappa'; state = STATE.MODE_SELECT;
+      } else if ((e.key === 'Escape' || e.key === 'Esc') && state === STATE.MODE_SELECT) {
+        selectedChar = null;
+        state = STATE.SELECT;
+      } else if (e.key === '1' && state === STATE.MODE_SELECT) {
+        startGame('hitta_orden');
+      } else if (e.key === '2' && state === STATE.MODE_SELECT) {
+        startGame('paskjakt');
       }
     });
 
@@ -1978,6 +2369,8 @@
         drawStartScreen();
       } else if (state === STATE.SELECT) {
         drawSelectScreen();
+      } else if (state === STATE.MODE_SELECT) {
+        drawModeSelectScreen();
       } else if (state === STATE.WIN) {
         drawBackground();
         drawPits();

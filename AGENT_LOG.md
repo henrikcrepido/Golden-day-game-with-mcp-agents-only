@@ -300,3 +300,33 @@
 | `index.html` | Added game card + EN/SV i18n keys | +18 |
 | `README.md` | Added game to table | +1 |
 | `AGENT_LOG.md` | This session appended | — |
+
+---
+
+# Agent Action Log — Påskjakt & 4-Character Update
+
+> **Session date:** 2026-03-29
+> **Agent:** GitHub Copilot Coding Agent
+> **Task:** Add Easter egg hunt game mode (Påskjakt) and two new playable characters (Mamma and Pappa) to `ture-selma.html`
+> **Outcome:** ✅ Success — feature implemented, JS syntax validated, UI screenshots verified
+
+## Timeline
+
+| # | Timestamp (UTC) | Action | Notes |
+|---|-----------------|--------|-------|
+| 1 | 08:21 | **Explore repository** — read `ture-selma.html` (2046 lines) and `index.html` | Understood game states, character drawing, item defs, click handlers |
+| 2 | 08:24 | **Plan formulated** — 18-point checklist in `report_progress` | |
+| 3 | 08:25 | **Add `STATE.MODE_SELECT` and `selectedMode` variable** | New game state for mode selection screen |
+| 4 | 08:25 | **Add `EASTER_ITEM_DEFS`** — 12 Easter-themed Swedish words with emojis | PÅSKÄGG, KANIN, BLOMMA, KYCKLING, FJÄRIL, etc. |
+| 5 | 08:26 | **`initLevel` updated** — uses `EASTER_ITEM_DEFS` when `selectedMode === 'paskjakt'` | |
+| 6 | 08:26 | **`drawPlayer` extended** — added Mamma (purple dress, bun, earrings) and Pappa (green sweater, mustache) | |
+| 7 | 08:27 | **`drawPlayerMiniature` extended** — same two new characters for UI cards | |
+| 8 | 08:27 | **`drawSelectScreen` rewritten** — 4-column card layout (Ture/Selma/Mamma/Pappa) | |
+| 9 | 08:27 | **`drawModeSelectScreen` added** — new screen with "Hitta Orden" vs "Påskjakt" cards | |
+| 10 | 08:28 | **`drawBackground` updated** — Easter tulips/eggs decorations at ground level in Påskjakt mode | |
+| 11 | 08:28 | **HUD, popup text, win screen updated** — mode-aware labels (🥚 Ägg vs 🌟 Ord, etc.) | |
+| 12 | 08:28 | **Click/keyboard/hover handlers updated** — 4-char select, mode select, Esc to go back | |
+| 13 | 08:28 | **`index.html` updated** — card description for Ture & Selma mentions new chars + Easter mode | |
+| 14 | 08:29 | **JS syntax validation** — `node --check` ✅ OK after fixing `} else {` → `} else if (char === 'selma') {` | |
+| 15 | 08:31 | **Browser smoke-tests** — screenshots of start screen, 4-char select, mode select, Påskjakt gameplay | All screens render correctly |
+
