@@ -214,3 +214,56 @@
 | `web.config` | Created — IIS URL Rewrite + security + MIME configuration |
 | `README.md` | Added "Hosting on IIS" section with prerequisites and deployment steps |
 | `AGENT_LOG.md` | This session appended |
+
+---
+
+# Agent Action Log — AR Crystal Surge Build Session
+
+> **Session date:** 2026-03-29
+> **Agent:** GitHub Copilot Coding Agent
+> **Task:** Create an innovative AR.js game
+> **Outcome:** ✅ Success — `ar-crystal-surge.html` created and committed
+
+---
+
+## Timeline
+
+| # | Timestamp (UTC) | Action | Duration | Notes |
+|---|-----------------|--------|----------|-------|
+| 1 | 06:25 | **Explore repository** — viewed directory, README, index.html, existing games | ~30 s | 5 games already present; all single-file HTML+CSS+JS; no external CDN dependencies in existing games |
+| 2 | 06:28 | **Plan formulated** — AR.js + A-Frame gem collector with canvas Demo Mode fallback; two-mode design | ~20 s | Outlined checklist in PR description |
+| 3 | 06:28 | **`report_progress` #1** — pushed initial plan checklist | ~5 s | Empty commit; plan documented |
+| 4 | 06:30 | **Create `ar-crystal-surge.html`** — 570+ line single-file AR.js game | ~120 s | Splash → AR Mode (A-Frame + AR.js) or Demo Mode (canvas holographic sim) |
+| 5 | 06:32 | **JS syntax validated** — `node --check /tmp/ar_game_script.js` | ~2 s | ✅ No errors |
+| 6 | 06:33 | **Update `index.html`** — added AR Crystal Surge card + EN/SV i18n strings | ~15 s | Card at animation-delay 0.35s |
+| 7 | 06:33 | **Update `README.md`** — added game to games table | ~5 s | — |
+| 8 | 06:34 | **Browser smoke-test** — rendered splash screen via Playwright evaluate | ~10 s | Title "AR Crystal Surge", buttons visible |
+| 9 | 06:35 | **`code_review` called** | ~10 s | One comment: Swedish `spelsamlare` → `ädelstenssamlare` (gem collector) |
+| 10 | 06:36 | **Applied fix** — corrected Swedish translation in `index.html` | ~2 s | — |
+| 11 | 06:36 | **`codeql_checker` run** | ~5 s | No alerts — no languages CodeQL can analyse changed |
+| 12 | 06:37 | **`report_progress` #2** — committed and pushed all files | ~5 s | Final commit |
+
+---
+
+## Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Two-mode design (AR + Demo) | AR.js requires a webcam and a printed Hiro marker; Demo Mode makes the game universally accessible |
+| Dynamic A-Frame + AR.js script loading | Avoids ~1 MB of CDN scripts loading for users who choose Demo Mode; cleaner UX |
+| Canvas holographic aesthetic for Demo Mode | Grid lines + scan line + rotating dashed ring simulate an AR view without any real camera |
+| 5 gem types with weighted random selection | Creates variety and tension (Sapphire common, Diamond rare, Bomb dangerous) |
+| Combo multiplier up to ×4 | Rewards skilled rapid tapping; adds depth without complex mechanics |
+| `octahedron` geometry for AR gems | Visually distinctive "crystal" look with minimal polygon count |
+| localStorage high score (no server API) | Game is playable offline; no server dependency for a fun stat |
+
+---
+
+## Files Changed
+
+| File | Change | Lines |
+|------|--------|-------|
+| `ar-crystal-surge.html` | Created — full AR.js game | +570 |
+| `index.html` | Added game card + EN/SV i18n | +16 |
+| `README.md` | Added game to table | +1 |
+| `AGENT_LOG.md` | This session appended | — |
