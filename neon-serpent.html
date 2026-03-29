@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="pageTitle">Neon Serpent – Golden Day Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #07070f;
+      --panel:   #0f0f1e;
+      --border:  #1e1e3a;
+      --gold:    #ffd54f;
+      --gold2:   #ff8f00;
+      --green:   #39ff14;
+      --cyan:    #00e5ff;
+      --purple:  #d500f9;
+      --red:     #ff1744;
+      --blue:    #2979ff;
+      --text:    #dde4f0;
+      --muted:   #5a6080;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.5; }
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+      70%  { transform: scale(1.2)  rotate(3deg);  }
+      100% { transform: scale(1)    rotate(0deg);  opacity: 1; }
+    }
+    @keyframes glow-pulse {
+      0%,100% { box-shadow: 0 0 8px 2px rgba(57,255,20,0.4); }
+      50%      { box-shadow: 0 0 20px 6px rgba(57,255,20,0.8); }
+    }
+    @keyframes combo-pop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      40%  { transform: scale(1.4); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 15% 15%, rgba(57,255,20,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 85%, rgba(213,0,249,0.08) 0%, transparent 55%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 1rem 3rem;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Header ──────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 0.8rem;
+      animation: floatUp 0.6s ease both;
+    }
+    header .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--green), var(--cyan), var(--purple), var(--cyan), var(--green));
+      background-size: 400px 1px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+      letter-spacing: 2px;
+    }
+    header .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 0.15rem;
+    }
+
+    /* ── HUD ─────────────────────────────────── */
+    #hud {
+      display: flex;
+      gap: 1.2rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.6rem;
+      font-size: 0.88rem;
+      animation: floatUp 0.6s ease 0.1s both;
+    }
+    .hud-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.35rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.05rem;
+      min-width: 68px;
+    }
+    .hud-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+    .hud-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    #hud-combo-box .hud-value { color: var(--cyan); }
+    #hud-lives-box .hud-value { color: var(--red); }
+    #hud-level-box .hud-value { color: var(--purple); }
+
+    /* ── Active powerup bar ───────────────────── */
+    #powerup-bar {
+      min-height: 26px;
+      margin-bottom: 0.4rem;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .pu-pill {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      animation: popIn 0.3s ease both;
+    }
+    .pu-pill .pu-timer {
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    /* ── Canvas wrapper ──────────────────────── */
+    #canvas-wrap {
+      position: relative;
+      animation: floatUp 0.6s ease 0.2s both;
+    }
+    #game-canvas {
+      display: block;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      box-shadow: 0 0 30px rgba(57,255,20,0.12), 0 0 60px rgba(0,0,0,0.6);
+    }
+    #game-canvas.glow {
+      animation: glow-pulse 0.4s ease;
+    }
+
+    /* ── Overlay ─────────────────────────────── */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(7,7,15,0.88);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1.5rem;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    #overlay h2 {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #overlay p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      max-width: 280px;
+      line-height: 1.5;
+    }
+    .ov-score {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+    .ov-new-best {
+      font-size: 0.9rem;
+      color: var(--green);
+      font-weight: 700;
+      animation: pulse 1s ease infinite;
+    }
+
+    /* ── Buttons ─────────────────────────────── */
+    .btn {
+      padding: 0.55rem 1.6rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.12s, filter 0.12s;
+      letter-spacing: 0.5px;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary {
+      background: linear-gradient(135deg, #1a4a1a, #0f2e0f);
+      color: var(--green);
+      border: 2px solid rgba(57,255,20,0.4);
+    }
+    .btn-primary:hover { filter: brightness(1.3); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { filter: brightness(1.2); }
+
+    /* ── Name entry ──────────────────────────── */
+    #name-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #name-entry label {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    #name-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.95rem;
+      text-align: center;
+      width: 200px;
+    }
+    #name-input:focus { outline: 1px solid var(--cyan); }
+
+    /* ── Highscore table ─────────────────────── */
+    #hs-section {
+      margin-top: 0.3rem;
+      min-width: 240px;
+    }
+    #hs-section h3 {
+      font-size: 0.88rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      text-align: center;
+    }
+    #hs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    #hs-table th {
+      text-align: left;
+      padding: 0.2rem 0.4rem;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    #hs-table td {
+      padding: 0.28rem 0.4rem;
+      color: #b0b0d0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    #hs-table tr.hs-new td { color: var(--gold); font-weight: 700; }
+    #hs-table td:first-child { color: var(--muted); width: 1.8rem; }
+
+    /* ── Legend ──────────────────────────────── */
+    #legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+    }
+    .legend-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.25rem 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: #a0a0c0;
+    }
+
+    /* ── Back / lang button ──────────────────── */
+    #back-btn {
+      position: fixed;
+      top: 12px; left: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.2s, color 0.2s;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    #lang-btn {
+      position: fixed;
+      top: 12px; right: 14px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #c0cce0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #lang-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    /* ── Mobile d-pad ────────────────────────── */
+    #dpad {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-top: 0.8rem;
+    }
+    .dpad-row { display: flex; gap: 4px; }
+    .dpad-btn {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #c0cce0;
+      border-radius: 10px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s;
+    }
+    .dpad-btn:active { background: rgba(57,255,20,0.2); }
+
+    @media (hover: none) and (pointer: coarse) {
+      #dpad { display: flex; }
+    }
+    @media (max-width: 480px) {
+      #dpad { display: flex; }
+      header .logo { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <a id="back-btn" href="index.html">← <span data-i18n="back">Home</span></a>
+  <button id="lang-btn"></button>
+
+  <header>
+    <div class="logo" data-i18n="logo">🐍 Neon Serpent</div>
+    <div class="sub" data-i18n="sub">Eat. Grow. Dominate.</div>
+  </header>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-box" id="hud-score-box">
+      <span class="hud-label" data-i18n="hudScore">Score</span>
+      <span class="hud-value" id="hud-score">0</span>
+    </div>
+    <div class="hud-box" id="hud-best-box">
+      <span class="hud-label" data-i18n="hudBest">Best</span>
+      <span class="hud-value" id="hud-best">0</span>
+    </div>
+    <div class="hud-box" id="hud-combo-box">
+      <span class="hud-label" data-i18n="hudCombo">Combo</span>
+      <span class="hud-value" id="hud-combo">x1</span>
+    </div>
+    <div class="hud-box" id="hud-level-box">
+      <span class="hud-label" data-i18n="hudLevel">Level</span>
+      <span class="hud-value" id="hud-level">1</span>
+    </div>
+    <div class="hud-box" id="hud-lives-box">
+      <span class="hud-label" data-i18n="hudLives">Lives</span>
+      <span class="hud-value" id="hud-lives">❤️❤️❤️</span>
+    </div>
+  </div>
+
+  <!-- Active powerup indicators -->
+  <div id="powerup-bar"></div>
+
+  <!-- Canvas -->
+  <div id="canvas-wrap">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Overlay (start / game-over) -->
+    <div id="overlay">
+      <h2 id="ov-title" data-i18n="titleStart">🐍 Neon Serpent</h2>
+      <p id="ov-body" data-i18n="bodyStart">
+        Guide the serpent to eat glowing food.<br>
+        Chain pickups for score multipliers!<br><br>
+        ⬆⬇⬅➡ or WASD to move<br>
+        <small style="color:#404060">Avoid the walls and yourself</small>
+      </p>
+      <div class="ov-score" id="ov-score" style="display:none"></div>
+      <div class="ov-new-best" id="ov-new-best" style="display:none" data-i18n="newBest">🏆 New best score!</div>
+
+      <!-- Name entry (shown on game-over if score qualifies) -->
+      <div id="name-entry" style="display:none">
+        <label data-i18n="nameLabel">Enter your name for the leaderboard:</label>
+        <input id="name-input" type="text" maxlength="16" autocomplete="off"
+               data-i18n-placeholder="namePlaceholder" placeholder="Player" />
+        <button class="btn btn-primary" id="save-btn" data-i18n="saveName">Save Score</button>
+      </div>
+
+      <!-- Highscore table -->
+      <div id="hs-section" style="display:none">
+        <h3 data-i18n="hsTitle">🏆 High Scores</h3>
+        <table id="hs-table">
+          <thead>
+            <tr>
+              <th data-i18n="hsRank">#</th>
+              <th data-i18n="hsName">Name</th>
+              <th data-i18n="hsScore">Score</th>
+              <th data-i18n="hsLevel">Lvl</th>
+            </tr>
+          </thead>
+          <tbody id="hs-body"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" id="start-btn" data-i18n="startBtn">▶ Start Game</button>
+        <button class="btn btn-secondary" id="back-home-btn" data-i18n="homeBtn">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile D-pad -->
+  <div id="dpad">
+    <div class="dpad-row"><button class="dpad-btn" data-dir="up">▲</button></div>
+    <div class="dpad-row">
+      <button class="dpad-btn" data-dir="left">◀</button>
+      <button class="dpad-btn" data-dir="down">▼</button>
+      <button class="dpad-btn" data-dir="right">▶</button>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div id="legend">
+    <div class="legend-item">🍎 +10</div>
+    <div class="legend-item">💎 +50</div>
+    <div class="legend-item">⚡ <span data-i18n="legendSpeed">Speed 2×pts</span></div>
+    <div class="legend-item">❄️ <span data-i18n="legendSlow">Slow</span></div>
+    <div class="legend-item">💣 <span data-i18n="legendBomb">Avoid!</span></div>
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEON SERPENT  –  Innovative Snake Game
+   Features: power-ups, combo multiplier, particles, neon visuals, i18n,
+             3 lives, wall-wrap, persistent top-10 highscores
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── i18n ─────────────────────────────────────────────────────────────── */
+const TR = {
+  en: {
+    pageTitle:    'Neon Serpent – Golden Day Games',
+    logo:         '🐍 Neon Serpent',
+    sub:          'Eat. Grow. Dominate.',
+    back:         'Home',
+    hudScore:     'Score', hudBest: 'Best', hudCombo: 'Combo',
+    hudLevel:     'Level', hudLives: 'Lives',
+    titleStart:   '🐍 Neon Serpent',
+    bodyStart:    'Guide the serpent to eat glowing food.<br>Chain pickups for score multipliers!<br><br>⬆⬇⬅➡ or WASD to move<br><small style="color:#404060">Avoid walls and yourself.</small>',
+    titleOver:    'Game Over',
+    bodyOver:     'Your serpent met its end.',
+    newBest:      '🏆 New best score!',
+    nameLabel:    'Enter your name for the leaderboard:',
+    namePlaceholder: 'Player',
+    saveName:     'Save Score',
+    hsTitle:      '🏆 High Scores',
+    hsRank:       '#', hsName: 'Name', hsScore: 'Score', hsLevel: 'Lvl',
+    startBtn:     '▶ Start Game',
+    homeBtn:      '🏠 Home',
+    legendSpeed:  'Speed 2×pts',
+    legendSlow:   'Slow',
+    legendBomb:   'Avoid!',
+    puSpeed:      'Speed Boost',
+    puSlow:       'Slow Mode',
+    lvlUp:        'LEVEL UP!',
+    comboLabel:   'COMBO ',
+    hsEmpty:      'No scores yet — be first!',
+  },
+  sv: {
+    pageTitle:    'Neon Orm – Gyllene Dag Spel',
+    logo:         '🐍 Neon Orm',
+    sub:          'Ät. Väx. Dominera.',
+    back:         'Hem',
+    hudScore:     'Poäng', hudBest: 'Bäst', hudCombo: 'Combo',
+    hudLevel:     'Nivå', hudLives: 'Liv',
+    titleStart:   '🐍 Neon Orm',
+    bodyStart:    'Guida ormen att äta lysande mat.<br>Kedja pickups för score-multiplikatorer!<br><br>⬆⬇⬅➡ eller WASD för att röra sig<br><small style="color:#404060">Undvik väggar och dig själv.</small>',
+    titleOver:    'Game Over',
+    bodyOver:     'Din orm mötte sitt slut.',
+    newBest:      '🏆 Nytt rekord!',
+    nameLabel:    'Ange ditt namn för topplistan:',
+    namePlaceholder: 'Spelare',
+    saveName:     'Spara poäng',
+    hsTitle:      '🏆 Topplistor',
+    hsRank:       '#', hsName: 'Namn', hsScore: 'Poäng', hsLevel: 'Nivå',
+    startBtn:     '▶ Starta spelet',
+    homeBtn:      '🏠 Hem',
+    legendSpeed:  'Hastighet 2×pts',
+    legendSlow:   'Långsam',
+    legendBomb:   'Undvik!',
+    puSpeed:      'Hastighetsökning',
+    puSlow:       'Långsamt läge',
+    lvlUp:        'NIVÅ UPP!',
+    comboLabel:   'COMBO ',
+    hsEmpty:      'Inga poäng än — var först!',
+  }
+};
+
+let lang = localStorage.getItem('lang') || 'en';
+function t(k) { return (TR[lang] || TR.en)[k] || k; }
+
+function applyLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.title = t('pageTitle');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    const v = (TR[l] || TR.en)[k];
+    if (v !== undefined) el.innerHTML = v;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.dataset.i18nPlaceholder;
+    const v = (TR[l] || TR.en)[k];
+    if (v !== undefined) el.placeholder = v;
+  });
+  document.getElementById('lang-btn').textContent = l === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
+}
+
+document.getElementById('lang-btn').addEventListener('click', () => {
+  const next = lang === 'en' ? 'sv' : 'en';
+  localStorage.setItem('lang', next);
+  applyLang(next);
+  if (!gameRunning) renderHsTable(null);
+});
+
+/* ── Canvas setup ─────────────────────────────────────────────────────── */
+const canvas = document.getElementById('game-canvas');
+const ctx    = canvas.getContext('2d');
+
+const COLS = 22, ROWS = 22, CELL = 20;
+canvas.width  = COLS * CELL;
+canvas.height = ROWS * CELL;
+
+/* ── Game constants ───────────────────────────────────────────────────── */
+const HS_KEY       = 'neonSerpent_hs';
+const BASE_INTERVAL = 140;   // ms between moves at level 1
+const MIN_INTERVAL  = 60;    // fastest possible
+const COMBO_WINDOW  = 3000;  // ms to maintain combo
+
+/* ── FOOD / POWERUP TYPES ─────────────────────────────────────────────── */
+const FOOD_TYPES = [
+  { type:'apple',  emoji:'🍎', pts: 10,  weight: 50, color:'#ff4d6d' },
+  { type:'gem',    emoji:'💎', pts: 50,  weight: 12, color:'#00e5ff' },
+  { type:'star',   emoji:'⭐', pts: 25,  weight: 20, color:'#ffd54f' },
+  { type:'speed',  emoji:'⚡', pts: 15,  weight: 10, color:'#ffff00', powerup:'speed',  duration: 5000 },
+  { type:'slow',   emoji:'❄️', pts: 15,  weight: 10, color:'#80d8ff', powerup:'slow',   duration: 5000 },
+  { type:'bomb',   emoji:'💣', pts: 0,   weight: 8,  color:'#ff1744', powerup:'bomb' },
+];
+
+/* ── State ────────────────────────────────────────────────────────────── */
+let gameRunning   = false;
+let paused        = false;
+let snake, dir, nextDir, score, level, lives, combo, lastEatTime;
+let foods         = [];
+let particles     = [];
+let floaters      = [];     // floating score text
+let activePU      = {};     // { speed:{endTime}, slow:{endTime} }
+let gameInterval  = null;
+let newHighScore  = false;
+let newEntryIdx   = -1;
+
+/* ── Highscore persistence ────────────────────────────────────────────── */
+function loadHs() {
+  try { return JSON.parse(localStorage.getItem(HS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveHs(arr) {
+  const top = arr.slice(0, 10);
+  localStorage.setItem(HS_KEY, JSON.stringify(top));
+  fetch('/api/highscores/' + HS_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(top)
+  }).catch(() => {});
+}
+function getBestScore() {
+  const hs = loadHs();
+  return hs.length ? hs[0].score : 0;
+}
+function addToHs(name, scr, lvl) {
+  const hs = loadHs();
+  const ts = Date.now();
+  hs.push({ name: name || 'Player', score: scr, level: lvl, ts });
+  hs.sort((a, b) => b.score - a.score);
+  saveHs(hs);
+  const match = hs.find(x => x.ts === ts);
+  newEntryIdx = match ? hs.indexOf(match) : -1;
+  return hs;
+}
+
+/* ── Weighted random food pick ────────────────────────────────────────── */
+function pickFoodType() {
+  const total = FOOD_TYPES.reduce((s, f) => s + f.weight, 0);
+  let r = Math.random() * total;
+  for (const f of FOOD_TYPES) { r -= f.weight; if (r <= 0) return f; }
+  return FOOD_TYPES[0];
+}
+
+/* ── Place a food item ────────────────────────────────────────────────── */
+function placeFood() {
+  const type   = pickFoodType();
+  const empty  = [];
+  for (let x = 0; x < COLS; x++) {
+    for (let y = 0; y < ROWS; y++) {
+      if (!snake.some(s => s.x === x && s.y === y) &&
+          !foods.some(f => f.x === x && f.y === y)) {
+        empty.push({ x, y });
+      }
+    }
+  }
+  if (!empty.length) return;
+  const pos = empty[Math.floor(Math.random() * empty.length)];
+  foods.push({ ...type, x: pos.x, y: pos.y, spawnTime: Date.now() });
+}
+
+/* ── Interval helper ──────────────────────────────────────────────────── */
+function getMoveInterval() {
+  let base = Math.max(MIN_INTERVAL, BASE_INTERVAL - (level - 1) * 8);
+  if (activePU.speed)  base = Math.max(MIN_INTERVAL, base * 0.6);
+  if (activePU.slow)   base = base * 1.8;
+  return base;
+}
+
+/* ── Particle system ──────────────────────────────────────────────────── */
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 3;
+    particles.push({
+      x: x * CELL + CELL / 2,
+      y: y * CELL + CELL / 2,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1,
+      color,
+      size: 2 + Math.random() * 3,
+    });
+  }
+}
+
+/* ── Floating score text ──────────────────────────────────────────────── */
+function spawnFloater(x, y, text, color) {
+  floaters.push({ x: x * CELL + CELL / 2, y: y * CELL, text, color, life: 1, vy: -1.2 });
+}
+
+/* ── Init game ────────────────────────────────────────────────────────── */
+function initGame() {
+  const mid = Math.floor(COLS / 2);
+  snake   = [{ x: mid, y: mid }, { x: mid - 1, y: mid }, { x: mid - 2, y: mid }];
+  dir     = { dx: 1, dy: 0 };
+  nextDir = { dx: 1, dy: 0 };
+  score   = 0;
+  level   = 1;
+  lives   = 3;
+  combo   = 1;
+  lastEatTime = 0;
+  foods   = [];
+  particles = [];
+  floaters  = [];
+  activePU  = {};
+  newHighScore = false;
+  newEntryIdx  = -1;
+
+  placeFood();
+  placeFood();
+
+  updateHud();
+  updatePowerupBar();
+}
+
+/* ── Update HUD ───────────────────────────────────────────────────────── */
+function updateHud() {
+  document.getElementById('hud-score').textContent = score.toLocaleString();
+  document.getElementById('hud-best').textContent  = Math.max(score, getBestScore()).toLocaleString();
+  document.getElementById('hud-combo').textContent = 'x' + combo;
+  document.getElementById('hud-level').textContent = level;
+  const h = document.getElementById('hud-lives');
+  h.textContent = lives >= 3 ? '❤️❤️❤️' : lives === 2 ? '❤️❤️🖤' : lives === 1 ? '❤️🖤🖤' : '🖤🖤🖤';
+}
+
+/* ── Update active power-up display ──────────────────────────────────── */
+function updatePowerupBar() {
+  const bar = document.getElementById('powerup-bar');
+  const now = Date.now();
+  let html = '';
+  if (activePU.speed && activePU.speed > now) {
+    const s = Math.ceil((activePU.speed - now) / 1000);
+    html += '<div class="pu-pill">⚡ ' + t('puSpeed') + ' <span class="pu-timer">' + s + 's</span></div>';
+  }
+  if (activePU.slow && activePU.slow > now) {
+    const s = Math.ceil((activePU.slow - now) / 1000);
+    html += '<div class="pu-pill">❄️ ' + t('puSlow') + ' <span class="pu-timer">' + s + 's</span></div>';
+  }
+  bar.innerHTML = html;
+}
+
+/* ── Move snake ───────────────────────────────────────────────────────── */
+function moveSnake() {
+  const now = Date.now();
+
+  // expire powerups
+  if (activePU.speed && now >= activePU.speed)  { delete activePU.speed; reschedule(); }
+  if (activePU.slow  && now >= activePU.slow)   { delete activePU.slow;  reschedule(); }
+  updatePowerupBar();
+
+  dir = { ...nextDir };
+  const head = { x: (snake[0].x + dir.dx + COLS) % COLS,
+                 y: (snake[0].y + dir.dy + ROWS) % ROWS };
+
+  // self collision
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+    loseLife();
+    return;
+  }
+
+  snake.unshift(head);
+
+  // check food
+  const fi = foods.findIndex(f => f.x === head.x && f.y === head.y);
+  if (fi !== -1) {
+    const food = foods.splice(fi, 1)[0];
+    if (food.powerup === 'bomb') {
+      spawnParticles(head.x, head.y, '#ff1744', 18);
+      spawnFloater(head.x, head.y, '💥 -LIFE', '#ff1744');
+      loseLife();
+      snake.pop();
+    } else {
+      // Combo check
+      if (now - lastEatTime < COMBO_WINDOW) {
+        combo = Math.min(combo + 1, 8);
+      } else {
+        combo = 1;
+      }
+      lastEatTime = now;
+
+      const pts = food.pts * combo;
+      score += pts;
+
+      // activate powerup
+      if (food.powerup === 'speed') activePU.speed = now + food.duration;
+      if (food.powerup === 'slow')  activePU.slow  = now + food.duration;
+
+      spawnParticles(head.x, head.y, food.color, 14);
+      spawnFloater(head.x, head.y, '+' + pts + (combo > 1 ? ' x' + combo : ''), food.color);
+
+      // level up every 5 foods eaten (based on score milestones)
+      const newLevel = Math.floor(score / 150) + 1;
+      if (newLevel > level) {
+        level = newLevel;
+        spawnFloater(Math.floor(COLS / 2), Math.floor(ROWS / 2), t('lvlUp'), '#ffd54f');
+        reschedule();
+      }
+
+      placeFood();
+      if (foods.length < 2) placeFood();
+    }
+    updateHud();
+    updatePowerupBar();
+  } else {
+    snake.pop();
+    // decay combo if window expired
+    if (lastEatTime && now - lastEatTime >= COMBO_WINDOW) {
+      combo = 1;
+      updateHud();
+    }
+  }
+}
+
+/* ── Lose a life ──────────────────────────────────────────────────────── */
+function loseLife() {
+  lives--;
+  combo = 1;
+  activePU = {};
+  updateHud();
+  updatePowerupBar();
+
+  // Flash red border
+  canvas.classList.add('glow');
+  setTimeout(() => canvas.classList.remove('glow'), 400);
+
+  if (lives <= 0) {
+    endGame();
+    return;
+  }
+  // respawn snake in center
+  const mid = Math.floor(COLS / 2);
+  snake   = [{ x: mid, y: mid }, { x: mid - 1, y: mid }, { x: mid - 2, y: mid }];
+  dir     = { dx: 1, dy: 0 };
+  nextDir = { dx: 1, dy: 0 };
+}
+
+/* ── Reschedule interval (after speed change) ─────────────────────────── */
+function reschedule() {
+  if (!gameRunning) return;
+  clearInterval(gameInterval);
+  gameInterval = setInterval(moveSnake, getMoveInterval());
+}
+
+/* ── Start / End ──────────────────────────────────────────────────────── */
+function startGame() {
+  initGame();
+  hideOverlay();
+  gameRunning = true;
+  paused      = false;
+  gameInterval = setInterval(moveSnake, getMoveInterval());
+  requestAnimationFrame(renderLoop);
+}
+
+function endGame() {
+  clearInterval(gameInterval);
+  gameRunning = false;
+
+  const best = getBestScore();
+  newHighScore = score > 0 && score >= best;
+
+  // Show overlay
+  document.getElementById('ov-title').textContent  = t('titleOver');
+  document.getElementById('ov-body').innerHTML      = t('bodyOver');
+  document.getElementById('ov-score').textContent   = score.toLocaleString() + ' pts';
+  document.getElementById('ov-score').style.display = 'block';
+
+  const newBestEl = document.getElementById('ov-new-best');
+  newBestEl.style.display = newHighScore ? 'block' : 'none';
+
+  // Show name entry if score > 0 and qualifies top-10
+  const hs = loadHs();
+  const qualifies = score > 0 && (hs.length < 10 || score > hs[hs.length - 1].score);
+  if (qualifies) {
+    document.getElementById('name-entry').style.display = 'flex';
+    document.getElementById('name-input').value = localStorage.getItem('ns_playerName') || '';
+    setTimeout(() => document.getElementById('name-input').focus(), 100);
+    document.getElementById('hs-section').style.display = 'none';
+  } else {
+    document.getElementById('name-entry').style.display = 'none';
+    renderHsTable(null);
+  }
+
+  document.getElementById('overlay').style.display = 'flex';
+  document.getElementById('start-btn').dataset.i18n = 'startBtn';
+  document.getElementById('start-btn').textContent = '▶ ' + t('startBtn').replace('▶ ', '');
+}
+
+/* ── Save score & show table ──────────────────────────────────────────── */
+function saveAndShow() {
+  const rawName = document.getElementById('name-input').value.trim();
+  const name    = rawName || 'Player';
+  localStorage.setItem('ns_playerName', name);
+  addToHs(name, score, level);
+  document.getElementById('name-entry').style.display = 'none';
+  renderHsTable(name);
+}
+
+function renderHsTable(newName) {
+  const hs   = loadHs();
+  const body = document.getElementById('hs-body');
+  if (!hs.length) {
+    body.innerHTML = '<tr><td colspan="4" style="color:#606080;font-style:italic;text-align:center;padding:0.5rem">' + t('hsEmpty') + '</td></tr>';
+  } else {
+    body.innerHTML = hs.slice(0, 10).map((e, i) =>
+      '<tr' + (newName && e.name === newName && e.score === score ? ' class="hs-new"' : '') + '>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escHtml(e.name) + '</td>' +
+      '<td>' + e.score.toLocaleString() + '</td>' +
+      '<td>' + (e.level || 1) + '</td>' +
+      '</tr>'
+    ).join('');
+  }
+  document.getElementById('hs-section').style.display = 'block';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Show / hide overlay ──────────────────────────────────────────────── */
+function showStartOverlay() {
+  document.getElementById('ov-title').dataset.i18n    = 'titleStart';
+  document.getElementById('ov-title').textContent     = t('titleStart');
+  document.getElementById('ov-body').dataset.i18n     = 'bodyStart';
+  document.getElementById('ov-body').innerHTML        = t('bodyStart');
+  document.getElementById('ov-score').style.display   = 'none';
+  document.getElementById('ov-new-best').style.display= 'none';
+  document.getElementById('name-entry').style.display = 'none';
+  renderHsTable(null);
+  document.getElementById('overlay').style.display    = 'flex';
+}
+
+function hideOverlay() {
+  document.getElementById('overlay').style.display = 'none';
+}
+
+/* ── Rendering ────────────────────────────────────────────────────────── */
+const GRID_COLOR  = 'rgba(57,255,20,0.03)';
+const SNAKE_HEAD  = '#39ff14';
+const SNAKE_BODY  = '#1a7a0a';
+const SNAKE_GLOW  = 'rgba(57,255,20,0.6)';
+
+function renderLoop(ts) {
+  draw(ts);
+  requestAnimationFrame(renderLoop);
+}
+
+function draw(ts) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Grid
+  ctx.strokeStyle = GRID_COLOR;
+  ctx.lineWidth   = 0.5;
+  for (let x = 0; x <= COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x  += p.vx; p.y  += p.vy;
+    p.vy += 0.08;
+    p.life -= 0.035;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle   = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur  = 6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Food
+  const now = Date.now();
+  for (const f of foods) {
+    const pulse = 0.7 + 0.3 * Math.sin((now - f.spawnTime) / 300);
+    const cx    = f.x * CELL + CELL / 2;
+    const cy    = f.y * CELL + CELL / 2;
+
+    ctx.save();
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur  = 10 * pulse;
+    ctx.font = Math.round(CELL * 0.85) + 'px serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha  = 0.85 + 0.15 * pulse;
+    ctx.fillText(f.emoji, cx, cy + 1);
+    ctx.restore();
+  }
+
+  // Snake body
+  if (snake) {
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const seg  = snake[i];
+    const isHead = i === 0;
+    const ratio  = 1 - i / snake.length;
+    const r = CELL / 2 - 1;
+    const cx = seg.x * CELL + CELL / 2;
+    const cy = seg.y * CELL + CELL / 2;
+
+    ctx.save();
+    if (isHead) {
+      ctx.shadowColor = SNAKE_HEAD;
+      ctx.shadowBlur  = 14;
+      ctx.fillStyle   = SNAKE_HEAD;
+    } else {
+      const g = Math.round(80 + ratio * 130);
+      ctx.shadowColor = 'rgba(57,255,20,0.3)';
+      ctx.shadowBlur  = 6;
+      ctx.fillStyle   = 'rgb(0,' + g + ',0)';
+    }
+    const segR = isHead ? r : Math.max(3, r * (0.6 + 0.4 * ratio));
+    ctx.beginPath();
+    ctx.arc(cx, cy, segR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // eyes on head
+    if (isHead) {
+      ctx.fillStyle   = '#001a00';
+      ctx.shadowBlur  = 0;
+      const ex = dir.dx !== 0 ? cx + dir.dx * 5 : cx;
+      const eyeOff = dir.dy !== 0 ? 4 : 0;
+      const eyeOffX = dir.dx !== 0 ? 0 : 4;
+      ctx.beginPath(); ctx.arc(ex + eyeOff,   cy - eyeOffX, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex - eyeOff,   cy + eyeOffX, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  }
+
+  // Floating score text
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const fl = floaters[i];
+    fl.y    += fl.vy;
+    fl.life -= 0.022;
+    if (fl.life <= 0) { floaters.splice(i, 1); continue; }
+    ctx.save();
+    ctx.globalAlpha  = fl.life;
+    ctx.fillStyle    = fl.color;
+    ctx.shadowColor  = fl.color;
+    ctx.shadowBlur   = 8;
+    ctx.font         = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fl.text, fl.x, fl.y);
+    ctx.restore();
+  }
+}
+
+/* ── Input handling ───────────────────────────────────────────────────── */
+const KEY_MAP = {
+  ArrowUp:    { dx: 0, dy: -1 }, w: { dx: 0, dy: -1 }, W: { dx: 0, dy: -1 },
+  ArrowDown:  { dx: 0, dy:  1 }, s: { dx: 0, dy:  1 }, S: { dx: 0, dy:  1 },
+  ArrowLeft:  { dx:-1, dy:  0 }, a: { dx:-1, dy:  0 }, A: { dx:-1, dy:  0 },
+  ArrowRight: { dx: 1, dy:  0 }, d: { dx: 1, dy:  0 }, D: { dx: 1, dy:  0 },
+};
+
+document.addEventListener('keydown', e => {
+  // space / enter = start game if overlay visible
+  if (!gameRunning && (e.key === ' ' || e.key === 'Enter')) {
+    startGame(); return;
+  }
+  if (!gameRunning) return;
+
+  const nd = KEY_MAP[e.key];
+  if (nd) {
+    e.preventDefault();
+    if (nd.dx !== -dir.dx || nd.dy !== -dir.dy) nextDir = nd;
+  }
+});
+
+// D-pad
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!gameRunning) { startGame(); return; }
+    const map = { up:{dx:0,dy:-1}, down:{dx:0,dy:1}, left:{dx:-1,dy:0}, right:{dx:1,dy:0} };
+    const nd  = map[btn.dataset.dir];
+    if (nd && (nd.dx !== -dir.dx || nd.dy !== -dir.dy)) nextDir = nd;
+  });
+});
+
+// Touch swipe on canvas
+let touchStart = null;
+canvas.addEventListener('touchstart', e => {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+canvas.addEventListener('touchend', e => {
+  if (!touchStart || !gameRunning) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  touchStart = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+  let nd;
+  if (Math.abs(dx) > Math.abs(dy)) nd = dx > 0 ? {dx:1,dy:0} : {dx:-1,dy:0};
+  else                               nd = dy > 0 ? {dx:0,dy:1} : {dx:0,dy:-1};
+  if (nd.dx !== -dir.dx || nd.dy !== -dir.dy) nextDir = nd;
+}, { passive: true });
+
+/* ── Button handlers ──────────────────────────────────────────────────── */
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('back-home-btn').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+document.getElementById('save-btn').addEventListener('click', saveAndShow);
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveAndShow();
+});
+
+/* ── Init ─────────────────────────────────────────────────────────────── */
+applyLang(lang);
+showStartOverlay();
+
+// Kick off the render loop even before game starts (for empty canvas)
+requestAnimationFrame(function initDraw(ts) {
+  draw(ts);
+  if (!gameRunning) requestAnimationFrame(initDraw);
+});
+</script>
+</body>
+</html>

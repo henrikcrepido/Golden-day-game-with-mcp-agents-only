@@ -8,3 +8,6 @@ __pycache__/
 HighscoresApi/bin/
 HighscoresApi/obj/
 HighscoresApi/data/
+
+# Shell output files
+nohup.out

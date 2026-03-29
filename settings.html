@@ -287,6 +287,15 @@
       </div>
     </div>
 
+    <!-- ── Neon Serpent ──────────────────────────── -->
+    <div class="section-card" style="animation-delay:0.20s">
+      <h2>🐍 <span data-i18n="ns-title">Neon Serpent</span></h2>
+      <div id="ns-scores"></div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="clear-ns" data-i18n="clear-game">Clear scores</button>
+      </div>
+    </div>
+
     <!-- ── Danger zone ──────────────────────────────── -->
     <div class="section-card" style="animation-delay:0.20s">
       <h2>⚠️ <span data-i18n="danger-title">Danger Zone</span></h2>
@@ -315,6 +324,7 @@
       'ms-title':    'Minesweeper',
       'pb-title':    'Pinball Breaker',
       'sh-title':    'Support Hero',
+      'ns-title':    'Neon Serpent',
       'danger-title':'Danger Zone',
       'danger-desc': 'Permanently clear all highscores from every game. This cannot be undone.',
       'clear-game':  'Clear scores',
@@ -322,7 +332,7 @@
       'export-btn':  '📥 Export JSON',
       footer:        'Golden Day Games © 2026',
       // table headers
-      rank: '#', name: 'Name', score: 'Score', time: 'Time',
+      rank: '#', name: 'Name', score: 'Score', time: 'Time', level: 'Lvl',
       easy: 'Easy', medium: 'Medium', hard: 'Hard',
       achievements: 'Achievements', streak: 'Streak', rank_label: 'Rank',
       empty: 'No scores yet',
@@ -342,13 +352,14 @@
       'ms-title':    'Minesweeper',
       'pb-title':    'Pinball Krossar',
       'sh-title':    'Supporthjalten',
+      'ns-title':    'Neon Orm',
       'danger-title':'Farlig zon',
       'danger-desc': 'Rensa alla highscores permanent från varje spel. Det går inte att ångra.',
       'clear-game':  'Rensa poäng',
       'clear-all':   '🗑 Rensa alla highscores',
       'export-btn':  '📥 Exportera JSON',
       footer:        'Gyllene Dag Spel © 2026',
-      rank: '#', name: 'Namn', score: 'Poäng', time: 'Tid',
+      rank: '#', name: 'Namn', score: 'Poäng', time: 'Tid', level: 'Nivå',
       easy: 'Lätt', medium: 'Medel', hard: 'Svår',
       achievements: 'Prestationer', streak: 'Svit', rank_label: 'Rang',
       empty: 'Inga poäng ännu',
@@ -445,10 +456,19 @@
     );
   }
 
+  function renderNeonSerpent() {
+    const scores = readJSON('neonSerpent_hs');
+    document.getElementById('ns-scores').innerHTML = makeTable(
+      [t('rank'), t('name'), t('score'), t('level')],
+      scores.map((s, i) => [i + 1, s.name, s.score.toLocaleString(), s.level || 1])
+    );
+  }
+
   function renderAll() {
     renderMinesweeper();
     renderPinball();
     renderSupportHero();
+    renderNeonSerpent();
   }
 
   /* ── Clear handlers ────────────────────────────────────────────────── */
@@ -473,11 +493,19 @@
     showToast(t('toast_cleared'));
   });
 
+  document.getElementById('clear-ns').addEventListener('click', () => {
+    if (!confirm(t('confirm_clear_game'))) return;
+    localStorage.removeItem('neonSerpent_hs');
+    renderNeonSerpent();
+    showToast(t('toast_cleared'));
+  });
+
   document.getElementById('clear-all').addEventListener('click', () => {
     if (!confirm(t('confirm_clear_all'))) return;
     ['easy', 'medium', 'hard'].forEach(d => localStorage.removeItem('ms_hs_' + d));
     localStorage.removeItem('pbBreaker_hs');
     localStorage.removeItem('supportHeroLeaderboard');
+    localStorage.removeItem('neonSerpent_hs');
     renderAll();
     showToast(t('toast_all_cleared'));
   });
@@ -493,6 +521,7 @@
       },
       pinballBreaker:   readJSON('pbBreaker_hs'),
       supportHero:      readJSON('supportHeroLeaderboard'),
+      neonSerpent:      readJSON('neonSerpent_hs'),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
