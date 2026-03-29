@@ -344,38 +344,49 @@
     }
     #lang-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
-    /* ── Mobile d-pad ────────────────────────── */
+    /* ── D-pad control panel ─────────────────── */
     #dpad {
-      display: none;
+      display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      margin-top: 0.8rem;
+      gap: 6px;
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
     }
-    .dpad-row { display: flex; gap: 4px; }
+    #dpad-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .dpad-row { display: flex; gap: 6px; }
     .dpad-btn {
-      width: 52px; height: 52px;
+      width: 56px; height: 56px;
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.15);
       color: #c0cce0;
-      border-radius: 10px;
-      font-size: 1.4rem;
+      border-radius: 12px;
+      font-size: 1.5rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      transition: background 0.12s;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .dpad-btn:active { background: rgba(57,255,20,0.2); }
+    .dpad-btn:hover { background: rgba(57,255,20,0.12); border-color: rgba(57,255,20,0.3); }
+    .dpad-btn:active { background: rgba(57,255,20,0.25); transform: scale(0.93); }
 
-    @media (hover: none) and (pointer: coarse) {
-      #dpad { display: flex; }
-    }
     @media (max-width: 480px) {
-      #dpad { display: flex; }
       header .logo { font-size: 1.5rem; }
+      .dpad-btn { width: 60px; height: 60px; }
     }
   </style>
 </head>
@@ -463,13 +474,14 @@
     </div>
   </div>
 
-  <!-- Mobile D-pad -->
+  <!-- D-pad control panel -->
   <div id="dpad">
-    <div class="dpad-row"><button class="dpad-btn" data-dir="up">▲</button></div>
+    <div id="dpad-label" data-i18n="dpadLabel">Controls</div>
+    <div class="dpad-row"><button class="dpad-btn" data-dir="up" data-i18n-aria-label="dpadUp" aria-label="Up">▲</button></div>
     <div class="dpad-row">
-      <button class="dpad-btn" data-dir="left">◀</button>
-      <button class="dpad-btn" data-dir="down">▼</button>
-      <button class="dpad-btn" data-dir="right">▶</button>
+      <button class="dpad-btn" data-dir="left" data-i18n-aria-label="dpadLeft" aria-label="Left">◀</button>
+      <button class="dpad-btn" data-dir="down" data-i18n-aria-label="dpadDown" aria-label="Down">▼</button>
+      <button class="dpad-btn" data-dir="right" data-i18n-aria-label="dpadRight" aria-label="Right">▶</button>
     </div>
   </div>
 
@@ -518,6 +530,8 @@ const TR = {
     lvlUp:        'LEVEL UP!',
     comboLabel:   'COMBO ',
     hsEmpty:      'No scores yet — be first!',
+    dpadLabel:    'Controls',
+    dpadUp:       'Up', dpadDown: 'Down', dpadLeft: 'Left', dpadRight: 'Right',
   },
   sv: {
     pageTitle:    'Neon Orm – Gyllene Dag Spel',
@@ -546,6 +560,8 @@ const TR = {
     lvlUp:        'NIVÅ UPP!',
     comboLabel:   'COMBO ',
     hsEmpty:      'Inga poäng än — var först!',
+    dpadLabel:    'Kontroller',
+    dpadUp:       'Upp', dpadDown: 'Ner', dpadLeft: 'Vänster', dpadRight: 'Höger',
   }
 };
 
@@ -565,6 +581,11 @@ function applyLang(l) {
     const k = el.dataset.i18nPlaceholder;
     const v = (TR[l] || TR.en)[k];
     if (v !== undefined) el.placeholder = v;
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const k = el.dataset.i18nAriaLabel;
+    const v = (TR[l] || TR.en)[k];
+    if (v !== undefined) el.setAttribute('aria-label', v);
   });
   document.getElementById('lang-btn').textContent = l === 'en' ? '🇸🇪 SV' : '🇬🇧 EN';
 }
