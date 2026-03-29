@@ -286,7 +286,7 @@
   <div class="overlay" id="overlay-start">
     <div class="overlay-title">⛷ SKI SLALOM</div>
     <div class="overlay-sub">
-      Steer through every gate — miss one and earn a <strong>+2s penalty</strong>.<br>
+      Steer through every gate — miss one and earn a <strong>+2s penalty</strong>.<br />
       Complete 20 gates as fast as possible!
     </div>
     <div class="overlay-sub" style="margin-top:0.3rem;">
@@ -334,6 +334,7 @@ const SPEED_INC      = 0.12;
 const TURN_SPEED     = 4.5;
 const PENALTY_SECS   = 2;
 const HS_KEY         = 'ski_slalom_best';
+const IGNORED_KEYS   = ['F5','F12','Tab','CapsLock','Shift','Control','Alt','Meta'];
 
 /* ── Canvas ──────────────────────────────────────────────────── */
 const canvas = document.getElementById('gameCanvas');
@@ -585,7 +586,8 @@ function drawFinishLine() {
   if (cy < -20 || cy > CH + 20) return;
 
   const cols = ['#ff4444','#ff8800','#ffdd00','#44ff44','#00aaff','#aa44ff'];
-  const blockW = Math.ceil(CW / cols.length / 2);
+  const STRIPES_PER_COLOR = 2; /* two stripes of each colour across the canvas */
+  const blockW = Math.ceil(CW / (cols.length * STRIPES_PER_COLOR));
   let x = 0;
   let colIdx = 0;
   while (x < CW) {
@@ -725,8 +727,7 @@ function drawFrame() {
 /* ── Keyboard ────────────────────────────────────────────────── */
 document.addEventListener('keydown', e => {
   if (!gameRunning) {
-    const skip = ['F5','F12','Tab','CapsLock','Shift','Control','Alt','Meta'];
-    if (!skip.includes(e.key)) { startGame(); return; }
+    if (!IGNORED_KEYS.includes(e.key)) { startGame(); return; }
   }
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') { keys.left  = true; e.preventDefault(); }
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keys.right = true; e.preventDefault(); }
