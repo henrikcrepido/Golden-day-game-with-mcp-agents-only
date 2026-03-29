@@ -13,6 +13,7 @@ action logs and reusable instructions saved as Markdown for future sessions.
 | Pinball Breaker | [`pinball-breaker.html`](pinball-breaker.html) | Mouse/touch to move the paddle; smash bricks and hit bumpers for a score multiplier |
 | Dungeon of Echoes | [`mod-adventure.html`](mod-adventure.html) | A D&D-style MOD text adventure — explore, fight monsters, and claim the Dragon's Hoard |
 | Support Hero | [`support-hero.html`](support-hero.html) | Handle IBM MQ/MSMQ backout queues, restart services & IIS app pools, escalate correctly — reach Black Belt Support Master! |
+| AR Crystal Surge | [`ar-crystal-surge.html`](ar-crystal-surge.html) | AR.js gem collector — point your camera at the Hiro marker and tap floating crystals; combo multipliers up to ×4. Works without a camera in holographic Demo Mode! |
 
 ---
 
