@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ski Slalom – Golden Day Games</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #0d0d1a;
+      --panel:  #0f0f24;
+      --border: #1e1e3a;
+      --gold:   #ffd54f;
+      --gold2:  #ff8f00;
+      --cyan:   #00e5ff;
+      --red:    #ff4444;
+      --blue:   #4488ff;
+      --text:   #dde4f0;
+      --muted:  #5a6080;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+      70%  { transform: scale(1.2) rotate(3deg); }
+      100% { transform: scale(1)   rotate(0deg); opacity: 1; }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.5; }
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 80%, rgba(68,136,255,0.07) 0%, transparent 55%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 1rem 3rem;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      align-self: flex-start;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--cyan); }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 0.8rem;
+      animation: floatUp 0.6s ease both;
+    }
+    header .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--cyan), #88ccff, var(--gold), #88ccff, var(--cyan));
+      background-size: 400px 1px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+      letter-spacing: 2px;
+    }
+    header .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 0.15rem;
+    }
+
+    /* ── HUD ── */
+    #hud {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      animation: floatUp 0.6s ease 0.1s both;
+    }
+    .hud-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.3rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.05rem;
+      min-width: 72px;
+    }
+    .hud-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+    .hud-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    #hud-best  .hud-value { color: var(--cyan); }
+    #hud-gates .hud-value { color: #aaffcc; }
+    #hud-pen   .hud-value { color: var(--red); }
+
+    /* ── Canvas wrapper ── */
+    #canvas-wrap {
+      position: relative;
+      animation: floatUp 0.6s ease 0.15s both;
+    }
+    #gameCanvas {
+      display: block;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      box-shadow: 0 0 30px rgba(0,229,255,0.15);
+    }
+
+    /* ── Overlays ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(7, 7, 22, 0.88);
+      gap: 0.8rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .overlay.hidden { display: none; }
+
+    .overlay-title {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      text-shadow: 0 0 20px var(--cyan);
+    }
+    .overlay-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 300px;
+      font-size: 0.92rem;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row .stat-label { color: var(--muted); }
+    .stat-row .stat-val   { font-weight: 700; color: var(--gold); }
+
+    .record-badge {
+      display: none;
+      background: linear-gradient(135deg, var(--gold2), var(--gold));
+      color: #000;
+      font-weight: 900;
+      font-size: 0.85rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 999px;
+      letter-spacing: 1px;
+      animation: popIn 0.5s ease both;
+    }
+    .record-badge.show { display: block; }
+
+    .btn {
+      background: linear-gradient(135deg, #1a2a4a, #0f1e3a);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.6rem 1.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #1e3560, #142850);
+      box-shadow: 0 0 12px rgba(0,229,255,0.4);
+    }
+
+    .key-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Touch buttons ── */
+    #touch-controls {
+      display: none;
+      gap: 1rem;
+      margin-top: 0.7rem;
+      animation: floatUp 0.6s ease 0.2s both;
+    }
+    .touch-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1.6rem;
+      width: 80px;
+      height: 60px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .touch-btn:active { background: #1e2a4a; }
+
+    @media (max-width: 620px) {
+      #gameCanvas  { width: 100%; height: auto; }
+      #touch-controls { display: flex; }
+      header .logo { font-size: 1.5rem; }
+    }
+    @media (hover: none) and (pointer: coarse) {
+      #touch-controls { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Back to Games</a>
+
+<header>
+  <div class="logo">⛷ SKI SLALOM</div>
+  <div class="sub">Golden Day Games · Race the clock</div>
+</header>
+
+<div id="hud">
+  <div class="hud-box">
+    <span class="hud-label">Time</span>
+    <span class="hud-value" id="hv-time">0.00s</span>
+  </div>
+  <div class="hud-box" id="hud-best">
+    <span class="hud-label">Best</span>
+    <span class="hud-value" id="hv-best">--</span>
+  </div>
+  <div class="hud-box" id="hud-gates">
+    <span class="hud-label">Gates</span>
+    <span class="hud-value" id="hv-gates">0/20</span>
+  </div>
+  <div class="hud-box" id="hud-pen">
+    <span class="hud-label">Penalty</span>
+    <span class="hud-value" id="hv-pen">+0s</span>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="gameCanvas" width="600" height="500"></canvas>
+
+  <!-- Start overlay -->
+  <div class="overlay" id="overlay-start">
+    <div class="overlay-title">⛷ SKI SLALOM</div>
+    <div class="overlay-sub">
+      Steer through every gate — miss one and earn a <strong>+2s penalty</strong>.<br />
+      Complete 20 gates as fast as possible!
+    </div>
+    <div class="overlay-sub" style="margin-top:0.3rem;">
+      <strong style="color:var(--red)">←/→</strong> or <strong style="color:var(--red)">A/D</strong> to steer
+    </div>
+    <button class="btn" id="btn-start">▶ START RUN</button>
+    <div class="key-hint">or press any key</div>
+  </div>
+
+  <!-- Win overlay -->
+  <div class="overlay hidden" id="overlay-win">
+    <div class="overlay-title">🏁 FINISH!</div>
+    <div class="stat-row">
+      <span class="stat-label">Race time</span>
+      <span class="stat-val" id="win-race-time">--</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Penalties</span>
+      <span class="stat-val" id="win-penalties" style="color:var(--red)">--</span>
+    </div>
+    <div class="stat-row" style="border-bottom:none;">
+      <span class="stat-label">Final time</span>
+      <span class="stat-val" id="win-final-time" style="color:var(--cyan);font-size:1.2rem">--</span>
+    </div>
+    <div class="record-badge" id="new-record">🏆 NEW BEST TIME!</div>
+    <button class="btn" id="btn-again">▶ PLAY AGAIN</button>
+  </div>
+</div>
+
+<div id="touch-controls">
+  <button class="touch-btn" id="btn-left" aria-label="Steer left">◀</button>
+  <button class="touch-btn" id="btn-right" aria-label="Steer right">▶</button>
+</div>
+
+<script>
+/* ── Constants ───────────────────────────────────────────────── */
+const CW = 600, CH = 500;
+const SKIER_CANVAS_Y = 380;
+const GATE_COUNT     = 20;
+const GATE_SPACING   = 420;
+const FIRST_GATE_Y   = 650;
+const FINISH_OFFSET  = 700;
+const INIT_SPEED     = 2.8;
+const SPEED_INC      = 0.12;
+const TURN_SPEED     = 4.5;
+const PENALTY_SECS   = 2;
+const HS_KEY         = 'ski_slalom_best';
+const IGNORED_KEYS   = ['F5','F12','Tab','CapsLock','Shift','Control','Alt','Meta'];
+
+/* ── Canvas ──────────────────────────────────────────────────── */
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+
+/* ── State ───────────────────────────────────────────────────── */
+let gameRunning = false;
+let worldScroll  = 0;
+let speed        = INIT_SPEED;
+let skierX       = CW / 2;
+let startTime    = 0;
+let elapsedTime  = 0;
+let penalties    = 0;
+let gatesPassed  = 0;
+let gates        = [];
+let snowflakes   = [];
+let finished     = false;
+let finishWorldY = 0;
+let rafId        = null;
+
+/* ── Input ───────────────────────────────────────────────────── */
+const keys = { left: false, right: false };
+
+/* ── HUD elements ────────────────────────────────────────────── */
+const hvTime  = document.getElementById('hv-time');
+const hvBest  = document.getElementById('hv-best');
+const hvGates = document.getElementById('hv-gates');
+const hvPen   = document.getElementById('hv-pen');
+
+/* ── Best time ───────────────────────────────────────────────── */
+function getBest() {
+  const v = parseFloat(localStorage.getItem(HS_KEY));
+  return isNaN(v) ? null : v;
+}
+function saveBest(t) {
+  localStorage.setItem(HS_KEY, String(t));
+  postHighscore(t);
+}
+async function postHighscore(t) {
+  try {
+    await fetch('/api/highscores/' + HS_KEY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ score: t, name: 'Player' }])
+    });
+  } catch (_) { /* best-effort */ }
+}
+function renderBest() {
+  const b = getBest();
+  hvBest.textContent = b === null ? '--' : b.toFixed(2) + 's';
+}
+
+/* ── Gate generation ─────────────────────────────────────────── */
+function buildGates() {
+  gates = [];
+  for (let i = 0; i < GATE_COUNT; i++) {
+    const worldY      = FIRST_GATE_Y + i * GATE_SPACING;
+    const minOpen     = 100;
+    const maxOpen     = 150;
+    const openWidth   = Math.round(maxOpen - (maxOpen - minOpen) * (i / (GATE_COUNT - 1)));
+    const margin      = 80;
+    const maxCenter   = CW - margin - openWidth / 2;
+    const minCenter   = margin + openWidth / 2;
+    const centerX     = Math.round(minCenter + Math.random() * (maxCenter - minCenter));
+    gates.push({
+      worldY,
+      centerX,
+      openWidth,
+      leftX:  centerX - openWidth / 2,
+      rightX: centerX + openWidth / 2,
+      passed: false,
+      missed: false
+    });
+  }
+  finishWorldY = FIRST_GATE_Y + (GATE_COUNT - 1) * GATE_SPACING + FINISH_OFFSET;
+}
+
+/* ── Snowflakes ──────────────────────────────────────────────── */
+function buildSnowflakes() {
+  snowflakes = [];
+  for (let i = 0; i < 80; i++) {
+    snowflakes.push({
+      x:      Math.random() * CW,
+      worldY: Math.random() * (finishWorldY + CH),
+      r:      1 + Math.random() * 2.5,
+      drift:  (Math.random() - 0.5) * 0.4
+    });
+  }
+}
+
+/* ── Start / reset ───────────────────────────────────────────── */
+function startGame() {
+  document.getElementById('overlay-start').classList.add('hidden');
+  document.getElementById('overlay-win').classList.add('hidden');
+
+  worldScroll  = 0;
+  speed        = INIT_SPEED;
+  skierX       = CW / 2;
+  penalties    = 0;
+  gatesPassed  = 0;
+  finished     = false;
+  startTime    = performance.now();
+  elapsedTime  = 0;
+
+  buildGates();
+  buildSnowflakes();
+
+  gameRunning = true;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
+}
+
+/* ── Gate detection ──────────────────────────────────────────── */
+function checkGates() {
+  for (const gate of gates) {
+    if (gate.passed) continue;
+    const gateCanvasY = gate.worldY - worldScroll;
+    if (gateCanvasY < SKIER_CANVAS_Y) {
+      gate.passed = true;
+      const hit = skierX >= gate.leftX && skierX <= gate.rightX;
+      if (!hit) {
+        gate.missed = true;
+        penalties += PENALTY_SECS;
+      } else {
+        gatesPassed++;
+        speed += SPEED_INC;
+      }
+    }
+  }
+}
+
+/* ── HUD update ──────────────────────────────────────────────── */
+function updateHUD() {
+  hvTime.textContent  = elapsedTime.toFixed(2) + 's';
+  hvGates.textContent = gatesPassed + '/' + GATE_COUNT;
+  hvPen.textContent   = '+' + penalties + 's';
+}
+
+/* ── Win ─────────────────────────────────────────────────────── */
+function triggerFinish() {
+  finished    = true;
+  gameRunning = false;
+
+  const raceTime  = elapsedTime;
+  const finalTime = raceTime + penalties;
+  const best      = getBest();
+  const isRecord  = best === null || finalTime < best;
+
+  if (isRecord) saveBest(finalTime);
+  renderBest();
+
+  document.getElementById('win-race-time').textContent  = raceTime.toFixed(2) + 's';
+  document.getElementById('win-penalties').textContent  = '+' + penalties + 's';
+  document.getElementById('win-final-time').textContent = finalTime.toFixed(2) + 's';
+
+  const badge = document.getElementById('new-record');
+  badge.classList.toggle('show', isRecord);
+
+  document.getElementById('overlay-win').classList.remove('hidden');
+}
+
+/* ── Draw helpers ────────────────────────────────────────────── */
+function worldToCanvasY(wy) { return wy - worldScroll; }
+
+function drawBackground() {
+  /* snow gradient */
+  const grad = ctx.createLinearGradient(0, 0, 0, CH);
+  grad.addColorStop(0, '#c8deff');
+  grad.addColorStop(1, '#e8f4ff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, CW, CH);
+
+  /* subtle ski track lines */
+  ctx.save();
+  ctx.strokeStyle = 'rgba(160,190,230,0.35)';
+  ctx.lineWidth = 1.5;
+  const trackLeft  = skierX - 10;
+  const trackRight = skierX + 10;
+  ctx.beginPath(); ctx.moveTo(trackLeft, 0);  ctx.lineTo(trackLeft, SKIER_CANVAS_Y + 20);  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(trackRight, 0); ctx.lineTo(trackRight, SKIER_CANVAS_Y + 20); ctx.stroke();
+  ctx.restore();
+}
+
+function drawSnowflakes() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  for (const s of snowflakes) {
+    const cy = worldToCanvasY(s.worldY);
+    if (cy < -10 || cy > CH + 10) continue;
+    ctx.beginPath();
+    ctx.arc(s.x, cy, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawGate(gate) {
+  const cy = worldToCanvasY(gate.worldY);
+  if (cy < -60 || cy > CH + 60) return;
+
+  const poleH  = 44;
+  const poleW  = 6;
+  const flagW  = 22;
+  const flagH  = 14;
+
+  /* left pole – red */
+  ctx.save();
+  ctx.fillStyle = '#cc0000';
+  ctx.fillRect(gate.leftX - poleW / 2, cy - poleH, poleW, poleH);
+  ctx.fillStyle = '#ff3333';
+  ctx.beginPath();
+  ctx.moveTo(gate.leftX - poleW / 2, cy - poleH);
+  ctx.lineTo(gate.leftX - poleW / 2 - flagW, cy - poleH + flagH / 2);
+  ctx.lineTo(gate.leftX - poleW / 2, cy - poleH + flagH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  /* right pole – blue */
+  ctx.save();
+  ctx.fillStyle = '#0044cc';
+  ctx.fillRect(gate.rightX - poleW / 2, cy - poleH, poleW, poleH);
+  ctx.fillStyle = '#3377ff';
+  ctx.beginPath();
+  ctx.moveTo(gate.rightX + poleW / 2, cy - poleH);
+  ctx.lineTo(gate.rightX + poleW / 2 + flagW, cy - poleH + flagH / 2);
+  ctx.lineTo(gate.rightX + poleW / 2, cy - poleH + flagH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  /* gate line */
+  ctx.save();
+  ctx.strokeStyle = gate.missed
+    ? 'rgba(255,60,60,0.55)'
+    : (gate.passed ? 'rgba(80,255,120,0.4)' : 'rgba(100,140,200,0.3)');
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(gate.leftX, cy);
+  ctx.lineTo(gate.rightX, cy);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function drawFinishLine() {
+  const cy = worldToCanvasY(finishWorldY);
+  if (cy < -20 || cy > CH + 20) return;
+
+  const cols = ['#ff4444','#ff8800','#ffdd00','#44ff44','#00aaff','#aa44ff'];
+  const STRIPES_PER_COLOR = 2; /* two stripes of each color across the canvas */
+  const blockW = Math.ceil(CW / (cols.length * STRIPES_PER_COLOR));
+  let x = 0;
+  let colIdx = 0;
+  while (x < CW) {
+    ctx.fillStyle = cols[colIdx % cols.length];
+    ctx.fillRect(x, cy - 4, blockW, 8);
+    x += blockW;
+    colIdx++;
+  }
+  ctx.save();
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 14px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('FINISH', CW / 2, cy - 6);
+  ctx.restore();
+}
+
+function drawSkier() {
+  const x = skierX;
+  const y = SKIER_CANVAS_Y;
+
+  ctx.save();
+
+  /* skis */
+  ctx.strokeStyle = '#443322';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x - 9, y - 4); ctx.lineTo(x - 9, y + 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + 9, y - 4); ctx.lineTo(x + 9, y + 14); ctx.stroke();
+
+  /* body – white triangle */
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#aaccee';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 18);
+  ctx.lineTo(x - 11, y + 4);
+  ctx.lineTo(x + 11, y + 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  /* jacket colour */
+  ctx.fillStyle = '#ff5533';
+  ctx.beginPath();
+  ctx.moveTo(x, y - 4);
+  ctx.lineTo(x - 8, y + 4);
+  ctx.lineTo(x + 8, y + 4);
+  ctx.closePath();
+  ctx.fill();
+
+  /* head */
+  ctx.fillStyle = '#ffe0b2';
+  ctx.beginPath();
+  ctx.arc(x, y - 21, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* goggles */
+  ctx.fillStyle = '#1155aa';
+  ctx.beginPath();
+  ctx.arc(x - 3, y - 21, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + 3, y - 21, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* helmet */
+  ctx.fillStyle = '#cc2200';
+  ctx.beginPath();
+  ctx.arc(x, y - 24, 7, Math.PI, 0);
+  ctx.fill();
+
+  /* poles */
+  ctx.strokeStyle = '#aaaaaa';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x - 8, y - 6); ctx.lineTo(x - 18, y + 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + 8, y - 6); ctx.lineTo(x + 18, y + 12); ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawSpeedIndicator() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,30,60,0.6)';
+  ctx.fillRect(8, CH - 30, 90, 22);
+  ctx.fillStyle = '#aaccff';
+  ctx.font = '11px Segoe UI, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Speed: ' + speed.toFixed(1), 14, CH - 19);
+  ctx.restore();
+}
+
+/* ── Main loop ───────────────────────────────────────────────── */
+function loop(ts) {
+  if (!gameRunning) return;
+
+  /* timing */
+  elapsedTime = (ts - startTime) / 1000;
+
+  /* physics */
+  if (keys.left)  skierX = Math.max(20, skierX - TURN_SPEED);
+  if (keys.right) skierX = Math.min(CW - 20, skierX + TURN_SPEED);
+
+  worldScroll += speed;
+
+  /* update snowflakes drift */
+  for (const s of snowflakes) {
+    s.x += s.drift;
+    if (s.x < -5) s.x = CW + 5;
+    if (s.x > CW + 5) s.x = -5;
+  }
+
+  /* gate detection */
+  checkGates();
+
+  /* finish detection */
+  if (worldToCanvasY(finishWorldY) < SKIER_CANVAS_Y) {
+    triggerFinish();
+    drawFrame();
+    return;
+  }
+
+  drawFrame();
+  updateHUD();
+  rafId = requestAnimationFrame(loop);
+}
+
+function drawFrame() {
+  drawBackground();
+  drawSnowflakes();
+  for (const gate of gates) drawGate(gate);
+  drawFinishLine();
+  drawSkier();
+  drawSpeedIndicator();
+}
+
+/* ── Keyboard ────────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (!gameRunning) {
+    if (!IGNORED_KEYS.includes(e.key)) { startGame(); return; }
+  }
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') { keys.left  = true; e.preventDefault(); }
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keys.right = true; e.preventDefault(); }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+});
+
+/* ── Touch – canvas half-tap ─────────────────────────────────── */
+canvas.addEventListener('touchstart', e => {
+  if (!gameRunning) { startGame(); return; }
+  const rect = canvas.getBoundingClientRect();
+  const tx   = e.touches[0].clientX - rect.left;
+  const scaleX = CW / rect.width;
+  if (tx * scaleX < CW / 2) keys.left = true;
+  else                       keys.right = true;
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+  keys.left = false;
+  keys.right = false;
+}, { passive: true });
+
+/* ── Touch buttons ───────────────────────────────────────────── */
+function bindTouchBtn(id, which) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('pointerdown', e => {
+    if (!gameRunning) { startGame(); return; }
+    keys[which] = true;
+    e.preventDefault();
+  });
+  btn.addEventListener('pointerup',   () => { keys[which] = false; });
+  btn.addEventListener('pointerleave',() => { keys[which] = false; });
+}
+bindTouchBtn('btn-left',  'left');
+bindTouchBtn('btn-right', 'right');
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-again').addEventListener('click', startGame);
+
+/* ── Init ────────────────────────────────────────────────────── */
+renderBest();
+
+/* Draw a static preview frame */
+(function initPreview() {
+  buildGates();
+  buildSnowflakes();
+  worldScroll = 0;
+  drawBackground();
+  drawSnowflakes();
+  for (const gate of gates) drawGate(gate);
+  drawFinishLine();
+  drawSkier();
+})();
+</script>
+</body>
+</html>
