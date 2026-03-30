@@ -853,6 +853,54 @@ function drawGuideLines() {
   }
 }
 
+function drawIncomingPortMarkers() {
+  const upcoming = gates.filter(g => !g.passed).slice(0, 4);
+  if (upcoming.length === 0) return;
+
+  const bandY = 8;
+  const bandH = 36;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,30,56,0.38)';
+  ctx.strokeStyle = 'rgba(130,180,230,0.34)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(8, bandY, CW - 16, bandH);
+  ctx.strokeRect(8, bandY, CW - 16, bandH);
+  ctx.restore();
+
+  for (let i = 0; i < upcoming.length; i++) {
+    const gate = upcoming[i];
+    const alpha = 0.92 - i * 0.18;
+    const markerX = Math.max(20, Math.min(CW - 20, gate.centerX));
+    const halfW = Math.max(10, gate.openWidth * 0.28);
+
+    ctx.save();
+
+    ctx.strokeStyle = 'rgba(255,239,180,' + alpha + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(markerX - halfW, bandY + 18);
+    ctx.lineTo(markerX + halfW, bandY + 18);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,249,214,' + alpha + ')';
+    ctx.beginPath();
+    ctx.moveTo(markerX, bandY + 30);
+    ctx.lineTo(markerX - 7, bandY + 20);
+    ctx.lineTo(markerX + 7, bandY + 20);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(30,45,70,' + alpha + ')';
+    ctx.font = 'bold 11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), markerX, bandY + 12);
+
+    ctx.restore();
+  }
+}
+
 function drawFinishLine() {
   const cy = worldToCanvasY(finishWorldY);
   if (cy < -20 || cy > CH + 20) return;
@@ -1071,6 +1119,7 @@ function drawFrame() {
   for (const gate of gates) drawGate(gate);
   drawFinishLine();
   drawSkier();
+  drawIncomingPortMarkers();
   drawSpeedIndicator();
 }
 

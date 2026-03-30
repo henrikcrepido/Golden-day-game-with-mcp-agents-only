@@ -125,6 +125,7 @@
     }
     #hud-best  .hud-value { color: var(--cyan); }
     #hud-gates .hud-value { color: #aaffcc; }
+    #hud-next  .hud-value { color: #ffdca8; }
     #hud-pen   .hud-value { color: var(--red); }
 
     /* ── Canvas wrapper ── */
@@ -273,6 +274,10 @@
     <span class="hud-label">Gates</span>
     <span class="hud-value" id="hv-gates">0/20</span>
   </div>
+  <div class="hud-box" id="hud-next">
+    <span class="hud-label">Next Gate</span>
+    <span class="hud-value" id="hv-next">--</span>
+  </div>
   <div class="hud-box" id="hud-pen">
     <span class="hud-label">Penalty</span>
     <span class="hud-value" id="hv-pen">+0s</span>
@@ -343,6 +348,7 @@ const JUMP_MIN_W     = 70;
 const JUMP_MAX_W     = 110;
 const JUMP_POW       = 8.8;
 const JUMP_GRAVITY   = 0.48;
+const TREE_RECOVERY  = 1.25;
 const PENALTY_SECS   = 2;
 const HS_KEY         = 'ski_slalom_best';
 const IGNORED_KEYS   = ['F5','F12','Tab','CapsLock','Shift','Control','Alt','Meta'];
@@ -372,6 +378,9 @@ let lean         = 0;
 let jumpLift     = 0;
 let jumpVel      = 0;
 let airborne     = false;
+let crashTimer   = 0;
+let animTime     = 0;
+let prevTs       = 0;
 
 /* ── Input ───────────────────────────────────────────────────── */
 const keys = { left: false, right: false, jump: false };
@@ -380,6 +389,7 @@ const keys = { left: false, right: false, jump: false };
 const hvTime  = document.getElementById('hv-time');
 const hvBest  = document.getElementById('hv-best');
 const hvGates = document.getElementById('hv-gates');
+const hvNext  = document.getElementById('hv-next');
 const hvPen   = document.getElementById('hv-pen');
 
 /* ── Best time ───────────────────────────────────────────────── */
@@ -489,6 +499,9 @@ function startGame() {
   jumpLift     = 0;
   jumpVel      = 0;
   airborne     = false;
+  crashTimer   = 0;
+  animTime     = 0;
+  prevTs       = 0;
   penalties    = 0;
   gatesPassed  = 0;
   finished     = false;
@@ -525,7 +538,7 @@ function checkGates() {
 }
 
 function checkJumps() {
-  if (airborne) return;
+  if (airborne || crashTimer > 0) return;
   for (const jump of jumps) {
     if (jump.used) continue;
     const cy = worldToCanvasY(jump.worldY);
@@ -538,11 +551,42 @@ function checkJumps() {
   }
 }
 
+function checkTreeHit() {
+  if (airborne || crashTimer > 0) return;
+  for (const tree of trees) {
+    const cy = worldToCanvasY(tree.worldY);
+    if (cy < SKIER_CANVAS_Y - 42 || cy > SKIER_CANVAS_Y + 20) continue;
+
+    const crownRadius = 10 * tree.scale;
+    const xDist = Math.abs(skierX - tree.x);
+    if (xDist > crownRadius + 8) continue;
+
+    crashTimer = TREE_RECOVERY;
+    steerVel = 0;
+    jumpLift = 0;
+    jumpVel = 0;
+    airborne = false;
+    speed = Math.max(INIT_SPEED * 0.92, speed - 0.28);
+    break;
+  }
+}
+
 /* ── HUD update ──────────────────────────────────────────────── */
 function updateHUD() {
   hvTime.textContent  = elapsedTime.toFixed(2) + 's';
   hvGates.textContent = gatesPassed + '/' + GATE_COUNT;
   hvPen.textContent   = '+' + penalties + 's';
+
+  const nextGate = gates.find(g => !g.passed);
+  if (!nextGate) {
+    hvNext.textContent = 'FIN';
+    return;
+  }
+
+  const dx = nextGate.centerX - skierX;
+  const dir = dx < -16 ? 'L' : (dx > 16 ? 'R' : 'C');
+  const dist = Math.max(0, Math.round(nextGate.worldY - worldScroll));
+  hvNext.textContent = dir + ' ' + dist;
 }
 
 /* ── Win ─────────────────────────────────────────────────────── */
@@ -736,6 +780,127 @@ function drawGate(gate) {
   ctx.restore();
 }
 
+function drawGuideLines() {
+  if (gates.length < 2) return;
+
+  const upcoming = gates.filter(g => !g.passed).slice(0, 7);
+  const visible = upcoming.filter(g => {
+    const cy = worldToCanvasY(g.worldY);
+    return cy > -120 && cy < CH + 120;
+  });
+  if (visible.length < 2) return;
+
+  const drawLane = (sideKey, color) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.setLineDash([7, 6]);
+    ctx.beginPath();
+    ctx.moveTo(visible[0][sideKey], worldToCanvasY(visible[0].worldY));
+
+    for (let i = 1; i < visible.length; i++) {
+      const prev = visible[i - 1];
+      const curr = visible[i];
+      const midY = (worldToCanvasY(prev.worldY) + worldToCanvasY(curr.worldY)) * 0.5;
+      ctx.quadraticCurveTo(
+        prev[sideKey],
+        midY,
+        curr[sideKey],
+        worldToCanvasY(curr.worldY)
+      );
+    }
+
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  };
+
+  drawLane('leftX', 'rgba(255,130,130,0.4)');
+  drawLane('rightX', 'rgba(130,170,255,0.4)');
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(90,125,170,0.28)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 8]);
+  ctx.beginPath();
+  ctx.moveTo(visible[0].centerX, worldToCanvasY(visible[0].worldY));
+  for (let i = 1; i < visible.length; i++) {
+    ctx.lineTo(visible[i].centerX, worldToCanvasY(visible[i].worldY));
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  const marked = visible.slice(0, 3);
+  for (let i = 0; i < marked.length; i++) {
+    const g = marked[i];
+    const cy = worldToCanvasY(g.worldY);
+    const alpha = 0.56 - i * 0.14;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,240,180,' + alpha + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(g.centerX, cy, Math.max(22, g.openWidth * 0.4), 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,245,210,' + (alpha + 0.1) + ')';
+    ctx.font = 'bold 12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), g.centerX, cy - 14);
+    ctx.restore();
+  }
+}
+
+function drawIncomingPortMarkers() {
+  const upcoming = gates.filter(g => !g.passed).slice(0, 4);
+  if (upcoming.length === 0) return;
+
+  const bandY = 8;
+  const bandH = 36;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,30,56,0.38)';
+  ctx.strokeStyle = 'rgba(130,180,230,0.34)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(8, bandY, CW - 16, bandH);
+  ctx.strokeRect(8, bandY, CW - 16, bandH);
+  ctx.restore();
+
+  for (let i = 0; i < upcoming.length; i++) {
+    const gate = upcoming[i];
+    const alpha = 0.92 - i * 0.18;
+    const markerX = Math.max(20, Math.min(CW - 20, gate.centerX));
+    const halfW = Math.max(10, gate.openWidth * 0.28);
+
+    ctx.save();
+
+    ctx.strokeStyle = 'rgba(255,239,180,' + alpha + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(markerX - halfW, bandY + 18);
+    ctx.lineTo(markerX + halfW, bandY + 18);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,249,214,' + alpha + ')';
+    ctx.beginPath();
+    ctx.moveTo(markerX, bandY + 30);
+    ctx.lineTo(markerX - 7, bandY + 20);
+    ctx.lineTo(markerX + 7, bandY + 20);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(30,45,70,' + alpha + ')';
+    ctx.font = 'bold 11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), markerX, bandY + 12);
+
+    ctx.restore();
+  }
+}
+
 function drawFinishLine() {
   const cy = worldToCanvasY(finishWorldY);
   if (cy < -20 || cy > CH + 20) return;
@@ -765,6 +930,10 @@ function drawSkier() {
   const y = SKIER_CANVAS_Y;
   const turn = Math.max(-1, Math.min(1, lean));
   const carve = Math.abs(turn);
+  const speedFactor = Math.min(1.2, speed / 5.4);
+  const stride = Math.sin(animTime * 8.5) * (0.8 + speedFactor * 1.4);
+  const bob = Math.sin(animTime * 6.8) * (0.9 + carve * 0.8);
+  const crashActive = crashTimer > 0;
 
   ctx.save();
 
@@ -776,20 +945,27 @@ function drawSkier() {
     ctx.fill();
   }
 
-  ctx.translate(x, y - jumpLift);
-  ctx.rotate(turn * 0.34 + (airborne ? -0.08 : 0));
+  const crashProgress = crashActive ? 1 - (crashTimer / TREE_RECOVERY) : 1;
+  const layAmount = crashActive
+    ? (crashProgress < 0.55 ? 1 : Math.max(0, 1 - (crashProgress - 0.55) / 0.45))
+    : 0;
+  const recoverLift = crashActive ? (1 - layAmount) * 3.5 : 0;
+  const bodyRot = turn * 0.34 + (airborne ? -0.08 : 0) - layAmount * 1.28;
+
+  ctx.translate(x, y - jumpLift - bob * (crashActive ? 0.25 : 1) - recoverLift);
+  ctx.rotate(bodyRot);
 
   /* skis */
   ctx.strokeStyle = '#443322';
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(-10 - turn * 3, -4);
-  ctx.lineTo(-8 + turn * 5, 14);
+  ctx.moveTo(-10 - turn * 3, -4 + layAmount * 3);
+  ctx.lineTo(-8 + turn * 5, 14 + stride * 0.3 + layAmount * 2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(10 - turn * 3, -4);
-  ctx.lineTo(8 + turn * 5, 14);
+  ctx.moveTo(10 - turn * 3, -4 + layAmount * 3);
+  ctx.lineTo(8 + turn * 5, 14 - stride * 0.3 + layAmount * 2);
   ctx.stroke();
 
   /* body */
@@ -797,53 +973,53 @@ function drawSkier() {
   ctx.strokeStyle = '#aaccee';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(0, -18);
-  ctx.lineTo(-11, 4);
-  ctx.lineTo(11, 4);
+  ctx.moveTo(0, -18 + layAmount * 6);
+  ctx.lineTo(-11, 4 + layAmount * 2);
+  ctx.lineTo(11, 4 + layAmount * 2);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
   /* jacket */
-  ctx.fillStyle = turn < 0 ? '#ff663f' : '#ff5533';
+  ctx.fillStyle = crashActive ? '#dd4a2d' : (turn < 0 ? '#ff663f' : '#ff5533');
   ctx.beginPath();
-  ctx.moveTo(0, -4);
-  ctx.lineTo(-8, 4);
-  ctx.lineTo(8, 4);
+  ctx.moveTo(0, -4 + layAmount * 2);
+  ctx.lineTo(-8, 4 + layAmount * 2);
+  ctx.lineTo(8, 4 + layAmount * 2);
   ctx.closePath();
   ctx.fill();
 
   /* head */
   ctx.fillStyle = '#ffe0b2';
   ctx.beginPath();
-  ctx.arc(0, -21, 7, 0, Math.PI * 2);
+  ctx.arc(0 + layAmount * 5, -21 + layAmount * 6, 7, 0, Math.PI * 2);
   ctx.fill();
 
   /* goggles */
   ctx.fillStyle = '#1155aa';
   ctx.beginPath();
-  ctx.arc(-3, -21, 2.5, 0, Math.PI * 2);
+  ctx.arc(-3 + layAmount * 5, -21 + layAmount * 6, 2.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(3, -21, 2.5, 0, Math.PI * 2);
+  ctx.arc(3 + layAmount * 5, -21 + layAmount * 6, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
   /* helmet */
   ctx.fillStyle = '#cc2200';
   ctx.beginPath();
-  ctx.arc(0, -24, 7, Math.PI, 0);
+  ctx.arc(0 + layAmount * 5, -24 + layAmount * 6, 7, Math.PI, 0);
   ctx.fill();
 
-  /* poles swing slightly while turning */
+  /* poles swing with carving and stride */
   ctx.strokeStyle = '#aaaaaa';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(-8, -6);
-  ctx.lineTo(-18 - turn * 7, 12 - carve * 3);
+  ctx.moveTo(-8 + layAmount * 3, -6 + layAmount * 2);
+  ctx.lineTo(-18 - turn * 7 - stride * 0.9, 12 - carve * 3 + layAmount * 2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(8, -6);
-  ctx.lineTo(18 - turn * 7, 12 - carve * 3);
+  ctx.moveTo(8 + layAmount * 3, -6 + layAmount * 2);
+  ctx.lineTo(18 - turn * 7 + stride * 0.9, 12 - carve * 3 + layAmount * 2);
   ctx.stroke();
 
   ctx.restore();
@@ -864,40 +1040,51 @@ function drawSpeedIndicator() {
 function loop(ts) {
   if (!gameRunning) return;
 
+  const dt = prevTs ? Math.min(0.045, (ts - prevTs) / 1000) : 1 / 60;
+  prevTs = ts;
+
   /* timing */
   elapsedTime = (ts - startTime) / 1000;
+  animTime += dt * (2 + speed * 0.5);
 
   /* physics */
-  const steerInput = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  steerVel += steerInput * STEER_ACCEL * (airborne ? AIR_STEER_MULT : 1);
-  steerVel *= steerInput === 0 ? STEER_DRAG : 0.93;
-  if (Math.abs(steerVel) < 0.03) steerVel = 0;
-  steerVel = Math.max(-STEER_MAX, Math.min(STEER_MAX, steerVel));
+  if (crashTimer > 0) {
+    crashTimer = Math.max(0, crashTimer - dt);
+    steerVel *= 0.72;
+    lean += ((Math.sin(animTime * 14) * 0.38) - lean) * 0.24;
+    worldScroll += Math.max(0.38, speed * 0.2);
+  } else {
+    const steerInput = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    steerVel += steerInput * STEER_ACCEL * (airborne ? AIR_STEER_MULT : 1);
+    steerVel *= steerInput === 0 ? STEER_DRAG : 0.93;
+    if (Math.abs(steerVel) < 0.03) steerVel = 0;
+    steerVel = Math.max(-STEER_MAX, Math.min(STEER_MAX, steerVel));
 
-  skierX += steerVel;
-  if (skierX < 20) {
-    skierX = 20;
-    steerVel = Math.max(0, steerVel * -0.35);
-  }
-  if (skierX > CW - 20) {
-    skierX = CW - 20;
-    steerVel = Math.min(0, steerVel * -0.35);
-  }
-
-  lean += (steerVel / STEER_MAX - lean) * LEAN_SMOOTH;
-
-  if (airborne) {
-    jumpLift += jumpVel;
-    jumpVel -= JUMP_GRAVITY;
-    if (jumpLift <= 0) {
-      jumpLift = 0;
-      jumpVel = 0;
-      airborne = false;
-      speed += 0.03;
+    skierX += steerVel;
+    if (skierX < 20) {
+      skierX = 20;
+      steerVel = Math.max(0, steerVel * -0.35);
     }
-  }
+    if (skierX > CW - 20) {
+      skierX = CW - 20;
+      steerVel = Math.min(0, steerVel * -0.35);
+    }
 
-  worldScroll += speed;
+    lean += (steerVel / STEER_MAX - lean) * LEAN_SMOOTH;
+
+    if (airborne) {
+      jumpLift += jumpVel;
+      jumpVel -= JUMP_GRAVITY;
+      if (jumpLift <= 0) {
+        jumpLift = 0;
+        jumpVel = 0;
+        airborne = false;
+        speed += 0.03;
+      }
+    }
+
+    worldScroll += speed;
+  }
 
   /* update snowflakes drift */
   for (const s of snowflakes) {
@@ -908,6 +1095,7 @@ function loop(ts) {
 
   /* gate detection */
   checkGates();
+  checkTreeHit();
   checkJumps();
 
   /* finish detection */
@@ -927,9 +1115,11 @@ function drawFrame() {
   drawSnowflakes();
   drawTrees();
   drawJumps();
+  drawGuideLines();
   for (const gate of gates) drawGate(gate);
   drawFinishLine();
   drawSkier();
+  drawIncomingPortMarkers();
   drawSpeedIndicator();
 }
 
