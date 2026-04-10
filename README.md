@@ -16,6 +16,7 @@ action logs and reusable instructions saved as Markdown for future sessions.
 | AR Crystal Surge | [`ar-crystal-surge.html`](ar-crystal-surge.html) | AR.js gem collector — point your camera at the Hiro marker and tap floating crystals; combo multipliers up to ×4. Works without a camera in holographic Demo Mode! |
 | Ture & Selma – Hitta Orden! | [`ture-selma.html`](ture-selma.html) | Swedish platformer for young kids — play as Ture (5) or Selma (3), jump to collect items and learn to spell each word in Swedish (arrows + Space; touch buttons on mobile) |
 | Ski Slalom | [`ski-slalom.html`](ski-slalom.html) | Race through 20 slalom gates as fast as you can! Steer left & right with arrow keys (or A/D). Miss a gate = +2 s penalty. Best time is saved as your record. |
+| Asteroid Shield | [`asteroid-shield.html`](asteroid-shield.html) | Pilot your spaceship around Earth and blast incoming asteroids before they crash into the planet! Asteroids split on impact — survive wave after wave! |
 
 ---
 
