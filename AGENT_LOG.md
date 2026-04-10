@@ -330,3 +330,36 @@
 | 14 | 08:29 | **JS syntax validation** — `node --check` ✅ OK after fixing `} else {` → `} else if (char === 'selma') {` | |
 | 15 | 08:31 | **Browser smoke-tests** — screenshots of start screen, 4-char select, mode select, Påskjakt gameplay | All screens render correctly |
 
+
+---
+
+# Agent Action Log — Asteroid Shield Build Session
+
+> **Session date:** 2026-04-10
+> **Agent:** GitHub Copilot Coding Agent
+> **Task:** Build a spaceship-defends-Earth-against-asteroids canvas game
+> **Outcome:** ✅ Success — `asteroid-shield.html` created and committed
+
+## Timeline
+
+| # | Timestamp (UTC) | Action | Notes |
+|---|-----------------|--------|-------|
+| 1 | 17:17 | **Explore repository** — read existing games (ski-slalom, neon-serpent, index.html) | Understood single-file canvas pattern, highscore API, HUD pill style |
+| 2 | 17:18 | **Plan formulated** — 6-point checklist in `report_progress` | |
+| 3 | 17:18 | **Create `asteroid-shield.html`** — full 480×520 canvas game | Ship orbits Earth, asteroids spawn from edges, split on hit, Earth has health ring |
+| 4 | 17:20 | **JS syntax validation** — `node --check` ✅ OK | |
+| 5 | 17:20 | **`index.html` updated** — new game card + EN/SV translations | |
+| 6 | 17:20 | **`README.md` updated** — new row in games table | |
+| 7 | 17:21 | **`AGENT_LOG.md` updated** — this entry | |
+| 8 | 17:21 | **`report_progress`** — commit and push | |
+
+## Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Ship orbits Earth at fixed radius | Immediately legible "defend the centre" mechanic; natural rotation control |
+| Three asteroid sizes (large/medium/small) with splitting | Classic Asteroids-style depth; large → 2 medium → 2 small on destruction |
+| Earth health ring arc | Visual at-a-glance indicator; colour shifts green→orange→red |
+| Wave system with increasing speed | Difficulty curve without complexity; `spawnInterval` shrinks per wave |
+| Touch controls via pointer events | Supports mobile without requiring a separate code path |
+| Highscore synced to `/api/highscores/asteroid_shield_best` | Consistent with all other games in the repo |
