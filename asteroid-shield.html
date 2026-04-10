@@ -591,6 +591,13 @@
         if (earthHp <= 0) { gameOver(); return; }
         continue;
       }
+
+      /* Remove asteroids that have flown off screen */
+      if (a.x < -(a.r + 40) || a.x > BASE_W + a.r + 40 ||
+          a.y < -(a.r + 40) || a.y > BASE_H + a.r + 40) {
+        asteroids.splice(i, 1);
+        continue;
+      }
     }
 
     /* Bullet ↔ asteroid collisions */
