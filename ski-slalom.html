@@ -730,7 +730,7 @@ function drawJumps() {
   }
 }
 
-function drawGate(gate) {
+function drawGate(gate, isNext) {
   const cy = worldToCanvasY(gate.worldY);
   if (cy < -60 || cy > CH + 60) return;
 
@@ -739,11 +739,25 @@ function drawGate(gate) {
   const flagW  = 22;
   const flagH  = 14;
 
+  /* next-gate glow */
+  if (isNext) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,230,0,0.85)';
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = 'rgba(255,230,0,0.55)';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(gate.leftX, cy);
+    ctx.lineTo(gate.rightX, cy);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   /* left pole – red */
   ctx.save();
-  ctx.fillStyle = '#cc0000';
+  ctx.fillStyle = isNext ? '#ff2222' : '#cc0000';
   ctx.fillRect(gate.leftX - poleW / 2, cy - poleH, poleW, poleH);
-  ctx.fillStyle = '#ff3333';
+  ctx.fillStyle = isNext ? '#ff7777' : '#ff3333';
   ctx.beginPath();
   ctx.moveTo(gate.leftX - poleW / 2, cy - poleH);
   ctx.lineTo(gate.leftX - poleW / 2 - flagW, cy - poleH + flagH / 2);
@@ -754,9 +768,9 @@ function drawGate(gate) {
 
   /* right pole – blue */
   ctx.save();
-  ctx.fillStyle = '#0044cc';
+  ctx.fillStyle = isNext ? '#0055ff' : '#0044cc';
   ctx.fillRect(gate.rightX - poleW / 2, cy - poleH, poleW, poleH);
-  ctx.fillStyle = '#3377ff';
+  ctx.fillStyle = isNext ? '#66aaff' : '#3377ff';
   ctx.beginPath();
   ctx.moveTo(gate.rightX + poleW / 2, cy - poleH);
   ctx.lineTo(gate.rightX + poleW / 2 + flagW, cy - poleH + flagH / 2);
@@ -769,8 +783,8 @@ function drawGate(gate) {
   ctx.save();
   ctx.strokeStyle = gate.missed
     ? 'rgba(255,60,60,0.55)'
-    : (gate.passed ? 'rgba(80,255,120,0.4)' : 'rgba(100,140,200,0.3)');
-  ctx.lineWidth = 2;
+    : (gate.passed ? 'rgba(80,255,120,0.4)' : (isNext ? 'rgba(255,230,0,0.85)' : 'rgba(100,140,200,0.3)'));
+  ctx.lineWidth = isNext ? 3 : 2;
   ctx.setLineDash([6, 6]);
   ctx.beginPath();
   ctx.moveTo(gate.leftX, cy);
@@ -831,30 +845,23 @@ function drawGuideLines() {
   ctx.setLineDash([]);
   ctx.restore();
 
-  const marked = visible.slice(0, 3);
-  for (let i = 0; i < marked.length; i++) {
-    const g = marked[i];
+  /* only mark the single next gate */
+  if (visible.length > 0) {
+    const g = visible[0];
     const cy = worldToCanvasY(g.worldY);
-    const alpha = 0.56 - i * 0.14;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(255,240,180,' + alpha + ')';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,230,0,0.75)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.ellipse(g.centerX, cy, Math.max(22, g.openWidth * 0.4), 10, 0, 0, Math.PI * 2);
     ctx.stroke();
-
-    ctx.fillStyle = 'rgba(255,245,210,' + (alpha + 0.1) + ')';
-    ctx.font = 'bold 12px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(i + 1), g.centerX, cy - 14);
     ctx.restore();
   }
 }
 
 function drawIncomingPortMarkers() {
-  const upcoming = gates.filter(g => !g.passed).slice(0, 4);
+  const upcoming = gates.filter(g => !g.passed).slice(0, 1);
   if (upcoming.length === 0) return;
 
   const bandY = 8;
@@ -870,32 +877,25 @@ function drawIncomingPortMarkers() {
 
   for (let i = 0; i < upcoming.length; i++) {
     const gate = upcoming[i];
-    const alpha = 0.92 - i * 0.18;
     const markerX = Math.max(20, Math.min(CW - 20, gate.centerX));
     const halfW = Math.max(10, gate.openWidth * 0.28);
 
     ctx.save();
 
-    ctx.strokeStyle = 'rgba(255,239,180,' + alpha + ')';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,230,0,0.95)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(markerX - halfW, bandY + 18);
     ctx.lineTo(markerX + halfW, bandY + 18);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,249,214,' + alpha + ')';
+    ctx.fillStyle = 'rgba(255,230,0,0.95)';
     ctx.beginPath();
     ctx.moveTo(markerX, bandY + 30);
     ctx.lineTo(markerX - 7, bandY + 20);
     ctx.lineTo(markerX + 7, bandY + 20);
     ctx.closePath();
     ctx.fill();
-
-    ctx.fillStyle = 'rgba(30,45,70,' + alpha + ')';
-    ctx.font = 'bold 11px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(i + 1), markerX, bandY + 12);
 
     ctx.restore();
   }
@@ -1116,7 +1116,8 @@ function drawFrame() {
   drawTrees();
   drawJumps();
   drawGuideLines();
-  for (const gate of gates) drawGate(gate);
+  const nextGate = gates.find(g => !g.passed);
+  for (const gate of gates) drawGate(gate, gate === nextGate);
   drawFinishLine();
   drawSkier();
   drawIncomingPortMarkers();
